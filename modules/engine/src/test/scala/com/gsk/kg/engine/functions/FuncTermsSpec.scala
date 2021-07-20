@@ -2,10 +2,9 @@ package com.gsk.kg.engine.functions
 
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions.col
-
 import com.gsk.kg.engine.compiler.SparkSpec
+import com.gsk.kg.engine.functions.Literals.TypedLiteral
 import com.gsk.kg.engine.scalacheck.CommonGenerators
-
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
@@ -93,6 +92,26 @@ class FuncTermsSpec
         result shouldEqual Array(
           Row("\"chat\"@es"),
           Row("\"foo\"@es")
+        )
+      }
+    }
+
+    "FuncTerms.datatype" should {
+      "return the datatype IRI of a literal" in {
+        val df = List(
+          "\"1.1\"^^xsd:double", // a typed literal
+          "\"1\"",               // a simple literal
+          "\"foo\"@es",          // a literal with a language tag
+          "not a literal"
+        ).toDF("literals")
+
+        df.select(
+          FuncTerms.datatype(df("literals"))
+        ).collect shouldEqual Array(
+          Row("xsd:double"),
+          Row("xsd:string"),
+          Row("rdf:langString"),
+          Row("")
         )
       }
     }
