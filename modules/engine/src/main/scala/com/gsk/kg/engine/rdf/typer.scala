@@ -1,13 +1,14 @@
 package com.gsk.kg.engine.rdf
 
 import org.apache.spark.sql.Column
-import org.apache.spark.sql.types._
-import org.apache.spark.sql.functions._
-import com.gsk.kg.engine.functions.Literals
-import com.gsk.kg.engine.functions.Literals.TypedLiteral
-import com.gsk.kg.engine.RdfFormatter
 import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types._
+
+import com.gsk.kg.engine.RdfFormatter
+import com.gsk.kg.engine.functions.Literals
 import com.gsk.kg.engine.functions.Literals.LocalizedLiteral
+import com.gsk.kg.engine.functions.Literals.TypedLiteral
 
 object Tokens {
   val openAngleBracket    = "<"
@@ -56,8 +57,6 @@ object Typer {
     .add("type", StringType)
 
   /**
-    *
-    *
     */
   def from(df: DataFrame): DataFrame =
     applyTransformationToDF(df, prettyPrint)
@@ -65,7 +64,10 @@ object Typer {
   def to(df: DataFrame): DataFrame =
     applyTransformationToDF(df, parse)
 
-  def applyTransformationToDF(df: DataFrame, transform: Column => Column): DataFrame =
+  def applyTransformationToDF(
+      df: DataFrame,
+      transform: Column => Column
+  ): DataFrame =
     df.columns.foldLeft(df) { case (acc, column) =>
       acc.withColumn(column, transform(df(column)))
     }
@@ -73,10 +75,20 @@ object Typer {
   def prettyPrint(col: Column): Column =
     when(
       col("type") === RdfType.Uri.repr,
-      concat(lit(Tokens.openAngleBracket), col("value"), lit(Tokens.closingAngleBracket))
+      concat(
+        lit(Tokens.openAngleBracket),
+        col("value"),
+        lit(Tokens.closingAngleBracket)
+      )
     ).when(
       col("type") === RdfType.String.repr && col("lang").isNotNull,
-      concat(lit(Tokens.doubleQuote), col("value"), lit(Tokens.doubleQuote), lit(Tokens.langAnnotation), col("lang"))
+      concat(
+        lit(Tokens.doubleQuote),
+        col("value"),
+        lit(Tokens.doubleQuote),
+        lit(Tokens.langAnnotation),
+        col("lang")
+      )
     ).when(
       col("type") === RdfType.Blank.repr,
       concat(lit(Tokens.blankNode), col("value"))
@@ -103,7 +115,10 @@ object Typer {
       TypedLiteral.isTypedLiteral(col),
       createRecord(
         Literals.extractStringLiteral(col),
-        rtrim(ltrim(TypedLiteral(col).tag, Tokens.openAngleBracket), Tokens.closingAngleBracket)
+        rtrim(
+          ltrim(TypedLiteral(col).tag, Tokens.openAngleBracket),
+          Tokens.closingAngleBracket
+        )
       )
     ).when(
       RdfFormatter.isLocalizedString(col),
@@ -150,7 +165,12 @@ object Typer {
       )
     )
 
-  def createRecord(value: Column, tpe: Column, lang: Column = lit(null)): Column =
+  // scalafix:off
+  def createRecord(
+      value: Column,
+      tpe: Column,
+      lang: Column = lit(null) // scalastyle:off
+  ): Column =
     struct(
       value.as("value"),
       tpe.as("type"),
