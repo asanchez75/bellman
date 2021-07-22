@@ -206,7 +206,7 @@ object FuncProperty {
     }
   }
 
-  /** It returns a dataframe with all the vertex that points to itselft (0 length path), the predicate column will
+  /** It returns a dataframe with all the vertices that point to itself (0 length path), the predicate column will
     * contain null values.
     * @param df
     * @return
