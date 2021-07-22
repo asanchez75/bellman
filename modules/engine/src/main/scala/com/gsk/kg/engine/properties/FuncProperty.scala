@@ -156,6 +156,8 @@ object FuncProperty {
       .asRight[EngineError]
   }
 
+  def exactlyN(df: DataFrame, e: ColOrDf): Result[ColOrDf] = ???
+
   def uri(s: String): ColOrDf =
     Left(lit(s))
 
