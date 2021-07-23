@@ -321,5 +321,64 @@ class FuncPropertySpec
         )
       }
     }
+
+    "ExactlyN function" should {
+
+      "return expected values" in {
+
+        val df = List(
+          (
+            "<http://example.org/Alice>",
+            "<http://xmlns.org/foaf/0.1/knows>",
+            "<http://example.org/Bob>"
+          ),
+          (
+            "<http://example.org/Bob>",
+            "<http://xmlns.org/foaf/0.1/knows>",
+            "<http://example.org/Charles>"
+          ),
+          (
+            "<http://example.org/Charles>",
+            "<http://xmlns.org/foaf/0.1/name>",
+            "\"Charles\""
+          ),
+          (
+            "<http://example.org/Charles>",
+            "<http://xmlns.org/foaf/0.1/knows>",
+            "<http://example.org/Daniel>"
+          ),
+          (
+            "<http://example.org/Daniel>",
+            "<http://xmlns.org/foaf/0.1/knows>",
+            "<http://example.org/Erick>"
+          )
+        ).toDF("s", "p", "o")
+
+        // ?s foaf:knows{2} ?o
+        lazy val knowsUriFunc =
+          FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+
+        val n      = 2
+        val result = FuncProperty.exactlyN(df, n, knowsUriFunc)
+
+        result.right.get.right.get.collect().toSet shouldEqual Set(
+          Row(
+            "<http://example.org/Alice>",
+            "<http://xmlns.org/foaf/0.1/knows>",
+            "<http://example.org/Charles>"
+          ),
+          Row(
+            "<http://example.org/Bob>",
+            "<http://xmlns.org/foaf/0.1/knows>",
+            "<http://example.org/Daniel>"
+          ),
+          Row(
+            "<http://example.org/Charles>",
+            "<http://xmlns.org/foaf/0.1/knows>",
+            "<http://example.org/Erick>"
+          )
+        )
+      }
+    }
   }
 }
