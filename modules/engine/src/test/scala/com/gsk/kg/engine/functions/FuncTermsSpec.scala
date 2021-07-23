@@ -110,7 +110,7 @@ class FuncTermsSpec
           Row("xsd:double"),
           Row("xsd:string"),
           Row("rdf:langString"),
-          Row("")
+          Row(null)
         )
       }
     }
