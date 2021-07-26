@@ -58,10 +58,10 @@ object Typer {
 
   /**
     */
-  def from(df: DataFrame): DataFrame =
+  def untype(df: DataFrame): DataFrame =
     applyTransformationToDF(df, prettyPrint)
 
-  def to(df: DataFrame): DataFrame =
+  def `type`(df: DataFrame): DataFrame =
     applyTransformationToDF(df, parse)
 
   def applyTransformationToDF(

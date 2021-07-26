@@ -2,6 +2,7 @@ package com.gsk.kg.engine.rdf
 
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.BooleanType
 
 object TypedFuncs {
 
@@ -40,13 +41,11 @@ object TypedFuncs {
       col("type") === RdfType.String.repr
 
     def isNumeric(col: Column): Column =
-      col("type") === RdfType.Double.repr ||
-        col("type") === RdfType.Int.repr ||
-        col("type") === RdfType.Decimal.repr
+      isInt(col) || isDouble(col) || isDecimal(col)
 
     when(
       isBoolean(col),
-      col("value")
+      col("value").cast(BooleanType)
     ).when(
       isNumeric(col),
       ifNumeric
@@ -55,5 +54,87 @@ object TypedFuncs {
       ifStringLit
     ).otherwise(lit(null)) // scalastyle:off
   }
+
+  def isInt(col: Column): Column =
+    col("type") === RdfType.Int.repr
+
+  def isDouble(col: Column): Column =
+    col("type") === RdfType.Double.repr
+
+  def isDecimal(col: Column): Column =
+    col("type") === RdfType.Decimal.repr
+
+  def promoteNumericArgsToNumericResult(col1: Column, col2: Column)(
+      op: (Column, Column) => Column
+  ): Column = {
+    when( // Int, Int => Int
+      isInt(col1) && isInt(col2),
+      Typer.createRecord(
+        value = op(col1("value"), col2("value")),
+        tpe = RdfType.Int.repr
+      )
+    ).when( // Int, Decimal => Decimal
+      isInt(col1) && isDecimal(col2),
+      Typer.createRecord(
+        value = op(col1("value"), col2("value")),
+        tpe = RdfType.Decimal.repr
+      )
+    ).when( // Int, Double => Double
+      isInt(col1) && isDouble(col2),
+      Typer.createRecord(
+        value = op(col1("value"), col2("value")),
+        tpe = RdfType.Double.repr
+      )
+    ).when( // Decimal, Int => Decimal
+      isDecimal(col1) && isInt(col2),
+      Typer.createRecord(
+        value = op(col1("value"), col2("value")),
+        tpe = RdfType.Decimal.repr
+      )
+    ).when( // Decimal, Decimal => Decimal
+      isDecimal(col1) && isDecimal(col2),
+      Typer.createRecord(
+        value = op(col1("value"), col2("value")),
+        tpe = RdfType.Decimal.repr
+      )
+    ).when( // Decimal, Double => Double
+      isDecimal(col1) && isDouble(col2),
+      Typer.createRecord(
+        value = op(col1("value"), col2("value")),
+        tpe = RdfType.Double.repr
+      )
+    ).when( // Double, Int => Double
+      isDouble(col1) && isInt(col2),
+      Typer.createRecord(
+        value = op(col1("value"), col2("value")),
+        tpe = RdfType.Double.repr
+      )
+    ).when( // Double, Decimal => Double
+      isDouble(col1) && isDecimal(col2),
+      Typer.createRecord(
+        value = op(col1("value"), col2("value")),
+        tpe = RdfType.Double.repr
+      )
+    ).when( // Double, Double => Double
+      isDouble(col1) && isDouble(col2),
+      Typer.createRecord(
+        value = op(col1("value"), col2("value")),
+        tpe = RdfType.Double.repr
+      )
+    )
+  }
+
+
+  def add(l: Column, r: Column): Column =
+    promoteNumericArgsToNumericResult(l, r)(_ + _)
+
+  def subtract(l: Column, r: Column): Column =
+    promoteNumericArgsToNumericResult(l, r)(_ - _)
+
+  def multiply(l: Column, r: Column): Column =
+    promoteNumericArgsToNumericResult(l, r)(_ * _)
+
+  def divide(l: Column, r: Column): Column =
+    promoteNumericArgsToNumericResult(l, r)(_ / _)
 
 }

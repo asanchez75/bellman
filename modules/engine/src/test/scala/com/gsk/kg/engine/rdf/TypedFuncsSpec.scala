@@ -49,7 +49,7 @@ class TypedFuncsSpec
         )
       ).toDF("s", "p", "o")
 
-      val typed = Typer.to(df)
+      val typed = Typer.`type`(df)
 
       //  This is the query we're benchmarking against.  You can see the whole test done in IfSpec
       //
@@ -85,7 +85,7 @@ class TypedFuncsSpec
         )
 
       Typer
-        .from(withNewColumn)
+        .untype(withNewColumn)
         .select("?name", "?cat")
         .collect
         .toSet shouldEqual Set(

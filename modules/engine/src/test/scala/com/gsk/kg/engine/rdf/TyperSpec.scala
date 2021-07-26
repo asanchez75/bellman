@@ -18,8 +18,8 @@ class TyperSpec
 
   "Typer" should "add all needed types to the dataframe" in {
     forAll { df: DataFrame =>
-      val result = Typer.to(df)
-      val back   = Typer.from(result)
+      val result = Typer.`type`(df)
+      val back   = Typer.untype(result)
 
       df.collect shouldEqual back.collect
     }
