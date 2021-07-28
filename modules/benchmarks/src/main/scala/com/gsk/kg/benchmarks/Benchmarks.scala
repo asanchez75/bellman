@@ -67,24 +67,46 @@ class Benchmarks {
     )
   ).toDF("s", "p", "o")
 
+  val otherSpoDf = List(
+    ("<http://asdf.com/pepe>", "<http://asdf.com/a>", "a"),
+    ("<http://asdf.com/pepe>", "<http://asdf.com/b>", "b"),
+    ("<http://asdf.com/pepe>", "<http://asdf.com/c>", "c"),
+    ("<http://asdf.com/pepe>", "<http://asdf.com/d>", "d"),
+    ("<http://asdf.com/pepe>", "<http://asdf.com/e>", "e")
+  ).toDF("s", "p", "o")
+
   @Benchmark def selectQueryUntyped(blackhole: Blackhole): Unit =
-    Impl.selectQueryUntyped(spoDf, blackhole)
+    Impl.selectQueryUntyped(otherSpoDf, blackhole)
   @Benchmark def selectQueryTyped(blackhole: Blackhole): Unit =
-    Impl.selectQueryTyped(spoDf, blackhole)
+    Impl.selectQueryTyped(otherSpoDf, blackhole)
+  @Benchmark def selectQueryWithFunctionsUntyped(blackhole: Blackhole): Unit =
+    Impl.selectQueryWithFunctionsUntyped(spoDf, blackhole)
+  @Benchmark def selectQueryWithFunctionsTyped(blackhole: Blackhole): Unit =
+    Impl.selectQueryWithFunctionsTyped(spoDf, blackhole)
   @Benchmark def ifQueryUntyped(blackhole: Blackhole): Unit =
     Impl.ifQueryUntyped(spoDf, blackhole)
   @Benchmark def ifQueryTyped(blackhole: Blackhole): Unit =
     Impl.ifQueryTyped(spoDf, blackhole)
-  @Benchmark def ifUntyped(blackhole: Blackhole): Unit = Impl.untypedIf(df, blackhole)
-  @Benchmark def ifTyped(blackhole: Blackhole): Unit   = Impl.typedIf(df, blackhole)
-  @Benchmark def addUntyped(blackhole: Blackhole): Unit = Impl.untypedAdd(numericDf, blackhole)
-  @Benchmark def addTyped(blackhole: Blackhole): Unit   = Impl.typedAdd(numericDf, blackhole)
-  @Benchmark def substractUntyped(blackhole: Blackhole): Unit = Impl.untypedSubstract(numericDf, blackhole)
-  @Benchmark def substractTyped(blackhole: Blackhole): Unit   = Impl.typedSubstract(numericDf, blackhole)
-  @Benchmark def multiplyUntyped(blackhole: Blackhole): Unit = Impl.untypedMultiply(numericDf, blackhole)
-  @Benchmark def multiplyTyped(blackhole: Blackhole): Unit   = Impl.typedMultiply(numericDf, blackhole)
-  @Benchmark def divideUntyped(blackhole: Blackhole): Unit = Impl.untypedDivide(numericDf, blackhole)
-  @Benchmark def divideTyped(blackhole: Blackhole): Unit   = Impl.typedDivide(numericDf, blackhole)
+  @Benchmark def ifUntyped(blackhole: Blackhole): Unit =
+    Impl.untypedIf(df, blackhole)
+  @Benchmark def ifTyped(blackhole: Blackhole): Unit =
+    Impl.typedIf(df, blackhole)
+  @Benchmark def addUntyped(blackhole: Blackhole): Unit =
+    Impl.untypedAdd(numericDf, blackhole)
+  @Benchmark def addTyped(blackhole: Blackhole): Unit =
+    Impl.typedAdd(numericDf, blackhole)
+  @Benchmark def substractUntyped(blackhole: Blackhole): Unit =
+    Impl.untypedSubstract(numericDf, blackhole)
+  @Benchmark def substractTyped(blackhole: Blackhole): Unit =
+    Impl.typedSubstract(numericDf, blackhole)
+  @Benchmark def multiplyUntyped(blackhole: Blackhole): Unit =
+    Impl.untypedMultiply(numericDf, blackhole)
+  @Benchmark def multiplyTyped(blackhole: Blackhole): Unit =
+    Impl.typedMultiply(numericDf, blackhole)
+  @Benchmark def divideUntyped(blackhole: Blackhole): Unit =
+    Impl.untypedDivide(numericDf, blackhole)
+  @Benchmark def divideTyped(blackhole: Blackhole): Unit =
+    Impl.typedDivide(numericDf, blackhole)
 }
 
 object Impl {
@@ -279,7 +301,9 @@ object Impl {
     blackhole.consume(result)
   }
 
-  def selectQueryUntyped(df: DataFrame, blackhole: Blackhole)(implicit sc: SQLContext) = {
+  def selectQueryWithFunctionsUntyped(df: DataFrame, blackhole: Blackhole)(
+      implicit sc: SQLContext
+  ) = {
     val query = """
       PREFIX dm: <http://asdf.com/>
 
@@ -303,7 +327,9 @@ object Impl {
     blackhole.consume(result)
   }
 
-  def selectQueryTyped(df: DataFrame, blackhole: Blackhole)(implicit sc: SQLContext) = {
+  def selectQueryWithFunctionsTyped(df: DataFrame, blackhole: Blackhole)(
+      implicit sc: SQLContext
+  ) = {
     val typed = Typer.`type`(df)
 
     val first = typed
@@ -319,15 +345,27 @@ object Impl {
       .select(col("s").as("?s"), col("o").as("?d"))
 
     val fourth = typed
-      .filter(col("s")("value") === "http://asdf.com/r")
+      .filter(
+        col("s")("value") === "http://asdf.com/r" && col("o")(
+          "value"
+        ) === "asdf"
+      )
       .select(col("s").as("?s"))
 
     val fifth = typed
-      .filter(col("s")("value") === "http://asdf.com/t")
+      .filter(
+        col("s")("value") === "http://asdf.com/t" && col("o")(
+          "value"
+        ) === "asdf"
+      )
       .select(col("s").as("?s"))
 
     val joined =
-      first.join(second, "?s").join(third, "?s").join(fourth, "?s").join(fifth, "?s")
+      first
+        .join(second, "?s")
+        .join(third, "?s")
+        .join(fourth, "?s")
+        .join(fifth, "?s")
 
     val withNewBindings =
       joined
@@ -344,16 +382,82 @@ object Impl {
           "?e",
           TypedFuncs.uri(
             TypedFuncs.concat(
-              Typer.createRecord(lit("http://example.com?asdf="), RdfType.Uri.repr),
+              Typer.createRecord(
+                lit("http://example.com?asdf="),
+                RdfType.Uri.repr
+              ),
               NonEmptyList.of(col("?c"))
             )
           )
         )
+        .distinct()
 
     val result = withNewBindings.collect()
 
     blackhole.consume(result)
-
   }
 
+  def selectQueryUntyped(df: DataFrame, blackhole: Blackhole)(implicit
+      sc: SQLContext
+  ) = {
+    val query = """
+      PREFIX dm: <http://asdf.com/>
+
+      SELECT * WHERE {
+        ?s dm:a ?a;
+           dm:b ?b;
+           dm:c ?c;
+           dm:d ?d;
+           dm:e ?e .
+      }
+      """
+
+    val result = com.gsk.kg.engine.Compiler
+      .compile(df, query, Config.default)
+      .right
+      .get
+      .collect
+
+    assert(!result.isEmpty)
+
+    blackhole.consume(result)
+  }
+
+  def selectQueryTyped(df: DataFrame, blackhole: Blackhole)(implicit
+      sc: SQLContext
+  ) = {
+    val typed = Typer.`type`(df)
+
+    val first = typed
+      .filter(col("s")("value") === "http://asdf.com/a")
+      .select(col("s").as("?s"), col("o").as("?a"))
+
+    val second = typed
+      .filter(col("s")("value") === "http://asdf.com/b")
+      .select(col("s").as("?s"), col("o").as("?b"))
+
+    val third = typed
+      .filter(col("s")("value") === "http://asdf.com/c")
+      .select(col("s").as("?s"), col("o").as("?c"))
+
+    val fourth = typed
+      .filter(col("s")("value") === "http://asdf.com/d")
+      .select(col("s").as("?s"), col("o").as("?d"))
+
+    val fifth = typed
+      .filter(col("s")("value") === "http://asdf.com/e")
+      .select(col("s").as("?s"), col("o").as("?e"))
+
+    val joined = first
+      .join(second, "?s")
+      .join(third, "?s")
+      .join(fourth, "?s")
+      .join(fifth, "?s")
+
+    val result = joined.collect()
+
+    assert(!result.isEmpty)
+
+    blackhole.consume(result)
+  }
 }
