@@ -9,6 +9,8 @@ import com.gsk.kg.sparqlparser.PropertyExpression._
 import com.gsk.kg.sparqlparser.StringVal._
 
 import org.scalatest.wordspec.AnyWordSpec
+import fastparse.Parsed.Failure
+import fastparse.Parsed.Success
 
 class ExprParserSpec extends AnyWordSpec with TestUtils {
 
@@ -1484,6 +1486,30 @@ class ExprParserSpec extends AnyWordSpec with TestUtils {
           case _ => fail
         }
       }
+    }
+  }
+
+  "queries from rdf test" should {
+
+    "1" in {
+        val p = fastparse.parse(
+          """(project (?X ?S)
+  (extend ((?S ?.0))
+    (group ((?X (coalesce ?w "1605-11-05"^^<http://www.w3.org/2001/XMLSchema#date>))) ((?.0 (sample ?v)))
+      (leftjoin
+        (bgp (triple ?s <http://example/p> ?v))
+        (bgp (triple ?s <http://example/q> ?w))))))
+          """,
+          ExprParser.parser(_)
+          )
+
+      p match {
+	      case Failure(label, index, extra) =>
+          fail()
+	      case Success(value, index) =>
+          succeed
+      }
+
     }
   }
 }

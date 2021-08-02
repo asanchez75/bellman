@@ -464,4 +464,64 @@ object Impl {
 
     blackhole.consume(result)
   }
+
+  def queryyyy(df: DataFrame) = {
+    val first = Typer
+      .`type`(df)
+
+    val typed = first.filter(first("g")("value") === "https://pubmed.ncbi.nlm.nih.gov")
+
+
+    // PREFIX  schema: <http://schema.org/>
+    // PREFIX  rdf:  <http://www.w3.org/2000/01/rdf-schema#>
+    // PREFIX  xml:  <http://www.w3.org/XML/1998/namespace>
+    // PREFIX  xsd:  <http://www.w3.org/2001/XMLSchema#>
+    // PREFIX  dm: <http://gsk-kg.rdip.gsk.com/dm/1.0/>
+    // PREFIX  prism: <http://prismstandard.org/namespaces/basic/2.0/>
+    // SELECT DISTINCT
+    //     ?te ?pred ?subjcui ?subjClass ?subjStartIdx ?subjEndIdx ?subjText
+    // FROM <https://pubmed.ncbi.nlm.nih.gov/>
+    // WHERE
+    // {
+    //     GRAPH ?g {
+    //       { ?fle dm:mappedTo <http://gsk-kg.rdip.gsk.com/umls/CUI=C1421546> } UNION { ?fle dm:mappedTo <http://gsk-kg.rdip.gsk.com/umls/CUI=C1434936> } UNION { ?fle dm:mappedTo <http://gsk-kg.rdip.gsk.com/umls/CUI=C0764363> } .
+    //       ?fde dm:entityLink ?fle .
+    //       {?pr dm:hasSubject ?fde .} UNION {?pr dm:hasObject ?fde .}
+    //       ?te dm:contains ?pr .
+    //     }
+    //     GRAPH ?g {
+    //       ?te dm:contains ?pred .
+    //       ?pred dm:hasSubject ?subjde .
+    //     }
+    //     GRAPH ?g {
+    //       ?subjde dm:entityLink ?subjle .
+    //       ?subjle dm:mappedTo ?subjconcept .
+    //       BIND( STRAFTER(str(?subjconcept), "CUI=") as ?subjcui) .
+    //     }
+    //     GRAPH ?g {
+    //       ?subjde dm:predEntityClass ?subjpc .
+    //       ?subjpc dm:predClass ?subjClass .
+    //     }
+    //     GRAPH ?g {
+    //       ?subjde dm:indexStart ?subjStartIdx .
+    //       ?subjde dm:indexEnd ?subjEndIdx .
+    //       ?subjde dm:text ?subjText .
+    //     }
+    //     FILTER( ?g IN (<https://pubmed.ncbi.nlm.nih.gov/>))
+    // }
+
+    val t1 = typed.filter(typed("p")("value") === "dm:mappedTo" && typed("o")("value") === "http://gsk-kg.rdip.gsk.com/umls/CUI=C1421546").select(typed("s").as("?fle"))
+    val t2 = typed.filter(typed("p")("value") === "dm:mappedTo" && typed("o")("value") === "http://gsk-kg.rdip.gsk.com/umls/CUI=C1434936").select(typed("s").as("?fle"))
+    val t3 = typed.filter(typed("p")("value") === "dm:mappedTo" && typed("o")("value") === "http://gsk-kg.rdip.gsk.com/umls/CUI=C0764363").select(typed("s").as("?fle"))
+    val t1_t2_t3_union = t1.union(t2).union(t3)
+    val t4 = typed.filter(typed("p")("value") === "dm:entityLink").select(typed("s").as("?fde"), typed("o").as("?fle"))
+    val t1_t2_t3_t4 = t1_t2_t3_union.join(t4, "?fle")
+    val t5 = typed.filter(typed("p")("value") === "dm:hasSubject").select(typed("s").as("?pr"), typed("o").as("?fde"))
+    val t6 = typed.filter(typed("p")("value") === "dm:hasObject").select(typed("s").as("?pr"), typed("o").as("?fde"))
+    val t5_t6_union = t5.union(t6)
+    val t1_t2_t3_t4_t5_t6 = t1_t2_t3_t4.join(t5_t6_union, "?fle")
+    val t7 = typed.filter(typed("p")("value") === "dm:contains").select(typed("s").as("?te"), typed("o").as("?pr"))
+    val t1_t2_t3_t4_t5_t6_t7 = t1_t2_t3_t4_t5_t6.join(t7, "?pr")
+
+  }
 }

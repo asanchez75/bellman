@@ -9,6 +9,7 @@ object BuiltInFuncParser {
   /*
   Functions on strings: https://www.w3.org/TR/sparql11-query/#func-strings
    */
+  def iri[_: P]: P[Unit]          = P("iri")
   def uri[_: P]: P[Unit]          = P("uri")
   def concat[_: P]: P[Unit]       = P("concat")
   def str[_: P]: P[Unit]          = P("str")
@@ -39,7 +40,7 @@ object BuiltInFuncParser {
   def strUuid[_: P]: P[Unit]      = P("struuid")
 
   def uriParen[_: P]: P[URI] =
-    P("(" ~ uri ~ ExpressionParser.parser ~ ")").map(s => URI(s))
+    P("(" ~ (uri | iri) ~ ExpressionParser.parser ~ ")").map(s => URI(s))
   def concatParen[_: P]: P[CONCAT] =
     ("(" ~ concat ~ ExpressionParser.parser ~ ExpressionParser.parser.rep(
       1
