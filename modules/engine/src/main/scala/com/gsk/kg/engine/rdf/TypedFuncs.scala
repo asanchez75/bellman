@@ -186,4 +186,20 @@ object TypedFuncs {
     )
   }
 
+  def strafter(col: Column, str: String): Column = {
+    def getLeftOrEmpty(c: Column, s: String): Column =
+      when(substring_index(c, s, -1) === c, lit(""))
+        .otherwise(substring_index(c, s, -1))
+
+    if (str.isEmpty()) {
+      col
+    } else {
+      Typer.createRecord(
+        getLeftOrEmpty(col("value"), str),
+        RdfType.String.repr,
+        col("lang")
+      )
+    }
+  }
+
 }

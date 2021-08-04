@@ -71,6 +71,8 @@ class Benchmarks {
     )
   ).toDF("s", "p", "o")
 
+  val spogDf = spoDf.withColumn("g", lit(""))
+
   val otherSpoDf = List(
     ("<http://asdf.com/pepe>", "<http://asdf.com/a>", "a"),
     ("<http://asdf.com/pepe>", "<http://asdf.com/b>", "b"),
@@ -79,38 +81,41 @@ class Benchmarks {
     ("<http://asdf.com/pepe>", "<http://asdf.com/e>", "e")
   ).toDF("s", "p", "o")
 
-  @Benchmark def selectQueryUntyped(blackhole: Blackhole): Unit =
-    Impl.selectQueryUntyped(otherSpoDf, blackhole)
-  @Benchmark def selectQueryTyped(blackhole: Blackhole): Unit =
-    Impl.selectQueryTyped(otherSpoDf, blackhole)
-  @Benchmark def selectQueryWithFunctionsUntyped(blackhole: Blackhole): Unit =
-    Impl.selectQueryWithFunctionsUntyped(spoDf, blackhole)
-  @Benchmark def selectQueryWithFunctionsTyped(blackhole: Blackhole): Unit =
-    Impl.selectQueryWithFunctionsTyped(spoDf, blackhole)
-  @Benchmark def ifQueryUntyped(blackhole: Blackhole): Unit =
-    Impl.ifQueryUntyped(spoDf, blackhole)
-  @Benchmark def ifQueryTyped(blackhole: Blackhole): Unit =
-    Impl.ifQueryTyped(spoDf, blackhole)
-  @Benchmark def ifUntyped(blackhole: Blackhole): Unit =
-    Impl.untypedIf(df, blackhole)
-  @Benchmark def ifTyped(blackhole: Blackhole): Unit =
-    Impl.typedIf(df, blackhole)
-  @Benchmark def addUntyped(blackhole: Blackhole): Unit =
-    Impl.untypedAdd(numericDf, blackhole)
-  @Benchmark def addTyped(blackhole: Blackhole): Unit =
-    Impl.typedAdd(numericDf, blackhole)
-  @Benchmark def substractUntyped(blackhole: Blackhole): Unit =
-    Impl.untypedSubstract(numericDf, blackhole)
-  @Benchmark def substractTyped(blackhole: Blackhole): Unit =
-    Impl.typedSubstract(numericDf, blackhole)
-  @Benchmark def multiplyUntyped(blackhole: Blackhole): Unit =
-    Impl.untypedMultiply(numericDf, blackhole)
-  @Benchmark def multiplyTyped(blackhole: Blackhole): Unit =
-    Impl.typedMultiply(numericDf, blackhole)
-  @Benchmark def divideUntyped(blackhole: Blackhole): Unit =
-    Impl.untypedDivide(numericDf, blackhole)
-  @Benchmark def divideTyped(blackhole: Blackhole): Unit =
-    Impl.typedDivide(numericDf, blackhole)
+  // @Benchmark def selectQueryUntyped(blackhole: Blackhole): Unit =
+  //   Impl.selectQueryUntyped(otherSpoDf, blackhole)
+  // @Benchmark def selectQueryTyped(blackhole: Blackhole): Unit =
+  //   Impl.selectQueryTyped(otherSpoDf, blackhole)
+  // @Benchmark def selectQueryWithFunctionsUntyped(blackhole: Blackhole): Unit =
+  //   Impl.selectQueryWithFunctionsUntyped(spoDf, blackhole)
+  // @Benchmark def selectQueryWithFunctionsTyped(blackhole: Blackhole): Unit =
+  //   Impl.selectQueryWithFunctionsTyped(spoDf, blackhole)
+  // @Benchmark def ifQueryUntyped(blackhole: Blackhole): Unit =
+  //   Impl.ifQueryUntyped(spoDf, blackhole)
+  // @Benchmark def ifQueryTyped(blackhole: Blackhole): Unit =
+  //   Impl.ifQueryTyped(spoDf, blackhole)
+  // @Benchmark def ifUntyped(blackhole: Blackhole): Unit =
+  //   Impl.untypedIf(df, blackhole)
+  // @Benchmark def ifTyped(blackhole: Blackhole): Unit =
+  //   Impl.typedIf(df, blackhole)
+  // @Benchmark def addUntyped(blackhole: Blackhole): Unit =
+  //   Impl.untypedAdd(numericDf, blackhole)
+  // @Benchmark def addTyped(blackhole: Blackhole): Unit =
+  //   Impl.typedAdd(numericDf, blackhole)
+  // @Benchmark def substractUntyped(blackhole: Blackhole): Unit =
+  //   Impl.untypedSubstract(numericDf, blackhole)
+  // @Benchmark def substractTyped(blackhole: Blackhole): Unit =
+  //   Impl.typedSubstract(numericDf, blackhole)
+  // @Benchmark def multiplyUntyped(blackhole: Blackhole): Unit =
+  //   Impl.untypedMultiply(numericDf, blackhole)
+  // @Benchmark def multiplyTyped(blackhole: Blackhole): Unit =
+  //   Impl.typedMultiply(numericDf, blackhole)
+  // @Benchmark def divideUntyped(blackhole: Blackhole): Unit =
+  //   Impl.untypedDivide(numericDf, blackhole)
+  // @Benchmark def divideTyped(blackhole: Blackhole): Unit =
+  //   Impl.typedDivide(numericDf, blackhole)
+
+  @Benchmark def queryyyTyped(blackhole: Blackhole): Unit =
+    Impl.queryyyy(spogDf, blackhole)
 }
 
 object Impl {
@@ -465,76 +470,151 @@ object Impl {
     blackhole.consume(result)
   }
 
-  def queryyyy(df: DataFrame) = {
+  def queryyyy(df: DataFrame, blackhole: Blackhole)(implicit
+      sc: SQLContext
+  ) = {
     val first = Typer
       .`type`(df)
 
-    val typed = first.filter(first("g")("value") === "https://pubmed.ncbi.nlm.nih.gov")
+    val typed =
+      first.filter(first("g")("value") === "https://pubmed.ncbi.nlm.nih.gov")
 
-
-    // PREFIX  schema: <http://schema.org/>
-    // PREFIX  rdf:  <http://www.w3.org/2000/01/rdf-schema#>
-    // PREFIX  xml:  <http://www.w3.org/XML/1998/namespace>
-    // PREFIX  xsd:  <http://www.w3.org/2001/XMLSchema#>
-    // PREFIX  dm: <http://gsk-kg.rdip.gsk.com/dm/1.0/>
-    // PREFIX  prism: <http://prismstandard.org/namespaces/basic/2.0/>
-    // SELECT DISTINCT
-    //     ?te ?pred ?subjcui ?subjClass ?subjStartIdx ?subjEndIdx ?subjText
-    // FROM <https://pubmed.ncbi.nlm.nih.gov/>
-    // WHERE
-    // {
-    //     GRAPH ?g {
-    //       { ?fle dm:mappedTo <http://gsk-kg.rdip.gsk.com/umls/CUI=C1421546> } UNION { ?fle dm:mappedTo <http://gsk-kg.rdip.gsk.com/umls/CUI=C1434936> } UNION { ?fle dm:mappedTo <http://gsk-kg.rdip.gsk.com/umls/CUI=C0764363> } .
-    //       ?fde dm:entityLink ?fle .
-    //       {?pr dm:hasSubject ?fde .} UNION {?pr dm:hasObject ?fde .}
-    //       ?te dm:contains ?pr .
-    //     }
-    //     GRAPH ?g {
-    //       ?te dm:contains ?pred .
-    //       ?pred dm:hasSubject ?subjde .
-    //     }
-    //     GRAPH ?g {
-    //       ?subjde dm:entityLink ?subjle .
-    //       ?subjle dm:mappedTo ?subjconcept .
-    //       BIND( STRAFTER(str(?subjconcept), "CUI=") as ?subjcui) .
-    //     }
-    //     GRAPH ?g {
-    //       ?subjde dm:predEntityClass ?subjpc .
-    //       ?subjpc dm:predClass ?subjClass .
-    //     }
-    //     GRAPH ?g {
-    //       ?subjde dm:indexStart ?subjStartIdx .
-    //       ?subjde dm:indexEnd ?subjEndIdx .
-    //       ?subjde dm:text ?subjText .
-    //     }
-    //     FILTER( ?g IN (<https://pubmed.ncbi.nlm.nih.gov/>))
-    // }
-
-    val t1 = typed.filter(typed("p")("value") === "dm:mappedTo" && typed("o")("value") === "http://gsk-kg.rdip.gsk.com/umls/CUI=C1421546").select(typed("s").as("?fle"))
-    val t2 = typed.filter(typed("p")("value") === "dm:mappedTo" && typed("o")("value") === "http://gsk-kg.rdip.gsk.com/umls/CUI=C1434936").select(typed("s").as("?fle"))
-    val t3 = typed.filter(typed("p")("value") === "dm:mappedTo" && typed("o")("value") === "http://gsk-kg.rdip.gsk.com/umls/CUI=C0764363").select(typed("s").as("?fle"))
+    val t1 = typed
+      .filter(
+        typed("p")(
+          "value"
+        ) === "http://gsk-kg.rdip.gsk.com/dm/1.0/mappedTo" && typed("o")(
+          "value"
+        ) === "http://gsk-kg.rdip.gsk.com/umls/CUI=C1421546"
+      )
+      .select(typed("s").as("?fle"))
+    val t2 = typed
+      .filter(
+        typed("p")(
+          "value"
+        ) === "http://gsk-kg.rdip.gsk.com/dm/1.0/mappedTo" && typed("o")(
+          "value"
+        ) === "http://gsk-kg.rdip.gsk.com/umls/CUI=C1434936"
+      )
+      .select(typed("s").as("?fle"))
+    val t3 = typed
+      .filter(
+        typed("p")(
+          "value"
+        ) === "http://gsk-kg.rdip.gsk.com/dm/1.0/mappedTo" && typed("o")(
+          "value"
+        ) === "http://gsk-kg.rdip.gsk.com/umls/CUI=C0764363"
+      )
+      .select(typed("s").as("?fle"))
     val t1_t2_t3_union = t1.union(t2).union(t3)
-    val t4 = typed.filter(typed("p")("value") === "dm:entityLink").select(typed("s").as("?fde"), typed("o").as("?fle"))
+    val t4 = typed
+      .filter(
+        typed("p")("value") === "http://gsk-kg.rdip.gsk.com/dm/1.0/entityLink"
+      )
+      .select(typed("s").as("?fde"), typed("o").as("?fle"))
     val t1_t2_t3_t4 = t1_t2_t3_union.join(t4, "?fle")
-    val t5 = typed.filter(typed("p")("value") === "dm:hasSubject").select(typed("s").as("?pr"), typed("o").as("?fde"))
-    val t6 = typed.filter(typed("p")("value") === "dm:hasObject").select(typed("s").as("?pr"), typed("o").as("?fde"))
-    val t5_t6_union = t5.union(t6)
-    val t1_t2_t3_t4_t5_t6 = t1_t2_t3_t4.join(t5_t6_union, "?fle")
-    val t7 = typed.filter(typed("p")("value") === "dm:contains").select(typed("s").as("?te"), typed("o").as("?pr"))
+    val t5 = typed
+      .filter(
+        typed("p")("value") === "http://gsk-kg.rdip.gsk.com/dm/1.0/hasSubject"
+      )
+      .select(typed("s").as("?pr"), typed("o").as("?fde"))
+    val t6 = typed
+      .filter(
+        typed("p")("value") === "http://gsk-kg.rdip.gsk.com/dm/1.0/hasObject"
+      )
+      .select(typed("s").as("?pr"), typed("o").as("?fde"))
+    val t5_t6_union       = t5.union(t6)
+    val t1_t2_t3_t4_t5_t6 = t1_t2_t3_t4.join(t5_t6_union, "?fde")
+    val t7 = typed
+      .filter(
+        typed("p")("value") === "http://gsk-kg.rdip.gsk.com/dm/1.0/contains"
+      )
+      .select(typed("s").as("?te"), typed("o").as("?pr"))
     val t1_t2_t3_t4_t5_t6_t7 = t1_t2_t3_t4_t5_t6.join(t7, "?pr")
 
+    val t8 = typed
+      .filter(
+        typed("p")("value") === "http://gsk-kg.rdip.gsk.com/dm/1.0/contains"
+      )
+      .select(typed("s").as("?te"), typed("o").as("?pred"))
+    val t9 = typed
+      .filter(
+        typed("p")("value") === "http://gsk-kg.rdip.gsk.com/dm/1.0/hasSubject"
+      )
+      .select(typed("s").as("?pred"), typed("o").as("?subjde"))
 
-    val t8 = typed.filter(typed("p")("value") === "dm:contains").select(typed("s").as("?te"), typed("o").as("?pred"))
-    val t9 = typed.filter(typed("p")("value") === "dm:hasSubject").select(typed("s").as("?pred"), typed("o").as("?subjde"))
-
-    val t8_t9 = t8.join(t9, "?pred")
+    val t8_t9    = t8.join(t9, "?pred")
     val t1_to_t9 = t1_t2_t3_t4_t5_t6_t7.join(t8_t9, "?te")
 
-    //       ?subjde dm:entityLink ?subjle .
-    //       ?subjle dm:mappedTo ?subjconcept .
-    //       BIND( STRAFTER(str(?subjconcept), "CUI=") as ?subjcui) .
-    val t10 = typed.filter(typed("p")("value") === "dm:entityLink").select(typed("s").as("?subjde"), typed("o").as("?subjle"))
-    val t11 = typed.filter(typed("p")("value") === "dm:mappedTo").select(typed("s").as("?subjle"), typed("o").as("?subjconcept"))
+    val t10 = typed
+      .filter(
+        typed("p")("value") === "http://gsk-kg.rdip.gsk.com/dm/1.0/entityLink"
+      )
+      .select(typed("s").as("?subjde"), typed("o").as("?subjle"))
+    val t11 = typed
+      .filter(
+        typed("p")("value") === "http://gsk-kg.rdip.gsk.com/dm/1.0/mappedTo"
+      )
+      .select(typed("s").as("?subjle"), typed("o").as("?subjconcept"))
 
+    val t10_t11 = t10
+      .join(t11, "?subjle")
+      .withColumn(
+        "?subjcui",
+        TypedFuncs.strafter(
+          col("?subjconcept"),
+          "CUI="
+        )
+      )
+
+    val t1_t11 = t1_to_t9.join(t10_t11, "?subjde")
+
+    val t12 = typed
+      .filter(
+        typed("p")(
+          "value"
+        ) === "http://gsk-kg.rdip.gsk.com/dm/1.0/predEntityClass"
+      )
+      .select(typed("s").as("?subjde"), typed("o").as("?subjpc"))
+    val t13 = typed
+      .filter(
+        typed("p")("value") === "http://gsk-kg.rdip.gsk.com/dm/1.0/predClass"
+      )
+      .select(typed("s").as("?subjpc"), typed("o").as("?subjClass"))
+    val t14 = typed
+      .filter(
+        typed("p")("value") === "http://gsk-kg.rdip.gsk.com/dm/1.0/indexStart"
+      )
+      .select(typed("s").as("?subjde"), typed("o").as("?subjStartIdx"))
+    val t15 = typed
+      .filter(
+        typed("p")("value") === "http://gsk-kg.rdip.gsk.com/dm/1.0/indexEnd"
+      )
+      .select(typed("s").as("?subjde"), typed("o").as("?subjEndIdx"))
+    val t16 = typed
+      .filter(typed("p")("value") === "http://gsk-kg.rdip.gsk.com/dm/1.0/text")
+      .select(typed("s").as("?subjde"), typed("o").as("?subjText"))
+
+    val t12_t16 = t12
+      .join(t13, "?subjpc")
+      .join(t14, "?subjde")
+      .join(t15, "?subjde")
+      .join(t16, "?subjde")
+
+    val all = t1_t11
+      .join(t12_t16, "?subjde")
+      .select(
+        "?te",
+        "?pred",
+        "?subjcui",
+        "?subjClass",
+        "?subjStartIdx",
+        "?subjEndIdx",
+        "?subjText"
+      )
+
+    val result = all.collect()
+
+    blackhole.consume(result)
   }
 }
