@@ -523,5 +523,18 @@ object Impl {
     val t7 = typed.filter(typed("p")("value") === "dm:contains").select(typed("s").as("?te"), typed("o").as("?pr"))
     val t1_t2_t3_t4_t5_t6_t7 = t1_t2_t3_t4_t5_t6.join(t7, "?pr")
 
+
+    val t8 = typed.filter(typed("p")("value") === "dm:contains").select(typed("s").as("?te"), typed("o").as("?pred"))
+    val t9 = typed.filter(typed("p")("value") === "dm:hasSubject").select(typed("s").as("?pred"), typed("o").as("?subjde"))
+
+    val t8_t9 = t8.join(t9, "?pred")
+    val t1_to_t9 = t1_t2_t3_t4_t5_t6_t7.join(t8_t9, "?te")
+
+    //       ?subjde dm:entityLink ?subjle .
+    //       ?subjle dm:mappedTo ?subjconcept .
+    //       BIND( STRAFTER(str(?subjconcept), "CUI=") as ?subjcui) .
+    val t10 = typed.filter(typed("p")("value") === "dm:entityLink").select(typed("s").as("?subjde"), typed("o").as("?subjle"))
+    val t11 = typed.filter(typed("p")("value") === "dm:mappedTo").select(typed("s").as("?subjle"), typed("o").as("?subjconcept"))
+
   }
 }
