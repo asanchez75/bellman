@@ -617,4 +617,74 @@ object Impl {
 
     blackhole.consume(result)
   }
+
+  def q21(df: DataFrame, blackhole: Blackhole)(implicit
+      sc: SQLContext
+  ) = {
+    val typed = Typer
+      .`type`(df)
+
+    def queryP(s: String, p: String, o: String) = 
+      typed
+        .filter(
+          typed("p")("value") === p
+        )
+        .select(typed("s").as(s), typed("o").as(o))
+
+    def queryPO(s: String, p: String, o: String) = 
+      typed
+        .filter(
+          typed("p")("value") === p &&
+          typed("o")("value") === o
+        )
+        .select(typed("s").as(s))
+
+    val t1 = queryP("?pred", "dm:hasSubject", "?subjde")
+    val t2 = queryP("?pred", "dm:hasObject", "?objde")
+    val t3 = queryP("?objde", "dm:entityLink", "?objle")
+    val t4 = queryPO("?objle", "dm:mappedTo", "<http://gsk-kg.rdip.gsk.com/umls/CUI=C1366587>")
+    val t5 = queryP("?subjde", "dm:entityLink", "?subjle")
+    val t6 = queryPO("?subjle", "dm:mappedTo", "<http://gsk-kg.rdip.gsk.com/umls/CUI=C1415615>")
+    val t7 = queryP("?subjde", "dm:indexStart", "?subjStartIdx")
+    val t8 = queryP("?subjde", "dm:indexEnd", "?subjEndIdx")
+    val t9 = queryP("?subjde", "dm:text", "?subjText")
+    val t10 = queryP("?objde", "dm:indexStart", "?objStartIdx")
+    val t11  = queryP("?objde", "dm:indexStart", "?objEndIdx")
+    val t12  = queryP("?objde", "dm:text", "?objText")
+    val t13  = queryP("?te", "dm:contains", "?pred")
+    val t14  = queryP("?te", "dm:text", "?text")
+    val t15  = queryP("?ds", "dm:contains", "?te")
+    val t16  = queryP("?doc", "dm:contains", "?ds")
+    val t17  = queryP("?doc", "schema:title", "?title")
+    val t18  = queryP("?doc", "dm:docSource", "?src")
+    val t19  = queryP("?doc", "prism:doi", "?doi")
+    val t20 = queryP("?doc", "dm:pubDateYear", "?year")
+    val t21 = queryP("?doc", "dm:pubDateMonth", "?month")
+
+    val result =
+      t1
+        .join(t2, "?pred")
+        .join(t3, "?objde")
+        .join(t4, "?objle")
+        .join(t5, "?subjde")
+        .join(t6, "?subjle")
+        .join(t7, "?subjde")
+        .join(t8, "?subjde")
+        .join(t9, "?subjde")
+        .join(t10, "?objde")
+        .join(t11, "?objde")
+        .join(t12, "?objde")
+        .join(t13, "?pred")
+        .join(t14, "?te")
+        .join(t15, "?te")
+        .join(t16, "?ds")
+        .join(t17, "?doc")
+        .join(t18, "?doc")
+        .join(t19, "?doc")
+        .join(t20, "?doc")
+        .join(t21, "?doc")
+        .collect()
+
+    blackhole.consume(result)
+  }
 }
