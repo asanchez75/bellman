@@ -57,7 +57,7 @@ class PropertyPathRewriteSpec
           }
       }
 
-      "(uri1|uri2|uri3)" ignore {
+      "(uri1|uri2|uri3)" in {
 
         val q =
           """
