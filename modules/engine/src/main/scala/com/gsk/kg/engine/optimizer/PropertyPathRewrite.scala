@@ -15,9 +15,54 @@ import com.gsk.kg.sparqlparser.StringVal
 import com.gsk.kg.sparqlparser.StringVal.VARIABLE
 import higherkindness.droste.Algebra
 import higherkindness.droste.Basis
+import higherkindness.droste.GTransM
+import higherkindness.droste.Gather
+import higherkindness.droste.TransM
 import higherkindness.droste.scheme
+import com.gsk.kg.sparqlparser.PropertyExpression.fixedpoint._
 
 object PropertyPathRewrite {
+
+  def trans[T, B](
+      s: StringVal,
+      o: StringVal,
+      g: List[StringVal]
+  )(implicit
+      dagR: Basis[DAG, T],
+      peR: Basis[PropertyExpressionF, B]
+  ): GTransM[Option, PropertyExpressionF, DAG, B, T] = GTransM {
+    pb: PropertyExpressionF[B] =>
+      val b: B = peR.algebra(pb)
+      scheme
+        .cata[PropertyExpressionF, B, PropertyExpression](
+          Basis[PropertyExpressionF, PropertyExpression].algebra
+        )
+        .apply(b) match {
+        case Alternative(Reverse(el), Reverse(er)) =>
+          Some(Union(pathR(o, el, s, g), pathR(o, er, s, g)))
+        case Alternative(Reverse(el), per) =>
+          Some(Union(pathR(o, el, s, g), pathR(s, per, o, g)))
+        case Alternative(pel, Reverse(er)) =>
+          Some(Union(pathR(s, pel, o, g), pathR(o, er, s, g)))
+        case Alternative(pel, per) =>
+          Some(Union(pathR(s, pel, o, g), pathR(s, per, o, g)))
+        case SeqExpression(Reverse(el), Reverse(er)) =>
+          Some(Join(pathR(o, el, s, g), pathR(o, er, s, g)))
+        case SeqExpression(Reverse(el), per) =>
+          Some(Join(pathR(o, el, s, g), pathR(s, per, o, g)))
+        case SeqExpression(pel, Reverse(er)) =>
+          Some(Join(pathR(s, pel, o, g), pathR(o, er, s, g)))
+        case SeqExpression(pel, per) =>
+          Some(Join(pathR(s, pel, o, g), pathR(s, per, o, g)))
+        case Reverse(SeqExpression(pel, per)) =>
+          Some(Join(pathR(o, pel, s, g), pathR(o, per, s, g)))
+        case Reverse(Alternative(pel, per)) =>
+          Some(Union(pathR(o, pel, s, g), pathR(o, per, s, g)))
+        case Reverse(e) =>
+          Some(Path(o, e, s, g))
+        case _ => None
+      }
+  }
 
 //  object PropertyExpressionRewrite {
 //
@@ -66,38 +111,48 @@ object PropertyPathRewrite {
     )
 
     T.coalgebra(t).rewrite { case x @ Path(s, pe, o, g) =>
-//      PropertyExpressionRewrite.apply[DAG[T]](s, o, g, p)
-      pe match {
-        case Alternative(Reverse(el), Reverse(er)) =>
-          Union(pathR(o, el, s, g), pathR(o, er, s, g))
-        case Alternative(Reverse(el), per) =>
-          Union(pathR(o, el, s, g), pathR(s, per, o, g))
-        case Alternative(pel, Reverse(er)) =>
-          Union(pathR(s, pel, o, g), pathR(o, er, s, g))
-        case Alternative(pel, per) =>
-          Union(pathR(s, pel, o, g), pathR(s, per, o, g))
-        case SeqExpression(Reverse(el), Reverse(er)) =>
-          val rndVar = generateRndVariable
-          Join(pathR(o, el, rndVar, g), pathR(rndVar, er, s, g))
-        case SeqExpression(Reverse(el), per) =>
-          val rndVar = generateRndVariable
-          Join(pathR(rndVar, el, s, g), pathR(rndVar, per, o, g))
-        case SeqExpression(pel, Reverse(er)) =>
-          val rndVar = generateRndVariable
-          Join(pathR(s, pel, rndVar, g), pathR(o, er, rndVar, g))
-        case SeqExpression(pel, per) =>
-          val rndVar = generateRndVariable
-          Join(pathR(s, pel, rndVar, g), pathR(rndVar, per, o, g))
-        case Reverse(SeqExpression(pel, per)) =>
-          val rndVar = generateRndVariable
-          Join(pathR(o, pel, rndVar, g), pathR(rndVar, per, s, g))
-        case Reverse(Alternative(pel, per)) =>
-          Union(pathR(o, pel, s, g), pathR(o, per, s, g))
-        case Reverse(e) =>
-          Path(o, e, s, g)
-        case _ =>
-          x
+      val rec =
+        scheme.gcataM[Option, PropertyExpressionF, PropertyExpression, T, T](
+          trans[T, PropertyExpression](s, o, g).algebra
+            .gather(Gather.cata)
+        )
+      rec(pe) match {
+        case Some(t) => T.coalgebra(t)
+        case None    => x
       }
+
+//      PropertyExpressionRewrite.apply[DAG[T]](s, o, g, pe)
+//      pe match {
+//        case Alternative(Reverse(el), Reverse(er)) =>
+//          Union(pathR(o, el, s, g), pathR(o, er, s, g))
+//        case Alternative(Reverse(el), per) =>
+//          Union(pathR(o, el, s, g), pathR(s, per, o, g))
+//        case Alternative(pel, Reverse(er)) =>
+//          Union(pathR(s, pel, o, g), pathR(o, er, s, g))
+//        case Alternative(pel, per) =>
+//          Union(pathR(s, pel, o, g), pathR(s, per, o, g))
+//        case SeqExpression(Reverse(el), Reverse(er)) =>
+//          val rndVar = generateRndVariable
+//          Join(pathR(o, el, rndVar, g), pathR(rndVar, er, s, g))
+//        case SeqExpression(Reverse(el), per) =>
+//          val rndVar = generateRndVariable
+//          Join(pathR(rndVar, el, s, g), pathR(rndVar, per, o, g))
+//        case SeqExpression(pel, Reverse(er)) =>
+//          val rndVar = generateRndVariable
+//          Join(pathR(s, pel, rndVar, g), pathR(o, er, rndVar, g))
+//        case SeqExpression(pel, per) =>
+//          val rndVar = generateRndVariable
+//          Join(pathR(s, pel, rndVar, g), pathR(rndVar, per, o, g))
+//        case Reverse(SeqExpression(pel, per)) =>
+//          val rndVar = generateRndVariable
+//          Join(pathR(o, pel, rndVar, g), pathR(rndVar, per, s, g))
+//        case Reverse(Alternative(pel, per)) =>
+//          Union(pathR(o, pel, s, g), pathR(o, per, s, g))
+//        case Reverse(e) =>
+//          Path(o, e, s, g)
+//        case _ =>
+//          x
+//      }
     }
   }
 
