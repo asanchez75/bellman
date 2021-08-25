@@ -137,6 +137,7 @@ lazy val `bellman-spark-engine` = project
         "monocle"
       )                 % Test,
       "com.codecommit" %% "shims" % Versions("shims") % Test,
+      "org.typelevel"  %% "cats-laws" % Versions("cats") % Test,
       "org.typelevel"  %% "discipline-core" % Versions("discipline") % Test,
       "org.typelevel"  %% "discipline-scalatest" % Versions(
         "discipline-scalatest"

@@ -34,7 +34,7 @@ class DataFrameArbitrariesSpec
    *
    * Once we do #103 we'll be able to test this out without problem!
    */
-  "DataFrameArbitrariesSpec" should "work" ignore {
+  "DataFrameArbitrariesSpec" should "work" in {
     forAll { df: DataFrame =>
       val path = "/tmp/data_frame_generated_by_sansa"
       try {
