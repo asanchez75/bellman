@@ -52,7 +52,7 @@ class FuncPropertySpec
           )
         ).toDF("s", "p", "o").@@[Untyped]
 
-        val uriFunc = FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+        val uriFunc = FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
         uriFunc shouldBe a[Left[_, _]]
 
         val result = df.select(uriFunc.left.get)
@@ -86,9 +86,9 @@ class FuncPropertySpec
         ).toDF("s", "p", "o").@@[Untyped]
 
         lazy val titleUriFunc =
-          FuncProperty.uri("<http://purl.org/dc/elements/1.1/title>")
+          FuncProperty.uri(df, "<http://purl.org/dc/elements/1.1/title>")
         lazy val labelUriFunc =
-          FuncProperty.uri("<http://www.w3.org/2000/01/rdf-schema#label>")
+          FuncProperty.uri(df, "<http://www.w3.org/2000/01/rdf-schema#label>")
         val alternativeFunc =
           FuncProperty.alternative(df, titleUriFunc, labelUriFunc)
 
@@ -122,9 +122,9 @@ class FuncPropertySpec
         ).toDF("s", "p", "o").@@[Untyped]
 
         lazy val knowsUriFunc =
-          FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+          FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
         lazy val nameUriFunc =
-          FuncProperty.uri("<http://xmlns.org/foaf/0.1/name>")
+          FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/name>")
 
         val result = for {
           // (seq <http://xmlns.org/foaf/0.1/knows> <http://xmlns.org/foaf/0.1/knows>)
@@ -182,7 +182,7 @@ class FuncPropertySpec
           ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
-            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+            FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           val n = 1
           val m = 3
@@ -280,7 +280,7 @@ class FuncPropertySpec
           ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
-            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+            FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           val n = 3
           val m = 2
@@ -336,7 +336,7 @@ class FuncPropertySpec
           ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
-            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+            FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           val n = 0
           val m = 2
@@ -458,7 +458,7 @@ class FuncPropertySpec
           ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
-            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+            FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           val n = -1
           val m = -1
@@ -502,7 +502,7 @@ class FuncPropertySpec
 
           // ?s foaf:knows+ ?o
           lazy val knowsUriFunc =
-            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+            FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           val result =
             FuncProperty.betweenNAndM(df, Some(1), None, knowsUriFunc)
@@ -603,7 +603,7 @@ class FuncPropertySpec
 
           // ?s foaf:knows* ?o
           lazy val knowsUriFunc =
-            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+            FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           val result =
             FuncProperty.betweenNAndM(df, Some(0), None, knowsUriFunc)
@@ -740,7 +740,7 @@ class FuncPropertySpec
 
           // ?s foaf:knows? ?o
           lazy val knowsUriFunc =
-            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+            FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           val result =
             FuncProperty.betweenNAndM(df, Some(0), Some(1), knowsUriFunc)
@@ -840,7 +840,7 @@ class FuncPropertySpec
           ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
-            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+            FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           val n = 3
           val m = 3
@@ -896,7 +896,7 @@ class FuncPropertySpec
           ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
-            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+            FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           val n = 2
 
@@ -975,7 +975,7 @@ class FuncPropertySpec
           ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
-            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+            FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           val n = 2
 
@@ -1096,7 +1096,7 @@ class FuncPropertySpec
           ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
-            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+            FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           val result =
             FuncProperty.betweenNAndM(df, None, None, knowsUriFunc)
@@ -1141,7 +1141,7 @@ class FuncPropertySpec
           ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
-            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+            FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           // ?s !foaf:knows ?o
           val result =
@@ -1187,9 +1187,9 @@ class FuncPropertySpec
           ).toDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
-            FuncProperty.uri("<http://xmlns.org/foaf/0.1/knows>")
+            FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
           lazy val fooUriFunc =
-            FuncProperty.uri("<http://xmlns.org/foaf/0.1/foo")
+            FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/foo")
 
           // ?s !(foaf:knows|foaf:foo) ?o
           val result =
