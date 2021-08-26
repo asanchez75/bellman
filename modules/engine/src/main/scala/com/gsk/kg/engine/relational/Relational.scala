@@ -3,21 +3,23 @@ package com.gsk.kg.engine.relational
 import cats.kernel.Eq
 import cats.syntax.eq._
 import higherkindness.droste.util.newtypes.@@
-import org.apache.spark.sql.Column
-import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.{Column, DataFrame, Encoder, Row, SQLContext}
+import org.apache.spark.sql.types.StructType
 
 /** The [[Relational]] typeclass captures the idea of a datatype [[A]] with
   * relational operations needed for compiling SparQL algebra
   *
   * =Laws=
+  *
   * {{{
   * Relational[A].union(Relational[A].empty, Relational[A].empty) <=> Relational[A].empty
+  * Relational[A].union(df, Relational[A].empty) <=> df
+  * Relational[A].union(Relational[A].empty, df) <=> df
   * }}}
-  *
-  * @see [[com.gsk.kg.engine.relational.RelationalLaws]]
   */
 trait Relational[A] {
+
+
   def empty: A
 
   def isEmpty(left: A)(implicit A: Eq[A]): Boolean =
@@ -39,7 +41,11 @@ trait Relational[A] {
   def withColumn(df: A, name: String, expression: Column): A
   def withColumnRenamed(df: A, oldName: String, newName: String): A
   def columns(df: A): Array[String]
-  def select(columns: Seq[Column]): A
+  def select(df: A, columns: Seq[Column]): A
+  def schema(df: A): StructType
+  def fromDataFrame(df: DataFrame): Option[A]
+  def getColumn(df: A, col: String): Column
+  def flatMap[U: Encoder](df: A, fn: Row => Seq[U]): A
 }
 
 object Relational extends RelationalInstances {
@@ -84,7 +90,13 @@ object Relational extends RelationalInstances {
     def columns: Array[String] =
       Relational[A].columns(df)
     def select(columns: Seq[Column]): A =
-      Relational[A].select(columns)
+      Relational[A].select(df, columns)
+    def schema: StructType =
+      Relational[A].schema(df)
+    def getColumn(col: String): Column =
+      Relational[A].getColumn(df, col)
+    def flatMap[U: Encoder](fn: Row => Seq[U]): A =
+      Relational[A].flatMap(df, fn)
   }
 }
 
@@ -96,11 +108,10 @@ trait RelationalInstances {
     * untyped dataframes means dataframes with [[org.apache.spark.sql.types.StringType]]
     * columns, instead of [[org.apache.spark.sql.types.StructType]].
     *
-    * @param df
-    * @param sc
+    * @param sc a SQLContext for low level Spark operations
     * @return
     */
-  implicit def untypedDataFrameRelational(df: DataFrame @@ Untyped)(implicit
+  implicit def untypedDataFrameRelational(implicit
       sc: SQLContext
   ): Relational[DataFrame @@ Untyped] = new Relational[DataFrame @@ Untyped] {
     def empty: DataFrame @@ Untyped =
@@ -145,6 +156,13 @@ trait RelationalInstances {
         right: DataFrame @@ Untyped
     ): DataFrame @@ Untyped =
       @@(left.unwrap.union(right.unwrap))
+
+    def unionByName(
+        left: DataFrame @@ Untyped,
+        right: DataFrame @@ Untyped
+    ): DataFrame @@ Untyped = @@ {
+      left.unwrap.unionByName(right.unwrap)
+    }
 
     def minus(
         left: DataFrame @@ Untyped,
@@ -200,9 +218,25 @@ trait RelationalInstances {
     def columns(df: DataFrame @@ Untyped): Array[String] =
       df.unwrap.columns
 
-    def select(columns: Seq[Column]): DataFrame @@ Untyped = @@ {
-      df.unwrap.select(columns: _*)
+    def select(
+        df: DataFrame @@ Untyped,
+        columns: Seq[Column]
+    ): DataFrame @@ Untyped =
+      @@ {
+        df.unwrap.select(columns: _*)
+      }
+
+    def schema(df: DataFrame @@ Untyped): StructType =
+      df.unwrap.schema
+
+    def fromDataFrame(df: DataFrame): Option[DataFrame @@ Untyped] = Some(
+      @@(df)
+    )
+
+    def getColumn(df: DataFrame @@ Untyped, col: String): Column = df.unwrap(col)
+
+    def flatMap[U: Encoder](df: DataFrame @@ Untyped, fn: Row => Seq[U]): DataFrame @@ Untyped = @@ {
+      df.unwrap.flatMap(fn)
     }
   }
-
 }
