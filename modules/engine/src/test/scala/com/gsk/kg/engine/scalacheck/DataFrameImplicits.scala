@@ -1,19 +1,18 @@
 package com.gsk.kg.engine
 package scalacheck
 
-import cats.Show
+import cats.{Eq, Show}
 import cats.implicits._
-
+import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
 
 import java.net.URI
 import java.{util => ju}
-
 import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
 
-trait DataFrameArbitraries {
+trait DataFrameImplicits {
   implicit val showUri: Show[URI] = Show[String].contramap(uri => s"<$uri>")
 
   final case class BlankNodeLabel(label: String)
@@ -183,6 +182,34 @@ trait DataFrameArbitraries {
     )
   }
 
+  /**
+    * adapted from spark-testing-base assertDataframeEquals
+    */
+  implicit val dataframeEq: Eq[DataFrame] = Eq.instance {
+    case (expected, result) =>
+      try {
+        expected.rdd.cache
+        result.rdd.cache
+
+        val expectedIndexValue = expected.rdd.zipWithIndex().map { case (row, idx) => (idx, row) }
+        val resultIndexValue = expected.rdd.zipWithIndex().map { case (row, idx) => (idx, row) }
+
+        val unequalRDD = expectedIndexValue
+          .join(resultIndexValue)
+          .filter { case (_, (r1, r2)) =>
+            !(r1.equals(r2) || DataFrameSuiteBase.approxEquals(r1, r2, 0.0))
+          }
+
+        (expected.schema == result.schema) &&
+          expected.rdd.count == result.rdd.count &&
+          unequalRDD.take(10).isEmpty
+
+
+      } finally {
+        expected.rdd.unpersist()
+        result.rdd.unpersist()
+      }
+  }
 }
 
-object DataFrameArbitraries extends DataFrameArbitraries
+object DataFrameImplicits extends DataFrameImplicits
