@@ -386,8 +386,7 @@ object ExpressionF {
       t: T,
       config: Config
   )(implicit
-      T: Basis[ExpressionF, T],
-      sc: SQLContext
+    T: Basis[ExpressionF, T]
   ): DataFrame @@ Untyped => Result[Column] = df => {
     val algebraM: AlgebraM[M, ExpressionF, Column] =
       AlgebraM.apply[M, ExpressionF, Column] {
