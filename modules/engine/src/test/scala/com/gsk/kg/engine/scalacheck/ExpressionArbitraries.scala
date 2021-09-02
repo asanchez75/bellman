@@ -86,7 +86,10 @@ trait ExpressionArbitraries extends CommonGenerators {
       .map(BuiltInFunc.ISNUMERIC),
     Gen
       .lzy(expressionGenerator)
-      .map(BuiltInFunc.ISLITERAL)
+      .map(BuiltInFunc.ISLITERAL),
+    Gen
+      .lzy(expressionGenerator)
+      .map(BuiltInFunc.BNODE)
   )
 
   val funcStringsGenerator: Gen[Expression] = Gen.oneOf(

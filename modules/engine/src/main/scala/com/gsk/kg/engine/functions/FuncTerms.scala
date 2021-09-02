@@ -223,34 +223,25 @@ object FuncTerms {
     u.substr(startPos, endPos)
   }
 
-  /**
-    *
-    * @param str
+  /** @param col
     * @return
     */
-  def bNode(str:String): Column = {
-    val prefix   = "_:"
+  def bNode(col: Column): Column = {
 
-    val bnodeGen = {
-      if (str.isEmpty) {
-        prefix + java.util.UUID.randomUUID().toString
-      }
-      else {
-        val strToArrayOfBits: Array[Byte] = str.toArray.map(_.toByte)
-        prefix + java.util.UUID.nameUUIDFromBytes(strToArrayOfBits).toString
-      }
+    val prefix = "_:"
+    val nameToArrayOfBits: String => String = (str: String) => {
+      val strToArrayOfBits = str.toArray.map(_.toByte)
+      prefix + java.util.UUID.nameUUIDFromBytes(strToArrayOfBits).toString
     }
 
-    lit(bnodeGen)
+    val udfFoo = udf(nameToArrayOfBits)
+
+    when(col === "", lit(prefix + java.util.UUID.randomUUID().toString))
+      .otherwise(udfFoo(col))
   }
 
-  /**
-    *
-    * @param col
+  /** @param str
     * @return
     */
-  def bNode(col:Column): Column = {
-    val uuidFenUdf = udf(bNode(_:String))
-    uuidFenUdf(col)
-  }
+  def bNode(str: String): Column = bNode(lit(str))
 }

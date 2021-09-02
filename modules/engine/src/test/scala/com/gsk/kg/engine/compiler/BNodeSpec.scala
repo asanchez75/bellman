@@ -90,5 +90,86 @@ class BNodeSpec
         expected
       )
     }
+
+    "Generate a generic BNODE in the select clause with a specific label(input parameter) name" in {
+      val query =
+        """
+          |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+          |
+          |SELECT BNODE("foo")
+          |WHERE  {
+          |   ?x foaf:name ?name .
+          |}
+          |""".stripMargin
+
+      Evaluation.eval(
+        df,
+        Some(col(Evaluation.renamedColumn).rlike(uuidRegex)),
+        query,
+        expected
+      )
+    }
+
+    "Generate a generic BNODE in a BIND with a specefic label(input parameter) name" in {
+      val query =
+        """
+          |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+          |
+          |SELECT ?id
+          |WHERE  {
+          |   ?x foaf:name ?name .
+          |   bind(BNODE("foo") as ?id) .
+          |}
+          |""".stripMargin
+
+      Evaluation.eval(
+        df,
+        Some(col(Evaluation.renamedColumn).rlike(uuidRegex)),
+        query,
+        expected
+      )
+    }
+
+    "Generate 2 BNODES with a specefic label different" in {
+      val query =
+        """
+          |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+          |
+          |SELECT ?id ?id2
+          |WHERE  {
+          |   ?x foaf:name ?name .
+          |   bind(BNODE("tomy") as ?id) .
+          |   bind(BNODE("pepe") as ?id2)
+          |}
+          |""".stripMargin
+
+      Evaluation.eval(
+        df,
+        Some(col(Evaluation.renamedColumn).notEqual(col("?id2"))),
+        query,
+        expected
+      )
+    }
+
+    "Generate 2 BNODES with the same specefic label" in {
+      val query =
+        """
+          |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+          |
+          |SELECT ?id ?id2
+          |WHERE  {
+          |   ?x foaf:name ?name .
+          |   bind(BNODE("tomy") as ?id) .
+          |   bind(BNODE("tomy") as ?id2)
+          |}
+          |""".stripMargin
+
+      Evaluation.eval(
+        df,
+        Some(col(Evaluation.renamedColumn).equalTo(col("?id2"))),
+        query,
+        expected
+      )
+    }
   }
 }

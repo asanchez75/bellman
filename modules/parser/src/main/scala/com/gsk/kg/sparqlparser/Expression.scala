@@ -87,7 +87,9 @@ object BuiltInFunc {
   )                          extends BuiltInFunc
   final case class UUID()    extends BuiltInFunc
   final case class STRUUID() extends BuiltInFunc
-  final case class BNODE(s: Expression)          extends BuiltInFunc
+  final case class BNODE(
+      s: Expression = StringVal.STRING("")
+  ) extends BuiltInFunc
 }
 
 sealed trait MathFunc extends StringLike

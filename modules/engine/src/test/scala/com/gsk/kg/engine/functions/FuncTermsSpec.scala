@@ -286,7 +286,9 @@ class FuncTermsSpec
     "FuncTerms.bNode" should {
       "return a bnode Column with a UUID random name" in {
         val df = List(
-          "foo"
+          "a1",
+          "a2",
+          "a3"
         ).toDF("fooColumn")
 
         val bnodeRegexColName = "bnodeR"
@@ -295,40 +297,47 @@ class FuncTermsSpec
           "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
 
         df.select(
-          FuncTerms.bNode("")
+          FuncTerms
+            .bNode("")
             .rlike(uuidRegex)
             .as(bnodeRegexColName)
-        ).collect() shouldEqual Array(Row(true))
+        ).collect() shouldEqual Array(Row(true), Row(true), Row(true))
       }
 
       "compare two blank node column with a a generic name and are diferents" in {
         val df = List(
-          "foo"
+          "a1",
+          "a2",
+          "a3"
         ).toDF("fooColumn")
 
         df.select(
           FuncTerms.bNode("").equalTo(FuncTerms.bNode(""))
-        ).collect() shouldEqual Array(Row(false))
+        ).collect() shouldEqual Array(Row(false), Row(false), Row(false))
       }
 
       "compare two blank node column with diferentes names and are diferents" in {
         val df = List(
-          "foo"
+          "a1",
+          "a2",
+          "a3"
         ).toDF("fooColumn")
 
         df.select(
-          FuncTerms.bNode("tomas").equalTo(FuncTerms.bNode("tomy"))
-        ).collect() shouldEqual Array(Row(false))
+          FuncTerms.bNode("pepe").equalTo(FuncTerms.bNode("tomy"))
+        ).collect() shouldEqual Array(Row(false), Row(false), Row(false))
       }
 
       "compare two blank node column with a a same name and are equals" in {
         val df = List(
-          "foo"
+          "a1",
+          "a2",
+          "a3"
         ).toDF("fooColumn")
 
         df.select(
           FuncTerms.bNode("tomy").equalTo(FuncTerms.bNode("tomy"))
-        ).collect() shouldEqual Array(Row(true))
+        ).collect() shouldEqual Array(Row(true), Row(true), Row(true))
       }
     }
   }
