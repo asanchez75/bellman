@@ -49,7 +49,7 @@ object PropertyPathRewrite {
           .composeLens(Path.o)
 
         val rndVar = generateRndVariable()
-        val updatedLL = updater.modify(_ => rndVar)(ll)
+        val updatedLL = updater.set(rndVar)(ll)
         val r = pathR(rndVar, per, or, gr)
         val res = joinR(updatedLL, r)
         res
