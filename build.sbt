@@ -22,6 +22,7 @@ lazy val Versions = Map(
   "discipline-scalatest" -> "2.0.1",
   "reftree"              -> "1.4.0",
   "shims"                -> "2.1.0",
+  "simulacrum"           -> "1.0.1",
   "pureconfig"           -> "0.14.0",
   "quiver"               -> "7.0.19"
 )
@@ -132,11 +133,13 @@ lazy val `bellman-spark-engine` = project
       "io.verizon.quiver"          %% "core"         % Versions("quiver"),
       "org.apache.spark"           %% "spark-sql"    % Versions("spark") % Provided,
       "com.github.julien-truffaut" %% "monocle-core" % Versions("monocle"),
+      "org.typelevel"              %% "simulacrum"   % Versions("simulacrum"),
       "com.github.julien-truffaut" %% "monocle-macro" % Versions("monocle"),
       "com.github.julien-truffaut" %% "monocle-law" % Versions(
         "monocle"
       )                 % Test,
       "com.codecommit" %% "shims" % Versions("shims") % Test,
+      "org.typelevel"  %% "cats-laws" % Versions("cats") % Test,
       "org.typelevel"  %% "discipline-core" % Versions("discipline") % Test,
       "org.typelevel"  %% "discipline-scalatest" % Versions(
         "discipline-scalatest"
