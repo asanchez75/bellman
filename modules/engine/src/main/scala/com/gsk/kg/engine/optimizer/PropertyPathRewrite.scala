@@ -38,9 +38,9 @@ object PropertyPathRewrite {
   def dagAlgebra[T](implicit basis: Basis[DAG, T]): CVAlgebra[DAG, T] =
     CVAlgebra {
       case Join(
-      ll :< Join(_, _ :< Path(slr, pelr, _, glr)),
-      _ :< Path(_, per, or, gr)
-      ) =>
+            ll :< Join(_, _),
+            _ :< Path(_, per, or, gr)
+          ) =>
         import com.gsk.kg.engine.optics._
 
         val updater = _joinR
@@ -48,25 +48,15 @@ object PropertyPathRewrite {
           .composePrism(_pathR)
           .composeLens(Path.o)
 
-        val rndVar = generateRndVariable()
-        val updatedLL = updater.modify(_ => rndVar)(ll)
-        val r = pathR(rndVar, per, or, gr)
-        val res = joinR(updatedLL, r)
-        res
-      //      case Join(
-      //            _ :< Join(ll :< Join(lll, rrr), _ :< Path(slr, pelr, _, glr)),
-      //            _ :< Path(_, per, or, gr)
-      //          ) =>
-      //        val rndVar = generateRndVariable
-      //        val lr     = pathR(slr, pelr, rndVar, glr)
-      //        val r      = pathR(rndVar, per, or, gr)
-      //        val res    = joinR(joinR(ll, lr), r)
-      //        res
-      case Join(l :< Path(sl, pel, _, gl), r :< Path(_, per, or, gr)) =>
+        val rndVar    = generateRndVariable()
+        val updatedLL = updater.set(rndVar)(ll)
+
+        joinR(updatedLL, pathR(rndVar, per, or, gr))
+      case Join(_ :< Path(sl, pel, _, gl), _ :< Path(_, per, or, gr)) =>
         val rndVar = generateRndVariable()
         joinR(pathR(sl, pel, rndVar, gl), pathR(rndVar, per, or, gr))
-
-      case t => t.map(toRecursive(_)).embed
+      case t =>
+        t.map(toRecursive(_)).embed
     }
 
   def peAlgebra[T](s: StringVal, o: StringVal, g: List[StringVal])(implicit
@@ -118,7 +108,6 @@ object PropertyPathRewrite {
               Wrap(_) :< ReverseF(fpel),
               Wrap(_) :< ReverseF(fper)
             ) =>
-//          val rndVar = generateRndVariable
           joinR(
             pathR(o, toRecursive(fpel), s, g),
             pathR(o, toRecursive(fper), s, g)
@@ -127,7 +116,6 @@ object PropertyPathRewrite {
               Wrap(_) :< ReverseF(fpel),
               Wrap(per) :< UriF(_)
             ) =>
-//          val rndVar = generateRndVariable
           joinR(
             pathR(o, toRecursive(fpel), s, g),
             pathR(s, per, o, g)
@@ -136,7 +124,6 @@ object PropertyPathRewrite {
               Wrap(pel) :< UriF(_),
               Wrap(_) :< ReverseF(fper)
             ) =>
-//          val rndVar = generateRndVariable
           joinR(
             pathR(s, pel, o, g),
             pathR(o, toRecursive(fper), s, g)
@@ -145,7 +132,6 @@ object PropertyPathRewrite {
               Wrap(pel) :< UriF(_),
               Wrap(per) :< UriF(_)
             ) =>
-//          val rndVar = generateRndVariable
           joinR(
             pathR(s, pel, o, g),
             pathR(s, per, o, g)
@@ -156,10 +142,6 @@ object PropertyPathRewrite {
             pathR(s, toRecursive(per), o, g)
           )
 
-        //          case ReverseF(_ :< AlternativeF(pel, per)) =>
-        //            wrapR(
-        //              Alternative(Reverse(toRecursive(pel)), Reverse(toRecursive(per)))
-        //            )
         case ReverseF(Wrap(pe) :< _) =>
           wrapR(Reverse(pe))
         case ReverseF(Wrap(pe) :< UriF(_)) =>

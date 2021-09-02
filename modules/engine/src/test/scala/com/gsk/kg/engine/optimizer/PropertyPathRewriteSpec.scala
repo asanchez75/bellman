@@ -26,6 +26,8 @@ class PropertyPathRewriteSpec
 
   type T = Fix[DAG]
 
+  import cats.instances.string._
+
   "PropertyPathRewrite" should {
 
     "rewrite DAG" when {
@@ -74,7 +76,6 @@ class PropertyPathRewriteSpec
 
           parse(q, config)
             .map { case (query, _) =>
-              import cats.instances.string._
               val dag: T  = DAG.fromQuery.apply(query)
               val reverse = PropertyPathRewrite[T].apply(dag)
 
@@ -161,6 +162,9 @@ class PropertyPathRewriteSpec
             .map { case (query, _) =>
               val dag: T  = DAG.fromQuery.apply(query)
               val reverse = PropertyPathRewrite[T].apply(dag)
+
+              println(dag.toTree.drawTree)
+              println(reverse.toTree.drawTree)
 
               Fix.un(reverse) match {
                 case Project(
@@ -273,9 +277,6 @@ class PropertyPathRewriteSpec
               import cats.instances.string._
               val dag: T  = DAG.fromQuery.apply(query)
               val reverse = PropertyPathRewrite[T].apply(dag)
-
-              println(dag.toTree.drawTree)
-              println(reverse.toTree.drawTree)
 
               Fix.un(reverse) match {
                 case Project(
