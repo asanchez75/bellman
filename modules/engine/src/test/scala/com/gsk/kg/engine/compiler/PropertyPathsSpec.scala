@@ -340,7 +340,7 @@ class PropertyPathsSpec
               |
               |SELECT ?s ?o
               |WHERE {
-              | ?s ^(foaf:knows/foaf:name) ?o .
+              | ?s (^foaf:knows/foaf:name) ?o .
               |}
               |""".stripMargin
 
@@ -352,7 +352,7 @@ class PropertyPathsSpec
         }
       }
 
-      "inverse ^ property path" ignore {
+      "reverse ^ property path" in {
 
         val df = List(
           (
@@ -374,32 +374,9 @@ class PropertyPathsSpec
 
         val result = Compiler.compile(df, query, config)
 
-        result.right.get.collect.toSet shouldEqual Set()
-      }
-
-      "reverse ^ property path" ignore {
-
-        val df = List(
-          (
-            "<http://example.org/alice>",
-            "<http://xmlns.org/foaf/0.1/mbox>",
-            "<mailto:alice@example.org>"
-          )
-        ).toDF("s", "p", "o")
-
-        val query =
-          """
-            |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
-            |
-            |SELECT ?o ?s
-            |WHERE {
-            | ?o foaf:knows/^foaf:mbox ?s .
-            |}
-            |""".stripMargin
-
-        val result = Compiler.compile(df, query, config)
-
-        result.right.get.collect.toSet shouldEqual Set()
+        result.right.get.collect.toSet shouldEqual Set(
+          Row("<mailto:alice@example.org>", "<http://example.org/alice>")
+        )
       }
 
       "arbitrary length + property path" in {

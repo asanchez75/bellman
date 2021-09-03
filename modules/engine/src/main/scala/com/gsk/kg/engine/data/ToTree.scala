@@ -80,14 +80,15 @@ object ToTree extends LowPriorityToTreeInstances0 {
               Stream(Leaf(variable.toString), expression.toTree, r)
             )
           case DAG.Sequence(bps) => Node("Sequence", bps.toStream)
-          case DAG.Path(s, p, o, g) =>
+          case DAG.Path(s, p, o, g, rev) =>
             TreeRep.Node(
               s"Path",
               Stream(
                 s.s.toTree,
                 p.toTree,
                 o.s.toTree,
-                g.toString().toTree
+                g.toString().toTree,
+                rev.toTree
               )
             )
           case DAG.BGP(quads) => Node("BGP", Stream(quads.toTree))
@@ -126,7 +127,7 @@ object ToTree extends LowPriorityToTreeInstances0 {
             Node("Table", Stream(v.toTree, rs.toTree))
           case DAG.Exists(not, p, r) => Node("Exists", Stream(not.toTree, p, r))
           case DAG.Noop(str)         => Leaf(s"Noop($str)")
-          case DAG.Wrap(pe)         => Leaf(s"Wrap($pe)")
+          case DAG.Wrap(pe)          => Leaf(s"Wrap($pe)")
         }
 
         val t = scheme.cata(alg)
