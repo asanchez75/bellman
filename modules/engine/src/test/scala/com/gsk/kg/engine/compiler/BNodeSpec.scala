@@ -1,8 +1,10 @@
 package com.gsk.kg.engine.compiler
-
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.Row
+import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.functions.collect_set
+import org.apache.spark.sql.functions.count
 
 import com.gsk.kg.sparqlparser.TestConfig
 
@@ -30,7 +32,7 @@ class BNodeSpec
 
   "perform query with BNODE function" should {
 
-    "Select Bnode with a generic name" in {
+    "SELECT bnode without name create a Blank node with UUID format" in {
       val query =
         """
           |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
@@ -49,7 +51,7 @@ class BNodeSpec
       )
     }
 
-    "Bind BNODE with a generic name be differents" in {
+    "BIND bnode without name create a Blank node with UUID format" in {
       val query =
         """
           |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
@@ -70,7 +72,31 @@ class BNodeSpec
       )
     }
 
-    "Generate 2 generic BNODE with diferents name" in {
+    "The rows of a bnode without name are different" in {
+      val query =
+        """
+          |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+          |
+          |SELECT BNODE()
+          |WHERE  {
+          |   ?x foaf:name ?name .
+          |}
+          |""".stripMargin
+
+      val wind     = Window.partitionBy(Evaluation.renamedColumn)
+      val countRow = count(col(Evaluation.renamedColumn)).over(wind)
+      val countDistinctRow = org.apache.spark.sql.functions
+        .size(collect_set(Evaluation.renamedColumn).over(wind))
+
+      Evaluation.eval(
+        df,
+        Some(countRow.equalTo(countDistinctRow)),
+        query,
+        expected
+      )
+    }
+
+    "The names of a two bnodes without name are differents" in {
       val query =
         """
           |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
@@ -91,7 +117,7 @@ class BNodeSpec
       )
     }
 
-    "Generate a generic BNODE in the SELECT clause with a specific label(input parameter)SIMPLE LITERAL name " in {
+    "The bnode created by with a specific label(input parameter) simple literal name,have a UUID format" in {
       val query =
         """
           |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
@@ -110,7 +136,32 @@ class BNodeSpec
       )
     }
 
-    "Generate a generic BNODE in a BIND with a specefic label(input parameter) VARIABLE name" in {
+    "The bnode created by with a specific label(input parameter) simple literal name,have differents" +
+      "values of rows" in {
+        val query =
+          """
+          |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+          |
+          |SELECT BNODE("abc")
+          |WHERE  {
+          |   ?x foaf:name ?name .
+          |}
+          |""".stripMargin
+
+        val wind     = Window.partitionBy(Evaluation.renamedColumn)
+        val countRow = count(col(Evaluation.renamedColumn)).over(wind)
+        val countDistinctRow = org.apache.spark.sql.functions
+          .size(collect_set(Evaluation.renamedColumn).over(wind))
+
+        Evaluation.eval(
+          df,
+          Some(countRow.equalTo(countDistinctRow)),
+          query,
+          expected
+        )
+      }
+
+    "The bnode created by with a variable,have a UUID format" in {
       val query =
         """
           |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
@@ -130,7 +181,31 @@ class BNodeSpec
       )
     }
 
-    "Generate 2 BNODES with a specific SIMPLE LITERAL label DIFFERENT" in {
+    "The bnode created by with a variable name,have different values of rows" in {
+      val query =
+        """
+          |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+          |
+          |SELECT BNODE(?name)
+          |WHERE  {
+          |   ?x foaf:name ?name .
+          |}
+          |""".stripMargin
+
+      val wind     = Window.partitionBy(Evaluation.renamedColumn)
+      val countRow = count(col(Evaluation.renamedColumn)).over(wind)
+      val countDistinctRow = org.apache.spark.sql.functions
+        .size(collect_set(Evaluation.renamedColumn).over(wind))
+
+      Evaluation.eval(
+        df,
+        Some(countRow.equalTo(countDistinctRow)),
+        query,
+        expected
+      )
+    }
+
+    "bnodes created with a different specific simple literal label are different" in {
       val query =
         """
           |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
@@ -151,7 +226,7 @@ class BNodeSpec
       )
     }
 
-    "Generate 2 BNODES with the same specific SIMPLE LITERAL label EQUAL" in {
+    "bnodes created with the same specific simple literal label are equal" in {
       val query =
         """
           |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
@@ -172,7 +247,7 @@ class BNodeSpec
       )
     }
 
-    "Generate 2 BNODES with a specific VARIABLE label DIFFERENT" in {
+    "bnodes created with a different variable are different" in {
       val query =
         """
           |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
@@ -193,7 +268,7 @@ class BNodeSpec
       )
     }
 
-    "Generate 2 BNODES with the same specific VARIABLE label EQUAL" in {
+    "bnodes created with the same variable are equal" in {
       val query =
         """
           |PREFIX foaf: <http://xmlns.com/foaf/0.1/>

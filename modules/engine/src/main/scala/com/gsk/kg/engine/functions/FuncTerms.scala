@@ -3,10 +3,10 @@ package com.gsk.kg.engine.functions
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions.{concat => cc, _}
+
 import com.gsk.kg.engine.functions.Literals.TypedLiteral
-import com.gsk.kg.engine.functions.Literals.extractStringLiteral
-import com.gsk.kg.engine.functions.Literals.nullLiteral
 import com.gsk.kg.engine.functions.Literals.TypedLiteral.isTypedLiteral
+import com.gsk.kg.engine.functions.Literals.nullLiteral
 
 object FuncTerms {
 
@@ -227,17 +227,23 @@ object FuncTerms {
     * @return
     */
   def bNode(col: Column): Column = {
-
     val prefix = "_:"
+
+    // Necesary var to generate diferents UUIDS between rows names when you specific de label name
+    var rowID = 0
+
     val nameToArrayOfBits: String => String = (str: String) => {
-      val strToArrayOfBits = str.toArray.map(_.toByte)
-      prefix + java.util.UUID.nameUUIDFromBytes(strToArrayOfBits).toString
+      if (str.isEmpty) {
+        prefix + java.util.UUID.randomUUID().toString
+      } else {
+        val strToArrayOfBits = (str + rowID.toString).toArray.map(_.toByte)
+        rowID = rowID + 1
+        prefix + java.util.UUID.nameUUIDFromBytes(strToArrayOfBits).toString
+      }
     }
 
     val udfFoo = udf(nameToArrayOfBits)
-
-    when(col === "", lit(prefix + java.util.UUID.randomUUID().toString))
-      .otherwise(udfFoo(col))
+    udfFoo(col)
   }
 
   /** @param str

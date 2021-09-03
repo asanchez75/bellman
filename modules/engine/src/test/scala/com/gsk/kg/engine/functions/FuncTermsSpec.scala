@@ -1,7 +1,10 @@
 package com.gsk.kg.engine.functions
 
 import org.apache.spark.sql.Row
+import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.functions.collect_set
+import org.apache.spark.sql.functions.count
 
 import com.gsk.kg.engine.compiler.SparkSpec
 import com.gsk.kg.engine.scalacheck.CommonGenerators
@@ -258,7 +261,6 @@ class FuncTermsSpec
     "FuncTerms.strUuid" should {
 
       "return an uuid value from the column" in {
-
         val uuidRegex =
           "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
         val uuidColName      = "uuid"
@@ -266,9 +268,11 @@ class FuncTermsSpec
 
         val elems = List(1, 2, 3)
         val df    = elems.toDF()
+
         val projection = Seq(
           FuncTerms.strUuid.as(uuidColName)
         )
+
         val dfResult = df
           .select(
             projection: _*
@@ -284,60 +288,178 @@ class FuncTermsSpec
     }
 
     "FuncTerms.bNode" should {
-      "return a bnode Column with a UUID random name" in {
-        val df = List(
-          "a1",
-          "a2",
-          "a3"
-        ).toDF("fooColumn")
-
-        val bnodeRegexColName = "bnodeR"
-
+      "return a bnode Column with UUID random names" in {
         val uuidRegex =
           "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+        val bnodeRegexColName = "bnodeR"
 
-        df.select(
-          FuncTerms
-            .bNode("")
-            .rlike(uuidRegex)
-            .as(bnodeRegexColName)
-        ).collect() shouldEqual Array(Row(true), Row(true), Row(true))
+        val df = List("a1", "a2", "a3").toDF()
+
+        val projection = Seq(
+          FuncTerms.bNode("").as(bnodeRegexColName)
+        )
+
+        val dfResult = df
+          .select(
+            projection: _*
+          )
+
+        dfResult
+          .select(
+            col(bnodeRegexColName)
+              .rlike(uuidRegex)
+              .as(bnodeRegexColName)
+          )
+          .collect() shouldEqual Array(Row(true), Row(true), Row(true))
       }
 
-      "compare two blank node column with a a generic name and are diferents" in {
-        val df = List(
-          "a1",
-          "a2",
-          "a3"
-        ).toDF("fooColumn")
+      "return a bnode Column with diferent value between rows" in {
+        val bnodeRegexColName = "bnodeR"
+        val wind              = Window.partitionBy(bnodeRegexColName)
 
-        df.select(
-          FuncTerms.bNode("").equalTo(FuncTerms.bNode(""))
-        ).collect() shouldEqual Array(Row(false), Row(false), Row(false))
+        val df = List("a1", "a2", "a3").toDF()
+
+        val projection = Seq(
+          FuncTerms.bNode("").as(bnodeRegexColName)
+        )
+
+        val dfResult = df
+          .select(
+            projection: _*
+          )
+          .withColumn("count", count(col(bnodeRegexColName)).over(wind))
+          .withColumn(
+            "countDistinct",
+            org.apache.spark.sql.functions
+              .size(collect_set(bnodeRegexColName).over(wind))
+          )
+
+        dfResult
+          .select(col("count").equalTo(col("countDistinct")))
+          .collect() shouldEqual Array(Row(true), Row(true), Row(true))
       }
 
-      "compare two blank node column with diferentes names and are diferents" in {
-        val df = List(
-          "a1",
-          "a2",
-          "a3"
-        ).toDF("fooColumn")
+      "compare two blank node column created with a generic name, and are different in rows and columns" in {
+        val bnodeRegexColName        = "bnodeR1"
+        val anotherBnodeRegexColName = "bnodeR2"
+        val wind                     = Window.partitionBy(bnodeRegexColName)
+        val df                       = List("a1", "a2", "a3").toDF()
 
-        df.select(
-          FuncTerms.bNode("pepe").equalTo(FuncTerms.bNode("tomy"))
-        ).collect() shouldEqual Array(Row(false), Row(false), Row(false))
+        val projection = Seq(
+          FuncTerms.bNode("").as(bnodeRegexColName),
+          FuncTerms.bNode("").as(anotherBnodeRegexColName)
+        )
+
+        val dfResult = df
+          .select(
+            projection: _*
+          )
+          .withColumn("count1", count(col(bnodeRegexColName)).over(wind))
+          .withColumn(
+            "countDistinct1",
+            org.apache.spark.sql.functions
+              .size(collect_set(bnodeRegexColName).over(wind))
+          )
+          .withColumn("count2", count(col(anotherBnodeRegexColName)).over(wind))
+          .withColumn(
+            "countDistinct2",
+            org.apache.spark.sql.functions
+              .size(collect_set(anotherBnodeRegexColName).over(wind))
+          )
+
+        dfResult
+          .select(
+            col(bnodeRegexColName).notEqual(col(anotherBnodeRegexColName)),
+            col("count1").equalTo(col("countDistinct1")),
+            col("count2").equalTo(col("countDistinct2"))
+          )
+          .collect() shouldEqual Array(
+          Row(true, true, true),
+          Row(true, true, true),
+          Row(true, true, true)
+        )
       }
 
-      "compare two blank node column with a a same name and are equals" in {
-        val df = List(
-          "a1",
-          "a2",
-          "a3"
-        ).toDF("fooColumn")
+      "compare two blank node column created with a different name, and are different in rows and columns" in {
+        val bnodeRegexColName        = "bnodeR1"
+        val anotherBnodeRegexColName = "bnodeR2"
+        val wind                     = Window.partitionBy(bnodeRegexColName)
+        val df                       = List("a1", "a2", "a3").toDF()
 
-        df.select(
-          FuncTerms.bNode("tomy").equalTo(FuncTerms.bNode("tomy"))
-        ).collect() shouldEqual Array(Row(true), Row(true), Row(true))
+        val projection = Seq(
+          FuncTerms.bNode("pepe").as(bnodeRegexColName),
+          FuncTerms.bNode("tomy").as(anotherBnodeRegexColName)
+        )
+
+        val dfResult = df
+          .select(
+            projection: _*
+          )
+          .withColumn("count1", count(col(bnodeRegexColName)).over(wind))
+          .withColumn(
+            "countDistinct1",
+            org.apache.spark.sql.functions
+              .size(collect_set(bnodeRegexColName).over(wind))
+          )
+          .withColumn("count2", count(col(anotherBnodeRegexColName)).over(wind))
+          .withColumn(
+            "countDistinct2",
+            org.apache.spark.sql.functions
+              .size(collect_set(anotherBnodeRegexColName).over(wind))
+          )
+
+        dfResult
+          .select(
+            col(bnodeRegexColName).notEqual(col(anotherBnodeRegexColName)),
+            col("count1").equalTo(col("countDistinct1")),
+            col("count2").equalTo(col("countDistinct2"))
+          )
+          .collect() shouldEqual Array(
+          Row(true, true, true),
+          Row(true, true, true),
+          Row(true, true, true)
+        )
+      }
+
+      "compare two blank node column created with the same name, and are different in rows and columns" in {
+        val bnodeRegexColName        = "bnodeR1"
+        val anotherBnodeRegexColName = "bnodeR2"
+        val wind                     = Window.partitionBy(bnodeRegexColName)
+        val df                       = List("a1", "a2", "a3").toDF()
+
+        val projection = Seq(
+          FuncTerms.bNode("tomy").as(bnodeRegexColName),
+          FuncTerms.bNode("tomy").as(anotherBnodeRegexColName)
+        )
+
+        val dfResult = df
+          .select(
+            projection: _*
+          )
+          .withColumn("count1", count(col(bnodeRegexColName)).over(wind))
+          .withColumn(
+            "countDistinct1",
+            org.apache.spark.sql.functions
+              .size(collect_set(bnodeRegexColName).over(wind))
+          )
+          .withColumn("count2", count(col(anotherBnodeRegexColName)).over(wind))
+          .withColumn(
+            "countDistinct2",
+            org.apache.spark.sql.functions
+              .size(collect_set(anotherBnodeRegexColName).over(wind))
+          )
+
+        dfResult
+          .select(
+            col(bnodeRegexColName).equalTo(col(anotherBnodeRegexColName)),
+            col("count1").equalTo(col("countDistinct1")),
+            col("count2").equalTo(col("countDistinct2"))
+          )
+          .collect() shouldEqual Array(
+          Row(true, true, true),
+          Row(true, true, true),
+          Row(true, true, true)
+        )
       }
     }
   }
