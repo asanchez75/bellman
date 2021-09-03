@@ -6,6 +6,7 @@ import org.apache.spark.sql.functions.{concat => cc, _}
 
 import com.gsk.kg.engine.functions.Literals.TypedLiteral
 import com.gsk.kg.engine.functions.Literals.TypedLiteral.isTypedLiteral
+import com.gsk.kg.engine.functions.Literals.extractStringLiteral
 import com.gsk.kg.engine.functions.Literals.nullLiteral
 
 object FuncTerms {
@@ -243,11 +244,11 @@ object FuncTerms {
     }
 
     val udfFoo = udf(nameToArrayOfBits)
-    udfFoo(col)
+    udfFoo(extractStringLiteral(col))
   }
 
   /** @param str
     * @return
     */
-  def bNode(str: String): Column = bNode(lit(str))
+  def bNode(str: String): Column = bNode(lit(extractStringLiteral(str)))
 }

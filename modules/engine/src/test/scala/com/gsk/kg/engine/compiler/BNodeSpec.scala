@@ -6,6 +6,7 @@ import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.functions.collect_set
 import org.apache.spark.sql.functions.count
 
+import com.gsk.kg.engine.Compiler
 import com.gsk.kg.sparqlparser.TestConfig
 
 import org.scalatest.matchers.should.Matchers
@@ -29,6 +30,46 @@ class BNodeSpec
     "_:[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
 
   val expected = (1 to 3).map(_ => Row(true)).toList
+
+  "perform BNODE function correctly" when {
+
+    "str is simple literal" in {
+      val str      = "abc"
+      val actual = act(str)
+      val strTyped      = "\"abc\"^^xsd:string"
+      val actualTyped   = act(strTyped)
+      actual shouldEqual actualTyped
+    }
+  }
+
+  private def act(str: String) = {
+    val df = List(
+      (
+        "<http://uri.com/subject/#a1>",
+        "<http://xmlns.com/foaf/0.1/title>",
+        str
+      )
+    ).toDF("s", "p", "o")
+
+    val query =
+      s"""
+          PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+          CONSTRUCT {
+            ?x foaf:titleHashed ?titleHashed .
+          }
+          WHERE{
+            ?x foaf:title ?title .
+            BIND(bnode(?title) as ?titleHashed) .
+          }
+          """
+
+    Compiler
+      .compile(df, query, config)
+      .right
+      .get
+      .drop("s", "p")
+      .head()
+  }
 
   "perform query with BNODE function" should {
 

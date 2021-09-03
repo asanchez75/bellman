@@ -288,6 +288,20 @@ class FuncTermsSpec
     }
 
     "FuncTerms.bNode" should {
+
+      "correctly return BNODE" in {
+        val initial = List(
+          ("abc","\"abc\"^^xsd:string")
+        ).toDF("input","typed")
+
+        val df = initial.withColumn("result", FuncTerms.bNode(col("input")))
+          .withColumn("resultType", FuncTerms.bNode(col("typed")))
+
+        df.collect.foreach { case Row(_, _, result, resultType) =>
+          result shouldEqual resultType
+        }
+      }
+
       "return a bnode Column with UUID random names" in {
         val uuidRegex =
           "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
