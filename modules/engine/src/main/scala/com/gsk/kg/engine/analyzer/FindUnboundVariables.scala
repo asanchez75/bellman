@@ -214,7 +214,10 @@ object FindVariablesOnExpression {
         case SECONDS(s)                      => s
         case TIMEZONE(s)                     => s
         case TZ(s)                           => s
-        case BNODE(s)                        => s
+        case BNODE(s)                        => s match {
+          case None => Set.empty[VARIABLE]
+          case Some(si) => si
+        }
       }
 
     val eval =

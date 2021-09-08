@@ -294,8 +294,8 @@ class FuncTermsSpec
           ("abc","\"abc\"^^xsd:string")
         ).toDF("input","typed")
 
-        val df = initial.withColumn("result", FuncTerms.bNode(col("input")))
-          .withColumn("resultType", FuncTerms.bNode(col("typed")))
+        val df = initial.withColumn("result", FuncTerms.bNode(Some(col("input"))))
+          .withColumn("resultType", FuncTerms.bNode(Some(col("typed"))))
 
         df.collect.foreach { case Row(_, _, result, resultType) =>
           result shouldEqual resultType
@@ -310,7 +310,7 @@ class FuncTermsSpec
         val df = List("a1", "a2", "a3").toDF()
 
         val projection = Seq(
-          FuncTerms.bNode("").as(bnodeRegexColName)
+          FuncTerms.bNode(None).as(bnodeRegexColName)
         )
 
         val dfResult = df
@@ -334,7 +334,7 @@ class FuncTermsSpec
         val df = List("a1", "a2", "a3").toDF()
 
         val projection = Seq(
-          FuncTerms.bNode("").as(bnodeRegexColName)
+          FuncTerms.bNode(None).as(bnodeRegexColName)
         )
 
         val dfResult = df
@@ -360,8 +360,8 @@ class FuncTermsSpec
         val df                       = List("a1", "a2", "a3").toDF()
 
         val projection = Seq(
-          FuncTerms.bNode("").as(bnodeRegexColName),
-          FuncTerms.bNode("").as(anotherBnodeRegexColName)
+          FuncTerms.bNode(None).as(bnodeRegexColName),
+          FuncTerms.bNode(None).as(anotherBnodeRegexColName)
         )
 
         val dfResult = df
@@ -398,11 +398,11 @@ class FuncTermsSpec
         val bnodeRegexColName        = "bnodeR1"
         val anotherBnodeRegexColName = "bnodeR2"
         val wind                     = Window.partitionBy(bnodeRegexColName)
-        val df                       = List("a1", "a2", "a3").toDF()
+        val df                       = List(("a1", "a2"), ("a3", "a4"),("a5","a6")).toDF("pepe", "tomy")
 
         val projection = Seq(
-          FuncTerms.bNode("pepe").as(bnodeRegexColName),
-          FuncTerms.bNode("tomy").as(anotherBnodeRegexColName)
+          FuncTerms.bNode(Some(col("pepe"))).as(bnodeRegexColName),
+          FuncTerms.bNode(Some(col("tomy"))).as(anotherBnodeRegexColName)
         )
 
         val dfResult = df
@@ -439,11 +439,11 @@ class FuncTermsSpec
         val bnodeRegexColName        = "bnodeR1"
         val anotherBnodeRegexColName = "bnodeR2"
         val wind                     = Window.partitionBy(bnodeRegexColName)
-        val df                       = List("a1", "a2", "a3").toDF()
+        val df                       = List(("a1", "a2"), ("a3", "a4"),("a5","a6")).toDF("pepe", "tomy")
 
         val projection = Seq(
-          FuncTerms.bNode("tomy").as(bnodeRegexColName),
-          FuncTerms.bNode("tomy").as(anotherBnodeRegexColName)
+          FuncTerms.bNode(Some(col("tomy"))).as(bnodeRegexColName),
+          FuncTerms.bNode(Some(col("tomy"))).as(anotherBnodeRegexColName)
         )
 
         val dfResult = df
