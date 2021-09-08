@@ -2,13 +2,19 @@ package com.gsk.kg.engine.optimizer
 
 import cats.syntax.either._
 
+import higherkindness.droste.contrib.NewTypesSyntax.NewTypesOps
 import higherkindness.droste.data.Fix
 
+import com.gsk.kg.config.Config
 import com.gsk.kg.engine.DAG
 import com.gsk.kg.engine.DAG.Join
 import com.gsk.kg.engine.DAG.Path
 import com.gsk.kg.engine.DAG.Project
 import com.gsk.kg.engine.DAG.Union
+import com.gsk.kg.engine.LogLevel.Debug
+import com.gsk.kg.engine.LogMessage
+import com.gsk.kg.engine.compiler.SparkSpec
+import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.sparqlparser.PropertyExpression.Uri
 import com.gsk.kg.sparqlparser.StringVal.VARIABLE
 import com.gsk.kg.sparqlparser.TestConfig
@@ -16,12 +22,11 @@ import com.gsk.kg.sparqlparser.TestUtils
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class PropertyPathRewriteSpec
     extends AnyWordSpec
     with Matchers
-    with ScalaCheckDrivenPropertyChecks
+    with SparkSpec
     with TestUtils
     with TestConfig {
 
@@ -1472,6 +1477,94 @@ class PropertyPathRewriteSpec
             }
         }
       }
+    }
+
+    "phase return correct result" in {
+
+      import sqlContext.implicits._
+
+      val df = List(
+        (
+          "<http://example.org/Bob>",
+          "<http://xmlns.org/foaf/0.1/knows>",
+          "<http://example.org/Alice>"
+        ),
+        (
+          "<http://example.org/Charles>",
+          "<http://xmlns.org/foaf/0.1/friend>",
+          "<http://example.org/Bob>"
+        ),
+        (
+          "<http://example.org/Charles>",
+          "<http://xmlns.org/foaf/0.1/name>",
+          "\"Charles\""
+        ),
+        (
+          "<http://example.org/Charles>",
+          "<http://xmlns.org/foaf/0.1/knows>",
+          "<http://example.org/Daniel>"
+        )
+      ).toDF("s", "p", "o").@@[Untyped]
+
+      val q =
+        """
+          |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+          |
+          |SELECT ?s ?o
+          |WHERE {
+          | ?s (^foaf:knows/^foaf:name/foaf:mbox) ?o .
+          |}
+          |""".stripMargin
+
+      parse(q, config)
+        .map { case (query, _) =>
+          import cats.implicits._
+
+          val dag: T = DAG.fromQuery.apply(query)
+          val result =
+            PropertyPathRewrite.phase.run(dag).run(Config.default, df)
+
+          result match {
+            case Right((log, _, resultDag)) =>
+              log.map {
+                case LogMessage(level, phase, message)
+                    if level.equals(Debug) &&
+                      phase.equals("Optimizer(PropertyPathRewrite)") &&
+                      message.startsWith("resulting query:") =>
+                  succeed
+                case other =>
+                  fail(s"Wrong log: ${other.toString}")
+              }
+
+              Fix.un(resultDag) match {
+                case Project(
+                      _,
+                      Project(
+                        _,
+                        Join(
+                          Join(
+                            Path(sll, ell, oll, gll, true),
+                            Path(slr, elr, olr, glr, true)
+                          ),
+                          Path(sr, er, or, gr, false)
+                        )
+                      )
+                    ) =>
+                  sll shouldEqual VARIABLE("?s")
+                  oll shouldEqual slr
+                  olr shouldEqual sr
+                  or shouldEqual VARIABLE("?o")
+                  ell shouldEqual Uri("<http://xmlns.org/foaf/0.1/knows>")
+                  elr shouldEqual Uri("<http://xmlns.org/foaf/0.1/name>")
+                  er shouldEqual Uri("<http://xmlns.org/foaf/0.1/mbox>")
+                case x =>
+                  fail(x.toString)
+              }
+
+            case Left(x) =>
+              fail(x.toString)
+          }
+        }
     }
   }
 }
