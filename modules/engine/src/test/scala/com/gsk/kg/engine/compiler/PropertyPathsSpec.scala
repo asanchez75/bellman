@@ -177,6 +177,133 @@ class PropertyPathsSpec
             Row("\"Charles\"", "<http://example.org/Charles>")
           )
         }
+
+        "with default graph" in {
+
+          val df = List(
+            // graph1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            // graph2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM <http://graph.org/graph1>
+              |WHERE {
+              | ?s foaf:knows|foaf:name ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Charles>", "\"Charles\"")
+          )
+        }
+
+        "with named graph" in {
+
+          val df = List(
+            // graph1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            // graph2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM NAMED <http://graph.org/graph1>
+              |FROM NAMED <http://graph.org/graph2>
+              |WHERE {
+              | GRAPH <http://graph.org/graph1> { ?s foaf:knows|foaf:name ?o . }
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Charles>", "\"Charles\"")
+          )
+        }
       }
 
       "sequence / property path" when {
@@ -1371,6 +1498,153 @@ class PropertyPathsSpec
             )
           }
         }
+
+        "with default graph" in {
+
+          val df = List(
+            // graph1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph1>"
+            ),
+            // graph2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM <http://graph.org/graph1>
+              |WHERE {
+              | ?s foaf:knows/foaf:name ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row("<http://example.org/Bob>", "\"Charles\"")
+          )
+        }
+
+        "with named graph" in {
+
+          val df = List(
+            // graph1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph1>"
+            ),
+            // graph2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM NAMED <http://graph.org/graph1>
+              |FROM NAMED <http://graph.org/graph2>
+              |WHERE {
+              | GRAPH <http://graph.org/graph1> { ?s foaf:knows/foaf:name ?o . }
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row("<http://example.org/Bob>", "\"Charles\"")
+          )
+        }
       }
 
       "reverse ^ property path" in {
@@ -1400,128 +1674,532 @@ class PropertyPathsSpec
         )
       }
 
-      "arbitrary length + property path" in {
+      "arbitrary length + property path" when {
 
-        val df = List(
-          (
-            "<http://example.org/Alice>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Bob>"
-          ),
-          (
-            "<http://example.org/Bob>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Charles>"
-          ),
-          (
-            "<http://example.org/Charles>",
-            "<http://xmlns.org/foaf/0.1/name>",
-            "\"Charles\""
+        "simple path" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s foaf:knows+ ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>")
           )
-        ).toDF("s", "p", "o")
+        }
 
-        val query =
-          """
-            |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
-            |
-            |SELECT ?s ?o
-            |WHERE {
-            | ?s foaf:knows+ ?o .
-            |}
-            |""".stripMargin
+        "with default graph" in {
 
-        val result = Compiler.compile(df, query, config)
+          val df = List(
+            // graph1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            // graph2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
 
-        result.right.get.collect.toSet shouldEqual Set(
-          Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
-          Row("<http://example.org/Alice>", "<http://example.org/Charles>"),
-          Row("<http://example.org/Bob>", "<http://example.org/Charles>")
-        )
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM <http://graph.org/graph1>
+              |WHERE {
+              | ?s foaf:knows+ ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>")
+          )
+        }
+
+        "with named graph" in {
+
+          val df = List(
+            // graph1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            // graph2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM NAMED <http://graph.org/graph1>
+              |FROM NAMED <http://graph.org/graph2>
+              |WHERE {
+              | GRAPH <http://graph.org/graph1> { ?s foaf:knows+ ?o . }
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>")
+          )
+        }
       }
 
-      "arbitrary length * property path" in {
+      "arbitrary length * property path" when {
 
-        val df = List(
-          (
-            "<http://example.org/Alice>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Bob>"
-          ),
-          (
-            "<http://example.org/Bob>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Charles>"
-          ),
-          (
-            "<http://example.org/Charles>",
-            "<http://xmlns.org/foaf/0.1/name>",
-            "\"Charles\""
+        "simple path" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s foaf:knows* ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Charles>")
           )
-        ).toDF("s", "p", "o")
+        }
 
-        val query =
-          """
-            |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
-            |
-            |SELECT ?s ?o
-            |WHERE {
-            | ?s foaf:knows* ?o .
-            |}
-            |""".stripMargin
+        "with default graph" in {
 
-        val result = Compiler.compile(df, query, config)
+          val df = List(
+            // graph1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            // graph2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
 
-        result.right.get.collect.toSet shouldEqual Set(
-          Row("\"Charles\"", "\"Charles\""),
-          Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
-          Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
-          Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
-          Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
-          Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
-          Row("<http://example.org/Alice>", "<http://example.org/Charles>")
-        )
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM <http://graph.org/graph1>
+              |WHERE {
+              | ?s foaf:knows* ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Charles>")
+          )
+        }
+
+        "with named graph" in {
+
+          val df = List(
+            // graph1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            // graph2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM NAMED <http://graph.org/graph1>
+              |FROM NAMED <http://graph.org/graph2>
+              |WHERE {
+              | GRAPH <http://graph.org/graph1> { ?s foaf:knows* ?o . }
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Charles>")
+          )
+        }
       }
 
-      "optional ? property path" in {
+      "optional ? property path" when {
 
-        val df = List(
-          (
-            "<http://example.org/Alice>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Bob>"
-          ),
-          (
-            "<http://example.org/Bob>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Charles>"
-          ),
-          (
-            "<http://example.org/Charles>",
-            "<http://xmlns.org/foaf/0.1/name>",
-            "\"Charles\""
+        "simple path" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s foaf:knows? ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>")
           )
-        ).toDF("s", "p", "o")
+        }
 
-        val query =
-          """
-            |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
-            |
-            |SELECT ?s ?o
-            |WHERE {
-            | ?s foaf:knows? ?o .
-            |}
-            |""".stripMargin
+        "with default graph" in {
 
-        val result = Compiler.compile(df, query, config)
+          val df = List(
+            // graph1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            // graph2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
 
-        result.right.get.collect.toSet shouldEqual Set(
-          Row("\"Charles\"", "\"Charles\""),
-          Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
-          Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
-          Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
-          Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
-          Row("<http://example.org/Alice>", "<http://example.org/Bob>")
-        )
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM <http://graph.org/graph1>
+              |WHERE {
+              | ?s foaf:knows? ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>")
+          )
+        }
+
+        "with named graph" in {
+
+          val df = List(
+            // graph1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            // graph2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM NAMED <http://graph.org/graph1>
+              |FROM NAMED <http://graph.org/graph2>
+              |WHERE {
+              | GRAPH <http://graph.org/graph1> { ?s foaf:knows? ?o . }
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>")
+          )
+        }
       }
 
       "negated ! property path" when {
@@ -1633,287 +2311,1346 @@ class PropertyPathsSpec
             )
           )
         }
+
+        "with default graph" in {
+
+          val df = List(
+            // Graph 1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph1>"
+            ),
+            // Graph 2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM <http://graph.org/graph1>
+              |WHERE {
+              | ?s !foaf:knows ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row(
+              "<http://example.org/Charles>",
+              "\"Charles\""
+            )
+          )
+        }
+
+        "with named graph" in {
+
+          val df = List(
+            // Graph 1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph1>"
+            ),
+            // Graph 2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM NAMED <http://graph.org/graph1>
+              |FROM NAMED <http://graph.org/graph2>
+              |WHERE {
+              | GRAPH <http://graph.org/graph1> { ?s !foaf:knows ?o . }
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row(
+              "<http://example.org/Charles>",
+              "\"Charles\""
+            )
+          )
+        }
       }
 
-      "fixed length {n,m} property path" in {
+      "fixed length {n,m} property path" when {
 
-        val df = List(
-          (
-            "<http://example.org/Alice>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Bob>"
-          ),
-          (
-            "<http://example.org/Bob>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Charles>"
-          ),
-          (
-            "<http://example.org/Charles>",
-            "<http://xmlns.org/foaf/0.1/name>",
-            "\"Charles\""
-          ),
-          (
-            "<http://example.org/Charles>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Daniel>"
-          ),
-          (
-            "<http://example.org/Daniel>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Erick>"
+        "simple path" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s foaf:knows{1, 3} ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Erick>")
           )
-        ).toDF("s", "p", "o")
+        }
 
-        val query =
-          """
-            |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
-            |
-            |SELECT ?s ?o
-            |WHERE {
-            | ?s foaf:knows{1, 3} ?o .
-            |}
-            |""".stripMargin
+        "with default graph" in {
 
-        val result = Compiler.compile(df, query, config)
+          val df = List(
+            // Graph 1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph1>"
+            ),
+            // Graph 2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
 
-        result.right.get.collect.toSet shouldEqual Set(
-          Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
-          Row("<http://example.org/Alice>", "<http://example.org/Charles>"),
-          Row("<http://example.org/Alice>", "<http://example.org/Daniel>"),
-          Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
-          Row("<http://example.org/Bob>", "<http://example.org/Daniel>"),
-          Row("<http://example.org/Bob>", "<http://example.org/Erick>"),
-          Row("<http://example.org/Charles>", "<http://example.org/Daniel>"),
-          Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
-          Row("<http://example.org/Daniel>", "<http://example.org/Erick>")
-        )
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM <http://graph.org/graph1>
+              |WHERE {
+              | ?s foaf:knows{1, 3} ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Erick>")
+          )
+        }
+
+        "with named graph" in {
+
+          val df = List(
+            // Graph 1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph1>"
+            ),
+            // Graph 2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM NAMED <http://graph.org/graph1>
+              |FROM NAMED <http://graph.org/graph2>
+              |WHERE {
+              | GRAPH <http://graph.org/graph1> { ?s foaf:knows{1, 3} ?o . }
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Erick>")
+          )
+        }
       }
 
-      "fixed length {n,} property path" in {
+      "fixed length {n,} property path" when {
 
-        val df = List(
-          (
-            "<http://example.org/Alice>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Bob>"
-          ),
-          (
-            "<http://example.org/Bob>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Charles>"
-          ),
-          (
-            "<http://example.org/Charles>",
-            "<http://xmlns.org/foaf/0.1/name>",
-            "\"Charles\""
-          ),
-          (
-            "<http://example.org/Charles>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Daniel>"
-          ),
-          (
-            "<http://example.org/Daniel>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Erick>"
+        "simple path" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s foaf:knows{2,} ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Erick>"
+            )
           )
-        ).toDF("s", "p", "o")
+        }
 
-        val query =
-          """
-            |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
-            |
-            |SELECT ?s ?o
-            |WHERE {
-            | ?s foaf:knows{2,} ?o .
-            |}
-            |""".stripMargin
+        "with default graph" in {
 
-        val result = Compiler.compile(df, query, config)
+          val df = List(
+            // Graph 1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph1>"
+            ),
+            // Graph 2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
 
-        result.right.get.collect.toSet shouldEqual Set(
-          Row(
-            "<http://example.org/Alice>",
-            "<http://example.org/Charles>"
-          ),
-          Row(
-            "<http://example.org/Alice>",
-            "<http://example.org/Daniel>"
-          ),
-          Row(
-            "<http://example.org/Alice>",
-            "<http://example.org/Erick>"
-          ),
-          Row(
-            "<http://example.org/Bob>",
-            "<http://example.org/Daniel>"
-          ),
-          Row(
-            "<http://example.org/Bob>",
-            "<http://example.org/Erick>"
-          ),
-          Row(
-            "<http://example.org/Charles>",
-            "<http://example.org/Erick>"
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM <http://graph.org/graph1>
+              |WHERE {
+              | ?s foaf:knows{2,} ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Erick>"
+            )
           )
-        )
+        }
+
+        "with named graph" in {
+
+          val df = List(
+            // Graph 1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph1>"
+            ),
+            // Graph 2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM NAMED <http://graph.org/graph1>
+              |FROM NAMED <http://graph.org/graph2>
+              |WHERE {
+              | GRAPH <http://graph.org/graph1> { ?s foaf:knows{2,} ?o . }
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Erick>"
+            )
+          )
+        }
       }
 
-      "fixed length {,n} property path" in {
+      "fixed length {,n} property path" when {
 
-        val df = List(
-          (
-            "<http://example.org/Alice>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Bob>"
-          ),
-          (
-            "<http://example.org/Bob>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Charles>"
-          ),
-          (
-            "<http://example.org/Charles>",
-            "<http://xmlns.org/foaf/0.1/name>",
-            "\"Charles\""
-          ),
-          (
-            "<http://example.org/Charles>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Daniel>"
-          ),
-          (
-            "<http://example.org/Daniel>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Erick>"
+        "simple path" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s foaf:knows{,2} ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row(
+              "\"Charles\"",
+              "\"Charles\""
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Alice>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Bob>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Bob>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Daniel>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Daniel>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Erick>",
+              "<http://example.org/Erick>"
+            )
           )
-        ).toDF("s", "p", "o")
+        }
 
-        val query =
-          """
-            |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
-            |
-            |SELECT ?s ?o
-            |WHERE {
-            | ?s foaf:knows{,2} ?o .
-            |}
-            |""".stripMargin
+        "with default graph" in {
 
-        val result = Compiler.compile(df, query, config)
+          val df = List(
+            // Graph 1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph1>"
+            ),
+            // Graph 2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
 
-        result.right.get.collect.toSet shouldEqual Set(
-          Row(
-            "\"Charles\"",
-            "\"Charles\""
-          ),
-          Row(
-            "<http://example.org/Alice>",
-            "<http://example.org/Alice>"
-          ),
-          Row(
-            "<http://example.org/Alice>",
-            "<http://example.org/Bob>"
-          ),
-          Row(
-            "<http://example.org/Alice>",
-            "<http://example.org/Charles>"
-          ),
-          Row(
-            "<http://example.org/Bob>",
-            "<http://example.org/Bob>"
-          ),
-          Row(
-            "<http://example.org/Bob>",
-            "<http://example.org/Charles>"
-          ),
-          Row(
-            "<http://example.org/Bob>",
-            "<http://example.org/Daniel>"
-          ),
-          Row(
-            "<http://example.org/Charles>",
-            "<http://example.org/Charles>"
-          ),
-          Row(
-            "<http://example.org/Charles>",
-            "<http://example.org/Daniel>"
-          ),
-          Row(
-            "<http://example.org/Charles>",
-            "<http://example.org/Erick>"
-          ),
-          Row(
-            "<http://example.org/Daniel>",
-            "<http://example.org/Daniel>"
-          ),
-          Row(
-            "<http://example.org/Daniel>",
-            "<http://example.org/Erick>"
-          ),
-          Row(
-            "<http://example.org/Erick>",
-            "<http://example.org/Erick>"
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM <http://graph.org/graph1>
+              |WHERE {
+              | ?s foaf:knows{,2} ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row(
+              "\"Charles\"",
+              "\"Charles\""
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Alice>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Bob>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Bob>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Daniel>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Daniel>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Erick>",
+              "<http://example.org/Erick>"
+            )
           )
-        )
+        }
+
+        "with named graph" in {
+
+          val df = List(
+            // Graph 1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph1>"
+            ),
+            // Graph 2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM NAMED <http://graph.org/graph1>
+              |FROM NAMED <http://graph.org/graph2>
+              |WHERE {
+              | GRAPH <http://graph.org/graph1> { ?s foaf:knows{,2} ?o . }
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSet shouldEqual Set(
+            Row(
+              "\"Charles\"",
+              "\"Charles\""
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Alice>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Bob>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Bob>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Daniel>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Daniel>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Erick>",
+              "<http://example.org/Erick>"
+            )
+          )
+        }
       }
 
-      "fixed length {n} property path" in {
+      "fixed length {n} property path" when {
 
-        val df = List(
-          (
-            "<http://example.org/Alice>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Bob>"
-          ),
-          (
-            "<http://example.org/Bob>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Charles>"
-          ),
-          (
-            "<http://example.org/Charles>",
-            "<http://xmlns.org/foaf/0.1/name>",
-            "\"Charles\""
-          ),
-          (
-            "<http://example.org/Charles>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Daniel>"
-          ),
-          (
-            "<http://example.org/Daniel>",
-            "<http://xmlns.org/foaf/0.1/knows>",
-            "<http://example.org/Erick>"
+        "simple path" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s foaf:knows{2} ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect().toSet shouldEqual Set(
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Erick>"
+            )
           )
-        ).toDF("s", "p", "o")
+        }
 
-        val query =
-          """
-            |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
-            |
-            |SELECT ?s ?o
-            |WHERE {
-            | ?s foaf:knows{2} ?o .
-            |}
-            |""".stripMargin
+        "with default graph" in {
 
-        val result = Compiler.compile(df, query, config)
+          val df = List(
+            // Graph 1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph1>"
+            ),
+            // Graph 2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
 
-        result.right.get.collect().toSet shouldEqual Set(
-          Row(
-            "<http://example.org/Alice>",
-            "<http://example.org/Charles>"
-          ),
-          Row(
-            "<http://example.org/Bob>",
-            "<http://example.org/Daniel>"
-          ),
-          Row(
-            "<http://example.org/Charles>",
-            "<http://example.org/Erick>"
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM <http://graph.org/graph1>
+              |WHERE {
+              | ?s foaf:knows{2} ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect().toSet shouldEqual Set(
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Erick>"
+            )
           )
-        )
+        }
+
+        "with named graph" in {
+
+          val df = List(
+            // Graph 1
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph1>"
+            ),
+            // Graph 2
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |FROM NAMED <http://graph.rog/graph1>
+              |FROM NAMED <http://graph.org/graph2>
+              |WHERE {
+              | GRAPH <http://graph.org/graph1> { ?s foaf:knows{2} ?o . }
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect().toSet shouldEqual Set(
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Erick>"
+            )
+          )
+        }
       }
     }
 

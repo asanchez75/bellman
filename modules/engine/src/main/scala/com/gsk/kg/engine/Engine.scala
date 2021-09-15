@@ -1,6 +1,7 @@
 package com.gsk.kg.engine
 
 import cats.Foldable
+import cats.data.NonEmptyChain
 import cats.data.NonEmptyList
 import cats.implicits.toTraverseOps
 import cats.instances.all._
@@ -248,6 +249,23 @@ object Engine {
       g: List[StringVal],
       rev: Boolean
   )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] = {
+
+    def genPlaceholderChunk(
+        s: StringVal,
+        o: StringVal,
+        g: List[StringVal],
+        rev: Boolean
+    ): NonEmptyChain[Quad] = if (rev) {
+      Chunk(Quad(o, STRING(""), s, g))
+    } else {
+      Chunk(Quad(s, STRING(""), o, g))
+    }
+
+    def genGraphCnd(df: DataFrame @@ Untyped, g: List[StringVal]): Column =
+      g.foldLeft(lit(false)) { case (acc, elem) =>
+        acc || df.getColumn("g") === lit(elem.s)
+      }
+
     M.get[Result, Config, Log, DataFrame @@ Untyped].flatMap { df =>
       M.ask[Result, Config, Log, DataFrame @@ Untyped].flatMapF { config =>
         PropertyExpressionF
@@ -255,25 +273,21 @@ object Engine {
           .apply(df)
           .map {
             case Right(accDf) =>
-              val renamedDf = accDf
-              val chunk = if (rev) {
-                Chunk(Quad(o, STRING(""), s, List.empty))
-              } else {
-                Chunk(Quad(s, STRING(""), o, List.empty))
-              }
-              val result = applyChunkToDf(chunk, renamedDf)
+              val chunk    = genPlaceholderChunk(s, o, g, rev)
+              val graphCnd = genGraphCnd(accDf, g)
+
+              val filtered = accDf.filter(graphCnd)
+              val result   = applyChunkToDf(chunk, filtered)
               result.copy(relational =
                 result.relational
                   .withColumnRenamed("s", s.s)
                   .withColumnRenamed("o", o.s)
               )
             case Left(cond) =>
-              val chunk = if (rev) {
-                Chunk(Quad(o, STRING(""), s, List.empty))
-              } else {
-                Chunk(Quad(s, STRING(""), o, List.empty))
-              }
-              val filtered = df.filter(cond)
+              val chunk    = genPlaceholderChunk(s, o, g, rev)
+              val graphCnd = genGraphCnd(df, g)
+
+              val filtered = df.filter(cond && graphCnd)
               applyChunkToDf(chunk, filtered)
           }
       }

@@ -71,7 +71,8 @@ object FuncProperty {
           .map(i => getNLengthPathTriples(df, pathsFrame, i))
           .toList
 
-      val betweenNAndMPaths = Foldable[List].fold(paths)
+      val betweenNAndMPaths = Foldable[List]
+        .fold(paths)
 
       toSPOG(betweenNAndMPaths)
         .asRight[Column]
