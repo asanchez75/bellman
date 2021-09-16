@@ -2,11 +2,9 @@ package com.gsk.kg.engine.optimizer
 
 import cats.Functor
 import cats.implicits._
-
 import higherkindness.droste._
 import higherkindness.droste.data._
 import higherkindness.droste.syntax.all._
-
 import com.gsk.kg.engine.DAG
 import com.gsk.kg.engine.DAG.{Project => _, _}
 import com.gsk.kg.engine.Log
@@ -15,10 +13,14 @@ import com.gsk.kg.engine.Phase
 import com.gsk.kg.engine.PropertyExpressionF
 import com.gsk.kg.engine.PropertyExpressionF._
 import com.gsk.kg.engine.data.ToTree._
+import com.gsk.kg.engine.optics._joinR
+import com.gsk.kg.engine.optics._pathR
+import com.gsk.kg.engine.optics._unionR
 import com.gsk.kg.sparqlparser.PropertyExpression
 import com.gsk.kg.sparqlparser.PropertyExpression._
 import com.gsk.kg.sparqlparser.StringVal
 import com.gsk.kg.sparqlparser.StringVal.VARIABLE
+import monocle.POptional
 
 /** This optimization rewrites the DAG for Property Path expressions by performing multiple phases. To explain what
   * every phase tries to achive lets take a look at some example.
@@ -316,6 +318,77 @@ object PropertyPathRewrite {
     scheme[Fix].gcata(Embed[F, R].algebra.gather(Gather.cata)).apply(fixed)
   }
 
+  object RewriteOptics {
+
+    import com.gsk.kg.engine.optics._
+
+    object JoinUpdaters {
+
+      def _joinLeft_PathObject[T](implicit
+          basis: Basis[DAG, T]
+      ): POptional[T, T, StringVal, StringVal] =
+        _joinR
+          .composeLens(Join.l)
+          .composePrism(_pathR)
+          .composeLens(Path.o)
+
+      def _joinRight_PathObject[T](implicit
+          basis: Basis[DAG, T]
+      ): POptional[T, T, StringVal, StringVal] =
+        _joinR
+          .composeLens(Join.r)
+          .composePrism(_pathR)
+          .composeLens(Path.o)
+
+      def _joinLeft_PathSubject[T](implicit
+          basis: Basis[DAG, T]
+      ): POptional[T, T, StringVal, StringVal] =
+        _joinR
+          .composeLens(Join.l)
+          .composePrism(_pathR)
+          .composeLens(Path.s)
+
+      def _joinRight_PathSubject[T](implicit
+          basis: Basis[DAG, T]
+      ): POptional[T, T, StringVal, StringVal] =
+        _joinR
+          .composeLens(Join.r)
+          .composePrism(_pathR)
+          .composeLens(Path.s)
+    }
+
+    object UnionUpdaters {
+
+      def _unionLeftPathSubject[T](implicit
+          basis: Basis[DAG, T]
+      ): POptional[T, T, StringVal, StringVal] = _unionR
+        .composeLens(Union.l)
+        .composePrism(_pathR)
+        .composeLens(Path.s)
+
+      def _unionRightPathSubject[T](implicit
+          basis: Basis[DAG, T]
+      ): POptional[T, T, StringVal, StringVal] = _unionR
+        .composeLens(Union.r)
+        .composePrism(_pathR)
+        .composeLens(Path.s)
+
+      def _unionLeftPathObject[T](implicit
+          basis: Basis[DAG, T]
+      ): POptional[T, T, StringVal, StringVal] = _unionR
+        .composeLens(Union.l)
+        .composePrism(_pathR)
+        .composeLens(Path.o)
+
+      def _unionRightPathObject[T](implicit
+          basis: Basis[DAG, T]
+      ): POptional[T, T, StringVal, StringVal] = _unionR
+        .composeLens(Union.r)
+        .composePrism(_pathR)
+        .composeLens(Path.o)
+    }
+  }
+
   def reverseCoalgebra(implicit
       P: Project[PropertyExpressionF, PropertyExpression]
   ): CVCoalgebra[PropertyExpressionF, PropertyExpression] =
@@ -357,28 +430,25 @@ object PropertyPathRewrite {
       case Reverse(BetweenZeroAndN(n, e)) =>
         BetweenZeroAndNF(n, Coattr.pure(Reverse(e)))
       case x =>
-        P.coalgebra
+        val a = P.coalgebra
           .apply(x)
-          .map(Coattr.pure)
+        a.map(Coattr.pure)
     }
 
   def dagAlgebra[T](implicit
       basis: Basis[DAG, T]
-  ): CVAlgebra[DAG, T] =
+  ): CVAlgebra[DAG, T] = {
+
+    import RewriteOptics.JoinUpdaters._
+    import RewriteOptics.UnionUpdaters._
+
     CVAlgebra {
       case Join(
             ll :< Join(_, _),
             _ :< Path(_, per, or, gr, rev)
           ) =>
-        import com.gsk.kg.engine.optics._
-
-        val updater = _joinR
-          .composeLens(Join.r)
-          .composePrism(_pathR)
-          .composeLens(Path.o)
-
         val rndVar    = generateRndVariable()
-        val updatedLL = updater.set(rndVar)(ll)
+        val updatedLL = _joinRight_PathObject.set(rndVar)(ll)
 
         joinR(updatedLL, pathR(rndVar, per, or, gr, rev))
       case Join(
@@ -390,8 +460,92 @@ object PropertyPathRewrite {
           pathR(sl, pel, rndVar, gl, revl),
           pathR(rndVar, per, or, gr, revr)
         )
+      case Join(
+            _ :< Path(sl, pel, _, gl, rev),
+            r :< Union(_, _)
+          ) =>
+        val rndVar = generateRndVariable()
+        val update = (_unionLeftPathSubject.set(rndVar) compose
+          _unionRightPathSubject.set(rndVar))(r)
+
+        joinR(
+          pathR(sl, pel, rndVar, gl, rev),
+          update
+        )
+      case Join(
+            l :< Union(_, _),
+            _ :< Path(_, per, or, gr, rev)
+          ) =>
+        val rndVar = generateRndVariable()
+        val update = (_unionLeftPathObject.set(rndVar) compose
+          _unionRightPathObject.set(rndVar))(l)
+
+        joinR(
+          update,
+          pathR(rndVar, per, or, gr, rev)
+        )
+      case Join(
+            l :< Union(_, _),
+            r :< Union(_, _)
+          ) =>
+        val rndVar = generateRndVariable()
+        val updateL = (_unionLeftPathObject.set(rndVar) compose
+          _unionRightPathObject.set(rndVar))(l)
+        val updateR = (_unionLeftPathSubject.set(rndVar) compose
+          _unionRightPathSubject.set(rndVar))(r)
+
+        joinR(updateL, updateR)
       case t =>
         t.map(toRecursive(_)).embed
+    }
+  }
+
+  def pathCoalgebra2[T](
+      s: StringVal,
+      o: StringVal,
+      g: List[StringVal]
+  ): CVCoalgebra[DAG, PropertyExpression] =
+    CVCoalgebra[DAG, PropertyExpression] {
+      case SeqExpression(pel, per) =>
+        Join(Coattr.pure(pel), Coattr.pure(per))
+      case Alternative(pel, per) =>
+        Union(Coattr.pure(pel), Coattr.pure(per))
+      case OneOrMore(e) =>
+        Path(s, OneOrMore(e), o, g, false)
+      case ZeroOrMore(e) =>
+        Path(s, ZeroOrMore(e), o, g, false)
+      case ZeroOrOne(e) =>
+        Path(s, ZeroOrOne(e), o, g, false)
+      case NotOneOf(es) =>
+        Path(s, NotOneOf(es), o, g, false)
+      case BetweenNAndM(n, m, e) =>
+        Path(s, BetweenNAndM(n, m, e), o, g, false)
+      case ExactlyN(n, e) =>
+        Path(s, ExactlyN(n, e), o, g, false)
+      case NOrMore(n, e) =>
+        Path(s, NOrMore(n, e), o, g, false)
+      case BetweenZeroAndN(n, e) =>
+        Path(s, BetweenZeroAndN(n, e), o, g, false)
+      case Uri(uri) =>
+        Path(s, Uri(uri), o, g, false)
+      case Reverse(OneOrMore(e)) =>
+        Path(s, OneOrMore(Reverse(e)), o, g, false)
+      case Reverse(ZeroOrMore(e)) =>
+        Path(s, ZeroOrMore(Reverse(e)), o, g, false)
+      case Reverse(ZeroOrOne(e)) =>
+        Path(s, ZeroOrOne(Reverse(e)), o, g, false)
+      case Reverse(NotOneOf(es)) =>
+        Path(s, NotOneOf(es.map(Reverse)), o, g, false)
+      case Reverse(BetweenNAndM(n, m, e)) =>
+        Path(s, BetweenNAndM(n, m, Reverse(e)), o, g, false)
+      case Reverse(ExactlyN(n, e)) =>
+        Path(s, ExactlyN(n, Reverse(e)), o, g, false)
+      case Reverse(NOrMore(n, e)) =>
+        Path(s, NOrMore(n, Reverse(e)), o, g, false)
+      case Reverse(BetweenZeroAndN(n, e)) =>
+        Path(s, BetweenZeroAndN(n, Reverse(e)), o, g, false)
+      case Reverse(Uri(uri)) =>
+        Path(s, Uri(uri), o, g, true)
     }
 
   def pathCoalgebra(
@@ -417,13 +571,13 @@ object PropertyPathRewrite {
   ): T => T = { t =>
     T.coalgebra(t).rewrite { case Path(s, pe, o, g, rev) =>
       val peFutu   = scheme.zoo.futu(reverseCoalgebra)
-      val peAna    = scheme.anaM(pathCoalgebra(s, o, g))
+      val peAna    = scheme.zoo.futu(pathCoalgebra2(s, o, g))
       val dagHisto = scheme.zoo.histo(dagAlgebra)
 
       val reversedPushedDown = peFutu(pe)
       val unfoldedPaths =
         peAna(reversedPushedDown)
-          .getOrElse(pathR(s, reversedPushedDown, o, g, rev))
+//          .getOrElse(pathR(s, reversedPushedDown, o, g, rev))
       val internalVarReplace = dagHisto(unfoldedPaths)
 
       T.coalgebra(internalVarReplace)
