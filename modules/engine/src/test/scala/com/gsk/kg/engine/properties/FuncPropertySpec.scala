@@ -71,29 +71,34 @@ class FuncPropertySpec
             (
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Bob>"
+              "<http://example.org/Bob>",
+              ""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
-              "\"Charles\""
+              "\"Charles\"",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             )
-          ).toDF("s", "p", "o").@@[Untyped]
+          ).toDF("s", "p", "o", "g").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
@@ -169,29 +174,34 @@ class FuncPropertySpec
             (
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Bob>"
+              "<http://example.org/Bob>",
+              ""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
-              "\"Charles\""
+              "\"Charles\"",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             )
-          ).toDF("s", "p", "o").@@[Untyped]
+          ).toDF("s", "p", "o", "g").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
@@ -225,29 +235,34 @@ class FuncPropertySpec
             (
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Bob>"
+              "<http://example.org/Bob>",
+              ""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
-              "\"Charles\""
+              "\"Charles\"",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             )
-          ).toDF("s", "p", "o").@@[Untyped]
+          ).toDF("s", "p", "o", "g").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
@@ -347,29 +362,34 @@ class FuncPropertySpec
             (
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Bob>"
+              "<http://example.org/Bob>",
+              ""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
-              "\"Charles\""
+              "\"Charles\"",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             )
-          ).toDF("s", "p", "o").@@[Untyped]
+          ).toDF("s", "p", "o", "g").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
@@ -390,29 +410,34 @@ class FuncPropertySpec
             (
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Bob>"
+              "<http://example.org/Bob>",
+              ""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
-              "\"Charles\""
+              "\"Charles\"",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             )
-          ).toDF("s", "p", "o").@@[Untyped]
+          ).toDF("s", "p", "o", "g").@@[Untyped]
 
           // ?s foaf:knows+ ?o
           lazy val knowsUriFunc =
@@ -491,29 +516,34 @@ class FuncPropertySpec
             (
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Bob>"
+              "<http://example.org/Bob>",
+              ""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
-              "\"Charles\""
+              "\"Charles\"",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             )
-          ).toDF("s", "p", "o").@@[Untyped]
+          ).toDF("s", "p", "o", "g").@@[Untyped]
 
           // ?s foaf:knows* ?o
           lazy val knowsUriFunc =
@@ -628,29 +658,34 @@ class FuncPropertySpec
             (
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Bob>"
+              "<http://example.org/Bob>",
+              ""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
-              "\"Charles\""
+              "\"Charles\"",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             )
-          ).toDF("s", "p", "o").@@[Untyped]
+          ).toDF("s", "p", "o", "g").@@[Untyped]
 
           // ?s foaf:knows? ?o
           lazy val knowsUriFunc =
@@ -729,29 +764,34 @@ class FuncPropertySpec
             (
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Bob>"
+              "<http://example.org/Bob>",
+              ""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
-              "\"Charles\""
+              "\"Charles\"",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             )
-          ).toDF("s", "p", "o").@@[Untyped]
+          ).toDF("s", "p", "o", "g").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
@@ -785,29 +825,34 @@ class FuncPropertySpec
             (
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Bob>"
+              "<http://example.org/Bob>",
+              ""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
-              "\"Charles\""
+              "\"Charles\"",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             )
-          ).toDF("s", "p", "o").@@[Untyped]
+          ).toDF("s", "p", "o", "g").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
@@ -864,29 +909,34 @@ class FuncPropertySpec
             (
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Bob>"
+              "<http://example.org/Bob>",
+              ""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
-              "\"Charles\""
+              "\"Charles\"",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             )
-          ).toDF("s", "p", "o").@@[Untyped]
+          ).toDF("s", "p", "o", "g").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
@@ -985,29 +1035,34 @@ class FuncPropertySpec
             (
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Bob>"
+              "<http://example.org/Bob>",
+              ""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Charles>"
+              "<http://example.org/Charles>",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
-              "\"Charles\""
+              "\"Charles\"",
+              ""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Daniel>"
+              "<http://example.org/Daniel>",
+              ""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
-              "<http://example.org/Erick>"
+              "<http://example.org/Erick>",
+              ""
             )
-          ).toDF("s", "p", "o").@@[Untyped]
+          ).toDF("s", "p", "o", "g").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
