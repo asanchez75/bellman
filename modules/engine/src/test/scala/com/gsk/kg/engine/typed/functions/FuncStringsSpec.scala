@@ -103,16 +103,17 @@ class FuncStringsSpec
       "convert all lexical characters to upper case" in {
 
         val df = List(
-          "hello",
+          "\"hello\"",
           "\"hello\"@en",
           "\"hello\"^^<http://www.w3.org/2001/XMLSchema#string>"
         ).toTypedDF("text")
 
         df.select(FuncStrings.ucase(df("text")).as("result"))
+          .untype
           .collect shouldEqual Array(
-          Row("HELLO"),
+          Row("\"HELLO\""),
           Row("\"HELLO\"@en"),
-          Row("\"HELLO\"^^<http://www.w3.org/2001/XMLSchema#string>")
+          Row("\"HELLO\"")
         )
       }
     }
@@ -122,16 +123,17 @@ class FuncStringsSpec
       "convert all lexical characters to lower case" in {
 
         val df = List(
-          "HELLO",
+          "\"HELLO\"",
           "\"HELLO\"@en",
           "\"HELLO\"^^<http://www.w3.org/2001/XMLSchema#string>"
         ).toTypedDF("text")
 
         df.select(FuncStrings.lcase(df("text")).as("result"))
+          .untype
           .collect shouldEqual Array(
-          Row("hello"),
+          Row("\"hello\""),
           Row("\"hello\"@en"),
-          Row("\"hello\"^^<http://www.w3.org/2001/XMLSchema#string>")
+          Row("\"hello\"")
         )
       }
     }

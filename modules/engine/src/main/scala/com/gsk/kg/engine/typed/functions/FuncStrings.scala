@@ -2,7 +2,7 @@ package com.gsk.kg.engine.typed.functions
 
 import cats.data.NonEmptyList
 import com.gsk.kg.engine.syntax._
-import com.gsk.kg.engine.{RdfFormatter, RdfType}
+import com.gsk.kg.engine.{DataFrameTyper, RdfFormatter, RdfType}
 import com.gsk.kg.engine.functions.FuncStrings.StringFuncUtils._
 import com.gsk.kg.engine.functions.Literals._
 import org.apache.commons.codec.binary.Hex
@@ -52,7 +52,7 @@ object FuncStrings {
     * @return
     */
   def ucase(col: Column): Column =
-    applyRdfFormat(col)(upper)
+    DataFrameTyper.createRecord(upper(col.value), RdfType.String.repr, col.lang)
 
   /** Implementation of SparQL LCASE on Spark dataframes.
     *
@@ -61,7 +61,7 @@ object FuncStrings {
     * @return
     */
   def lcase(col: Column): Column =
-    applyRdfFormat(col)(lower)
+    DataFrameTyper.createRecord(lower(col.value), RdfType.String.repr, col.lang)
 
   /** Implementation of SparQL STRSTARTS on Spark dataframes.
     *
