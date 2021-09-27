@@ -1,20 +1,17 @@
 package com.gsk.kg.engine.typed.functions
 
 import cats.data.NonEmptyList
-
+import com.gsk.kg.engine.syntax._
+import com.gsk.kg.engine.{RdfFormatter, RdfType}
+import com.gsk.kg.engine.functions.FuncStrings.StringFuncUtils._
+import com.gsk.kg.engine.functions.Literals._
+import org.apache.commons.codec.binary.Hex
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.{concat => cc, _}
-
-import com.gsk.kg.engine._
-import com.gsk.kg.engine.functions.Literals._
-import com.gsk.kg.engine.syntax._
-import com.gsk.kg.engine.typed.functions.FuncStrings.StringFuncUtils._
 
 import java.nio.charset.StandardCharsets
 import java.util.Locale
 import java.util.regex.Pattern
-
-import org.apache.commons.codec.binary.Hex
 
 object FuncStrings {
 
@@ -39,13 +36,47 @@ object FuncStrings {
     * @param len
     * @return
     */
-  def substr(col: Column, pos: Int, len: Option[Int]): Column =
-    RdfType.String {
+  def substr(col: Column, pos: Int, len: Option[Int]): Column = {
+
+    def ss(col: Column, pos: Int, len: Option[Int]) = {
       len match {
-        case Some(l) => col.value.substr(pos, l)
-        case None    => col.value.substr(lit(pos), length(col.value) - pos + 1)
+        case Some(l) => col.substr(pos, l)
+        case None => col.substr(lit(pos), length(col) - pos + 1)
       }
     }
+
+    when(
+      col.contains("\"@"),
+      format_string(
+        "%s",
+        cc(
+          cc(
+            cc(
+              lit("\""),
+              ss(trim(substring_index(col, "\"@", 1), "\""), pos, len)
+            ),
+            lit("\"")
+          ),
+          cc(lit("@"), substring_index(col, "\"@", -1))
+        )
+      )
+    ).when(
+      col.contains("\"^^"),
+      format_string(
+        "%s",
+        cc(
+          cc(
+            cc(
+              lit("\""),
+              ss(trim(substring_index(col, "\"^^", 1), "\""), pos, len)
+            ),
+            lit("\"")
+          ),
+          cc(lit("^^"), substring_index(col, "\"^^", -1))
+        )
+      )
+    ).otherwise(ss(trim(col, "\""), pos, len))
+  }
 
   /** Implementation of SparQL UCASE on Spark dataframes.
     *
@@ -54,7 +85,7 @@ object FuncStrings {
     * @return
     */
   def ucase(col: Column): Column =
-    DataFrameTyper.createRecord(upper(col.value), RdfType.String.repr, col.lang)
+    applyRdfFormat(col)(upper)
 
   /** Implementation of SparQL LCASE on Spark dataframes.
     *
@@ -63,9 +94,11 @@ object FuncStrings {
     * @return
     */
   def lcase(col: Column): Column =
-    DataFrameTyper.createRecord(lower(col.value), RdfType.String.repr, col.lang)
+    applyRdfFormat(col)(lower)
 
   /** Implementation of SparQL STRSTARTS on Spark dataframes.
+    *
+    * TODO (pepegar): Implement argument compatibility checks
     *
     * @see [[https://www.w3.org/TR/sparql11-query/#func-strstarts]]
     * @param col
@@ -73,7 +106,7 @@ object FuncStrings {
     * @return
     */
   def strstarts(col: Column, str: String): Column =
-    RdfType.Boolean(col.value.startsWith(extractStringLiteral(str)))
+    extractStringLiteral(col).startsWith(extractStringLiteral(str))
 
   /** Implementation of SparQL STRENDS on Spark dataframes.
     *
@@ -85,7 +118,7 @@ object FuncStrings {
     * @return
     */
   def strends(col: Column, str: String): Column =
-    RdfType.Boolean(col.value.endsWith(extractStringLiteral(str)))
+    extractStringLiteral(col).endsWith(extractStringLiteral(str))
 
   /** Implementation of SparQL STRBEFORE on Spark dataframes.
     *
@@ -102,11 +135,23 @@ object FuncStrings {
       when(substring_index(c, s, 1) === c, lit(""))
         .otherwise(substring_index(c, s, 1))
 
-    DataFrameTyper.createRecord(
-      getLeftOrEmpty(col.value, str),
-      col.`type`,
-      col.lang
-    )
+    if (isEmptyPattern(str)) {
+      cc(lit("\"\""), substring_index(col, "\"", -1))
+    } else {
+      when(
+        isLocalizedLocalizedArgs(col, str),
+        strFuncArgsLocalizedLocalized(col, str, "\"%s\"@")(getLeftOrEmpty)
+      ).when(
+        isLocalizedPlainArgs(col),
+        strFuncArgsLocalizedPlain(col, str, "\"%s\"@")(getLeftOrEmpty)
+      ).when(
+        isTypedTypedArgs(col, str),
+        strFuncArgsTypedTyped(col, str, "\"%s\"^^")(getLeftOrEmpty)
+      ).when(
+        isTypedPlainArgs(col),
+        strFuncArgsTypedPlain(col, str, "\"%s\"^^")(getLeftOrEmpty)
+      ).otherwise(getLeftOrEmpty(col, str))
+    }
   }
 
   /** Implementation of SparQL STRAFTER on Spark dataframes.
@@ -125,6 +170,8 @@ object FuncStrings {
     * | strafter("abc"@en, ""@en)      | "abc"@en          |
     * | strafter("abc"@en, "")         | "abc"@en          |
     *
+    * TODO (pepegar): Implement argument compatibility checks
+    *
     * @see [[https://www.w3.org/TR/sparql11-query/#func-strafter]]
     * @param col
     * @param str
@@ -139,11 +186,19 @@ object FuncStrings {
     if (isEmptyPattern(str)) {
       col
     } else {
-      DataFrameTyper.createRecord(
-        getLeftOrEmpty(col.value, str),
-        col.`type`,
-        col.lang
-      )
+      when(
+        isLocalizedLocalizedArgs(col, str),
+        strFuncArgsLocalizedLocalized(col, str, "\"%s\"@")(getLeftOrEmpty)
+      ).when(
+        isLocalizedPlainArgs(col),
+        strFuncArgsLocalizedPlain(col, str, "\"%s\"@")(getLeftOrEmpty)
+      ).when(
+        isTypedTypedArgs(col, str),
+        strFuncArgsTypedTyped(col, str, "\"%s\"^^")(getLeftOrEmpty)
+      ).when(
+        isTypedPlainArgs(col),
+        strFuncArgsTypedPlain(col, str, "\"%s\"^^")(getLeftOrEmpty)
+      ).otherwise(getLeftOrEmpty(col, str))
     }
   }
 
@@ -154,7 +209,7 @@ object FuncStrings {
     * @return
     */
   def encodeForURI(str: String): Column =
-    RdfType.String(lit(encodeUri(extractStringLiteral(str))))
+    lit(encodeUri(extractStringLiteral(str)))
 
   /** Implementation of SparQL ENCODE_FOR_URI on Spark dataframes.
     *
@@ -164,7 +219,7 @@ object FuncStrings {
     */
   def encodeForURI(col: Column): Column = {
     val efu = udf((str: String) => encodeUri(str))
-    RdfType.String(efu(col.value))
+    efu(extractStringLiteral(col))
   }
 
   /** Concatenate two [[Column]] into a new one
@@ -174,21 +229,22 @@ object FuncStrings {
     * @return
     */
   def concat(appendTo: Column, append: NonEmptyList[Column]): Column = {
-
-    val concatValues = append.toList.foldLeft(appendTo.value) {
-      case (acc, elem) =>
-        cc(acc, elem.value)
+    val (lvalue, ltag) = unfold(appendTo)
+    val concatValues = append.toList.foldLeft(lvalue) { case (acc, elem) =>
+      val (rvalue, _) = unfold(elem)
+      cc(acc, rvalue)
     }
 
     when(
-      allArgsAreSameTypeAndLang(appendTo, append.toList),
-      DataFrameTyper.createRecord(
-        concatValues,
-        RdfType.String.repr,
-        appendTo.lang
+      areAllArgsSameTypeAndSameTags(appendTo, append.toList),
+      when(
+        RdfFormatter.isLocalizedString(appendTo),
+        format_string("\"%s\"@%s", concatValues, ltag)
+      ).otherwise(
+        format_string("\"%s\"^^%s", concatValues, ltag)
       )
     ).otherwise(
-      RdfType.String(concatValues)
+      concatValues
     )
   }
 
@@ -212,9 +268,8 @@ object FuncStrings {
 
     val langMatch =
       udf((tag: String, range: String) => hasMatchingLangTag(tag, range))
-
-    when(col.value === lit("") && range == "*", RdfType.Boolean.False)
-      .otherwise(RdfType.Boolean(langMatch(col.value, lit(range))))
+    when(col === lit("") && range == "*", lit(false))
+      .otherwise(langMatch(col, lit(range)))
   }
 
   /** Implementation of SparQL REGEX on Spark dataframes.
@@ -226,7 +281,7 @@ object FuncStrings {
     * @return
     */
   def regex(col: Column, pattern: String, flags: String): Column =
-    RdfType.Boolean(col.value.rlike(s"(?$flags)$pattern"))
+    col.rlike(s"(?$flags)$pattern")
 
   /** Implementation of SparQL REPLACE on Spark dataframes.
     *
@@ -244,6 +299,7 @@ object FuncStrings {
     * | replace("AAAA", "A+?", "b")                | "bbbb"                     |
     * | replace("darted", "^(.*?)d(.*)$", "$1c$2") | "carted"                   |
     *
+    *
     * @see https://www.w3.org/TR/sparql11-query/#func-replace
     * @see https://www.w3.org/TR/xpath-functions/#func-replace
     * @param col
@@ -253,11 +309,7 @@ object FuncStrings {
     * @return
     */
   def replace(col: Column, pattern: String, by: String, flags: String): Column =
-    DataFrameTyper.createRecord(
-      regexp_replace(col.value, s"(?$flags)$pattern", by),
-      RdfType.String.repr,
-      col.lang
-    )
+    regexp_replace(col, s"(?$flags)$pattern", by)
 
   object StringFuncUtils {
 
@@ -293,24 +345,35 @@ object FuncStrings {
       (getValue, getTag)
     }
 
-    def allArgsAreSameTypeAndLang(
-        arg1: Column,
-        args: List[Column]
-    ): Column = {
+    def areAllArgsSameTypeAndSameTags(
+                                       arg1: Column,
+                                       args: List[Column]
+                                     ): Column = {
       when(
-        arg1.lang.isNotNull, {
+        RdfFormatter.isLocalizedString(arg1), {
+          val l = LocalizedLiteral(arg1)
           args.foldLeft(lit(true)) { case (acc, elem) =>
             acc && when(
-              elem.lang.isNotNull,
-              elem.lang === arg1.lang
+              RdfFormatter.isLocalizedString(elem), {
+                val r = LocalizedLiteral(elem)
+                l.tag === r.tag
+              }
             ).otherwise(lit(false))
           }
         }
-      ).otherwise {
-        args.foldLeft(lit(true)) { case (acc, elem) =>
-          acc && elem.`type` === arg1.`type`
+      ).when(
+        RdfFormatter.isDatatypeLiteral(arg1), {
+          val l = TypedLiteral(arg1)
+          args.foldLeft(lit(true)) { case (acc, elem) =>
+            acc && when(
+              RdfFormatter.isDatatypeLiteral(elem), {
+                val r = TypedLiteral(elem)
+                l.tag === r.tag
+              }
+            ).otherwise(lit(false))
+          }
         }
-      }
+      ).otherwise(lit(false))
     }
 
     def isLocalizedLocalizedArgs(arg1: Column, arg2: String): Column =
@@ -330,13 +393,13 @@ object FuncStrings {
       RdfFormatter.isLocalizedString(arg1)
 
     def strFuncArgsLocalizedLocalized(
-        col: Column,
-        str: String,
-        localizedFormat: String
-    )(
-        f: (Column, String) => Column
-    ): Column = {
-      val left  = LocalizedLiteral(col)
+                                       col: Column,
+                                       str: String,
+                                       localizedFormat: String
+                                     )(
+                                       f: (Column, String) => Column
+                                     ): Column = {
+      val left = LocalizedLiteral(col)
       val right = LocalizedLiteral(str)
       when(
         left.tag =!= right.tag,
@@ -347,20 +410,20 @@ object FuncStrings {
     }
 
     def strFuncArgsLocalizedPlain(
-        col: Column,
-        str: String,
-        localizedFormat: String
-    )(
-        f: (Column, String) => Column
-    ): Column = {
+                                   col: Column,
+                                   str: String,
+                                   localizedFormat: String
+                                 )(
+                                   f: (Column, String) => Column
+                                 ): Column = {
       val left = LocalizedLiteral(col)
       LocalizedLiteral.formatLocalized(left, str, localizedFormat)(f)
     }
 
     def strFuncArgsTypedTyped(col: Column, str: String, typedFormat: String)(
-        f: (Column, String) => Column
+      f: (Column, String) => Column
     ): Column = {
-      val left  = TypedLiteral(col)
+      val left = TypedLiteral(col)
       val right = TypedLiteral(str)
       when(
         left.tag =!= right.tag,
@@ -371,7 +434,7 @@ object FuncStrings {
     }
 
     def strFuncArgsTypedPlain(col: Column, str: String, typedFormat: String)(
-        f: (Column, String) => Column
+      f: (Column, String) => Column
     ): Column = {
       val left = TypedLiteral(col)
       TypedLiteral.formatTyped(left, str, typedFormat)(f)
@@ -402,7 +465,7 @@ object FuncStrings {
   }
 
   private def formatRdfString(col: Column, sep: String)(
-      f: Column => Column
+    f: Column => Column
   ): Column = {
     format_string(
       "%s",
