@@ -36,47 +36,14 @@ object FuncStrings {
     * @param len
     * @return
     */
-  def substr(col: Column, pos: Int, len: Option[Int]): Column = {
-
-    def ss(col: Column, pos: Int, len: Option[Int]) = {
+  def substr(col: Column, pos: Int, len: Option[Int]): Column =
+    RdfType.String {
       len match {
-        case Some(l) => col.substr(pos, l)
-        case None => col.substr(lit(pos), length(col) - pos + 1)
+        case Some(l) => col.value.substr(pos, l)
+        case None => col.value.substr(lit(pos), length(col.value) - pos + 1)
       }
     }
 
-    when(
-      col.contains("\"@"),
-      format_string(
-        "%s",
-        cc(
-          cc(
-            cc(
-              lit("\""),
-              ss(trim(substring_index(col, "\"@", 1), "\""), pos, len)
-            ),
-            lit("\"")
-          ),
-          cc(lit("@"), substring_index(col, "\"@", -1))
-        )
-      )
-    ).when(
-      col.contains("\"^^"),
-      format_string(
-        "%s",
-        cc(
-          cc(
-            cc(
-              lit("\""),
-              ss(trim(substring_index(col, "\"^^", 1), "\""), pos, len)
-            ),
-            lit("\"")
-          ),
-          cc(lit("^^"), substring_index(col, "\"^^", -1))
-        )
-      )
-    ).otherwise(ss(trim(col, "\""), pos, len))
-  }
 
   /** Implementation of SparQL UCASE on Spark dataframes.
     *
