@@ -5,6 +5,7 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.DataTypes
 
+import com.gsk.kg.engine.syntax._
 import com.gsk.kg.config.Config
 
 object RdfFormatter {
@@ -38,39 +39,39 @@ object RdfFormatter {
 
   def prettyPrintTypedColumn(col: Column): Column =
     when(
-      col("type") === RdfType.Uri.repr,
+      col.`type` === RdfType.Uri.repr,
       concat(
         lit(Tokens.openAngleBracket),
-        col("value"),
+        col.value,
         lit(Tokens.closingAngleBracket)
       )
     ).when(
-      col("type") === RdfType.String.repr && col("lang").isNotNull,
+      col.`type` === RdfType.String.repr && col.lang.isNotNull,
       concat(
         lit(Tokens.doubleQuote),
-        col("value"),
+        col.value,
         lit(Tokens.doubleQuote),
         lit(Tokens.langAnnotation),
-        col("lang")
+        col.lang
       )
     ).when(
-      col("type") === RdfType.String.repr && isNull(col("lang")),
+      col.`type` === RdfType.String.repr && isNull(col.lang),
       concat(
         lit(Tokens.doubleQuote),
-        col("value"),
+        col.value,
         lit(Tokens.doubleQuote)
       )
     ).when(
-      col("type") === RdfType.Blank.repr,
-      concat(lit(Tokens.blankNode), col("value"))
+      col.`type` === RdfType.Blank.repr,
+      concat(lit(Tokens.blankNode), col.value)
     ).otherwise(
       concat(
         lit(Tokens.doubleQuote),
-        col("value"),
+        col.value,
         lit(Tokens.doubleQuote),
         lit(Tokens.typeAnnotation),
         lit(Tokens.openAngleBracket),
-        lit(col("type")),
+        col.`type`,
         lit(Tokens.closingAngleBracket)
       )
     )

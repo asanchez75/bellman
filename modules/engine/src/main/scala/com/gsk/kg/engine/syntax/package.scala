@@ -55,16 +55,23 @@ trait DataFrameSyntax {
       */
     def sparql(query: String, config: Config): DataFrame =
       Compiler.compile(df, query, config) match {
-        case Left(a)  => throw EngineException(a)
+        case Left(a) => throw EngineException(a)
         case Right(b) => b
       }
 
     /** Compile query with dataframe with default configuration
+      *
       * @param query
       * @return
       */
     def sparql(query: String): DataFrame =
       sparql(query, Config.default)
+
+    def untype: DataFrame =
+      RdfFormatter.formatDataFrame(
+        df,
+        Config.default.copy(typeDataframe = true, formatRdfOutput = true)
+      )
   }
 
   final case class EngineException(error: EngineError)
