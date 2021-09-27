@@ -65,15 +65,13 @@ object FuncStrings {
 
   /** Implementation of SparQL STRSTARTS on Spark dataframes.
     *
-    * TODO (pepegar): Implement argument compatibility checks
-    *
     * @see [[https://www.w3.org/TR/sparql11-query/#func-strstarts]]
     * @param col
     * @param str
     * @return
     */
   def strstarts(col: Column, str: String): Column =
-    extractStringLiteral(col).startsWith(extractStringLiteral(str))
+    RdfType.Boolean(col.value.startsWith(extractStringLiteral(str)))
 
   /** Implementation of SparQL STRENDS on Spark dataframes.
     *
@@ -85,7 +83,7 @@ object FuncStrings {
     * @return
     */
   def strends(col: Column, str: String): Column =
-    extractStringLiteral(col).endsWith(extractStringLiteral(str))
+    RdfType.Boolean(col.value.endsWith(extractStringLiteral(str)))
 
   /** Implementation of SparQL STRBEFORE on Spark dataframes.
     *

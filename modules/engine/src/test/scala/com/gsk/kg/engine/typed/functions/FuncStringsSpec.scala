@@ -143,28 +143,30 @@ class FuncStringsSpec
       "return true if a field starts with a given string" in {
 
         val df = List(
-          "hello world",
-          "hello universe"
+          "\"hello world\"",
+          "\"hello universe\""
         ).toTypedDF("text")
 
         df.select(FuncStrings.strstarts(df("text"), "hello").as("result"))
+          .untype
           .collect shouldEqual Array(
-          Row(true),
-          Row(true)
+          Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"),
+          Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
         )
       }
 
       "return false otherwise" in {
 
         val df = List(
-          "hello world",
-          "hello universe"
+          "\"hello world\"",
+          "\"hello universe\""
         ).toTypedDF("text")
 
         df.select(FuncStrings.strstarts(df("text"), "help").as("result"))
+          .untype
           .collect shouldEqual Array(
-          Row(false),
-          Row(false)
+          Row("\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>"),
+          Row("\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
         )
       }
     }
@@ -174,28 +176,30 @@ class FuncStringsSpec
       "return true if a field ends with a given string" in {
 
         val df = List(
-          "sports car",
-          "sedan car"
+          "\"sports car\"",
+          "\"sedan car\""
         ).toTypedDF("text")
 
         df.select(FuncStrings.strends(df("text"), "car").as("result"))
+          .untype
           .collect shouldEqual Array(
-          Row(true),
-          Row(true)
+          Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"),
+          Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
         )
       }
 
       "return false otherwise" in {
 
         val df = List(
-          "hello world",
-          "hello universe"
+          "\"hello world\"",
+          "\"hello universe\""
         ).toTypedDF("text")
 
         df.select(FuncStrings.strends(df("text"), "dses").as("result"))
+          .untype
           .collect shouldEqual Array(
-          Row(false),
-          Row(false)
+          Row("\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>"),
+          Row("\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
         )
       }
     }
