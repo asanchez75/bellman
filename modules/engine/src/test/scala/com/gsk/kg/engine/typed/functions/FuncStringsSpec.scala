@@ -12,11 +12,11 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class FuncStringsSpec
-  extends AnyWordSpec
-    with Matchers
-    with SparkSpec
-    with ScalaCheckDrivenPropertyChecks
-    with CommonGenerators {
+    extends AnyWordSpec
+      with Matchers
+      with SparkSpec
+      with ScalaCheckDrivenPropertyChecks
+      with CommonGenerators {
 
   import sqlContext.implicits._
 
@@ -33,7 +33,9 @@ class FuncStringsSpec
           "\"chat\""
         ).toTypedDF("a")
 
-        df.select(FuncStrings.strlen(df("a")).as("result")).untype.collect shouldEqual Array(
+        df.select(FuncStrings.strlen(df("a")).as("result"))
+          .untype
+          .collect shouldEqual Array(
           Row("\"4\"^^<http://www.w3.org/2001/XMLSchema#integer>")
         )
       }
@@ -43,7 +45,9 @@ class FuncStringsSpec
           "\"chat\"^^<http://www.w3.org/2001/XMLSchema#string>"
         ).toTypedDF("a")
 
-        df.select(FuncStrings.strlen(df("a")).as("result")).untype.collect shouldEqual Array(
+        df.select(FuncStrings.strlen(df("a")).as("result"))
+          .untype
+          .collect shouldEqual Array(
           Row("\"4\"^^<http://www.w3.org/2001/XMLSchema#integer>")
         )
       }
@@ -53,7 +57,9 @@ class FuncStringsSpec
           "\"chat\"@en"
         ).toTypedDF("a")
 
-        df.select(FuncStrings.strlen(df("a")).as("result")).untype.collect shouldEqual Array(
+        df.select(FuncStrings.strlen(df("a")).as("result"))
+          .untype
+          .collect shouldEqual Array(
           Row("\"4\"^^<http://www.w3.org/2001/XMLSchema#integer>")
         )
       }
@@ -64,28 +70,30 @@ class FuncStringsSpec
       "correctly return the substring of a given column without length specified" in {
 
         val df = List(
-          "hello world",
-          "hello universe"
+          "\"hello world\"",
+          "\"hello universe\""
         ).toTypedDF("text")
 
         df.select(FuncStrings.substr(df("text"), 5, None).as("result"))
+          .untype
           .collect shouldEqual Array(
-          Row("o world"),
-          Row("o universe")
+          Row("\"o world\""),
+          Row("\"o universe\"")
         )
       }
 
       "correctly return the substring of a given column with length specified" in {
 
         val df = List(
-          "hello world",
-          "hello universe"
+          "\"hello world\"",
+          "\"hello universe\""
         ).toTypedDF("text")
 
         df.select(FuncStrings.substr(df("text"), 5, Some(3)).as("result"))
+          .untype
           .collect shouldEqual Array(
-          Row("o w"),
-          Row("o u")
+          Row("\"o w\""),
+          Row("\"o u\"")
         )
       }
     }
@@ -258,10 +266,26 @@ class FuncStringsSpec
           ("abc", "b", "c"),
           ("\"abc\"@en", "ab", "\"c\"@en"),
           ("\"abc\"@en", "\"b\"@cy", null),
-          ("\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>", "", "\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>"),
-          ("\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>", "\"a\"^^<http://www.w3.org/2001/XMLSchema#other>", null),
-          ("\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>", "\"\"^^<http://www.w3.org/2001/XMLSchema#string>", "\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>"),
-          ("\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>", "\"z\"^^<http://www.w3.org/2001/XMLSchema#string>", ""),
+          (
+            "\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>",
+            "",
+            "\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>"
+          ),
+          (
+            "\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>",
+            "\"a\"^^<http://www.w3.org/2001/XMLSchema#other>",
+            null
+          ),
+          (
+            "\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>",
+            "\"\"^^<http://www.w3.org/2001/XMLSchema#string>",
+            "\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>"
+          ),
+          (
+            "\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>",
+            "\"z\"^^<http://www.w3.org/2001/XMLSchema#string>",
+            ""
+          ),
           ("abc", "xyz", ""),
           ("\"abc\"@en", "\"z\"@en", ""),
           ("\"abc\"@en", "z", ""),
@@ -286,7 +310,10 @@ class FuncStringsSpec
 
       "return correctly encoded URI" in {
         val initial = List(
-          ("\"Los Angeles\"^^<http://www.w3.org/2001/XMLSchema#string>", "Los%20Angeles"),
+          (
+            "\"Los Angeles\"^^<http://www.w3.org/2001/XMLSchema#string>",
+            "Los%20Angeles"
+          ),
           ("\"Los Angeles\"@en", "Los%20Angeles"),
           ("Los Angeles", "Los%20Angeles"),
           ("~bébé", "~b%C3%A9b%C3%A9"),
@@ -436,9 +463,17 @@ class FuncStringsSpec
             "\"bar\"^^<http://www.w3.org/2001/XMLSchema#string>",
             "\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>"
           ),
-          ("foo", "\"bar\"^^<http://www.w3.org/2001/XMLSchema#string>", "foobar"),
+          (
+            "foo",
+            "\"bar\"^^<http://www.w3.org/2001/XMLSchema#string>",
+            "foobar"
+          ),
           ("\"foo\"@en", "bar", "foobar"),
-          ("\"foo\"@en", "\"bar\"^^<http://www.w3.org/2001/XMLSchema#string>", "foobar")
+          (
+            "\"foo\"@en",
+            "\"bar\"^^<http://www.w3.org/2001/XMLSchema#string>",
+            "foobar"
+          )
         )
 
         cases.map { case (arg1, arg2, expected) =>
