@@ -55,7 +55,7 @@ trait DataFrameSyntax {
       */
     def sparql(query: String, config: Config): DataFrame =
       Compiler.compile(df, query, config) match {
-        case Left(a)  => throw EngineException(a)
+        case Left(a) => throw EngineException(a)
         case Right(b) => b
       }
 
