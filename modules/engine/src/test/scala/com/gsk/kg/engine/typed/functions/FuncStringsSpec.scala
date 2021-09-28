@@ -209,28 +209,30 @@ class FuncStringsSpec
       "find the correct string if it exists" in {
 
         val df = List(
-          "hello potato",
-          "goodbye tomato"
+          "\"hello potato\"",
+          "\"goodbye tomato\""
         ).toTypedDF("text")
 
         df.select(FuncStrings.strbefore(df("text"), " ").as("result"))
+          .untype
           .collect shouldEqual Array(
-          Row("hello"),
-          Row("goodbye")
+          Row("\"hello\""),
+          Row("\"goodbye\"")
         )
       }
 
       "return empty strings otherwise" in {
 
         val df = List(
-          "hello potato",
-          "goodbye tomato"
+          "\"hello potato\"",
+          "\"goodbye tomato\""
         ).toTypedDF("text")
 
         df.select(FuncStrings.strbefore(df("text"), "#").as("result"))
+          .untype
           .collect shouldEqual Array(
-          Row(""),
-          Row("")
+          Row("\"\""),
+          Row("\"\"")
         )
       }
     }
@@ -240,28 +242,30 @@ class FuncStringsSpec
       "find the correct string if it exists" in {
 
         val df = List(
-          "hello#potato",
-          "goodbye#tomato"
+          "\"hello#potato\"",
+          "\"goodbye#tomato\""
         ).toTypedDF("text")
 
         df.select(FuncStrings.strafter(df("text"), "#").as("result"))
+          .untype
           .collect shouldEqual Array(
-          Row("potato"),
-          Row("tomato")
+          Row("\"potato\""),
+          Row("\"tomato\"")
         )
       }
 
       "return empty strings otherwise" in {
 
         val df = List(
-          "hello potato",
-          "goodbye tomato"
+          "\"hello potato\"",
+          "\"goodbye tomato\""
         ).toTypedDF("text")
 
         df.select(FuncStrings.strafter(df("text"), "#").as("result"))
+          .untype
           .collect shouldEqual Array(
-          Row(""),
-          Row("")
+          Row("\"\""),
+          Row("\"\"")
         )
       }
 
@@ -269,43 +273,40 @@ class FuncStringsSpec
       "ww3c test" in {
 
         val cases = List(
-          ("abc", "b", "c"),
+          ("\"abc\"", "b", "\"c\""),
           ("\"abc\"@en", "ab", "\"c\"@en"),
-          ("\"abc\"@en", "\"b\"@cy", null),
           (
             "\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>",
             "",
-            "\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>"
-          ),
-          (
-            "\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>",
-            "\"a\"^^<http://www.w3.org/2001/XMLSchema#other>",
-            null
+            "\"abc\""
           ),
           (
             "\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>",
             "\"\"^^<http://www.w3.org/2001/XMLSchema#string>",
-            "\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>"
+            "\"abc\""
           ),
           (
             "\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>",
             "\"z\"^^<http://www.w3.org/2001/XMLSchema#string>",
-            ""
+            "\"\""
           ),
-          ("abc", "xyz", ""),
-          ("\"abc\"@en", "\"z\"@en", ""),
-          ("\"abc\"@en", "z", ""),
+          ("\"abc\"", "xyz", "\"\""),
+          ("\"abc\"@en", "\"z\"@en", "\"\"@en"),
+          ("\"abc\"@en", "z", "\"\"@en"),
           ("\"abc\"@en", "\"\"@en", "\"abc\"@en"),
           ("\"abc\"@en", "", "\"abc\"@en")
         )
 
+
         cases.map { case (arg1, arg2, expect) =>
           val df = List(arg1).toTypedDF("arg1")
-          val strafter = FuncStrings.strafter(df("arg1"), arg2)
+          val strafter = FuncStrings.strafter(df("arg1"), arg2).as("result")
           val result = df
             .select(strafter)
-            .as("result")
+            .untype
             .collect()
+
+          df.show(false)
 
           result shouldEqual Array(Row(expect))
         }
