@@ -5,8 +5,8 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.DataTypes
 
-import com.gsk.kg.engine.syntax._
 import com.gsk.kg.config.Config
+import com.gsk.kg.engine.syntax._
 
 object RdfFormatter {
 

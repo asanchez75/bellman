@@ -1,23 +1,24 @@
 package com.gsk.kg.engine.typed.functions
 
 import cats.data.NonEmptyList
-import cats.syntax.list._
-import com.gsk.kg.config.Config
-import com.gsk.kg.engine.syntax._
-import com.gsk.kg.engine.compiler.SparkSpec
-import com.gsk.kg.engine.scalacheck.CommonGenerators
+
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions.lit
+
+import com.gsk.kg.engine.compiler.SparkSpec
+import com.gsk.kg.engine.scalacheck.CommonGenerators
+import com.gsk.kg.engine.syntax._
+
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class FuncStringsSpec
-    extends AnyWordSpec
-      with Matchers
-      with SparkSpec
-      with ScalaCheckDrivenPropertyChecks
-      with CommonGenerators {
+  extends AnyWordSpec
+    with Matchers
+    with SparkSpec
+    with ScalaCheckDrivenPropertyChecks
+    with CommonGenerators {
 
   import sqlContext.implicits._
 
@@ -629,8 +630,9 @@ class FuncStringsSpec
         ).toTypedDF("text")
 
         val result =
-          df.select(FuncStrings.replace(df("text"), "A+?", "b", "").as("result"))
-            .untype
+          df.select(
+            FuncStrings.replace(df("text"), "A+?", "b", "").as("result")
+          ).untype
             .collect
 
         result shouldEqual Array(
@@ -646,7 +648,9 @@ class FuncStringsSpec
 
         val result =
           df.select(
-            FuncStrings.replace(df("text"), "^(.*?)d(.*)$", "$1c$2", "").as("result")
+            FuncStrings
+              .replace(df("text"), "^(.*?)d(.*)$", "$1c$2", "")
+              .as("result")
           ).untype
             .collect
 
