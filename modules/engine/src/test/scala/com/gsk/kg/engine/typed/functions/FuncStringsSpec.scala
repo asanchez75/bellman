@@ -1,5 +1,6 @@
 package com.gsk.kg.engine.typed.functions
 
+import cats.data.NonEmptyList
 import cats.syntax.list._
 import com.gsk.kg.config.Config
 import com.gsk.kg.engine.syntax._
@@ -352,144 +353,62 @@ class FuncStringsSpec
       "concatenate two string columns" in {
 
         val df = List(
-          ("Hello", " Dolly"),
-          ("Here's a song", " Dolly")
-        ).toTypedDF("a", "b")
-
-        df.select(
-          FuncStrings.concat(df("a"), List(df("b")).toNel.get).as("verses")
-        ).collect shouldEqual Array(
-          Row("Hello Dolly"),
-          Row("Here's a song Dolly")
-        )
-      }
-
-      "concatenate two string columns with quotes" in {
-
-        val df = List(
           ("\"Hello\"", "\" Dolly\""),
-          ("\"Hello\"", " Dolly"),
-          ("Hello", "\" Dolly\""),
-          ("Hello", " Dolly")
+          ("\"Here's a song\"", "\" Dolly\"")
         ).toTypedDF("a", "b")
 
         df.select(
-          FuncStrings.concat(df("a"), List(df("b")).toNel.get).as("verses")
-        ).collect shouldEqual Array(
-          Row("Hello Dolly"),
-          Row("Hello Dolly"),
-          Row("Hello Dolly"),
-          Row("Hello Dolly")
+          FuncStrings.concat(df("a"), NonEmptyList.of(df("b"))).as("verses")
+        ).untype.collect shouldEqual Array(
+          Row("\"Hello Dolly\""),
+          Row("\"Here's a song Dolly\"")
         )
       }
 
       "concatenate a column in quotes with a literal string" in {
 
         val df = List(
-          ("Hello", " Dolly"),
-          ("Here's a song", " Dolly")
+          ("\"Hello\"", "\" Dolly\""),
+          ("\"Here's a song\"", "\" Dolly\"")
         ).toTypedDF("a", "b")
 
         df.select(
           FuncStrings
-            .concat(df("a"), List(lit(" world!")).toNel.get)
+            .concat(df("a"), NonEmptyList.of(lit(" world!")))
             .as("sentences")
-        ).collect shouldEqual Array(
-          Row("Hello world!"),
-          Row("Here's a song world!")
-        )
-      }
-
-      "concatenate a column with a literal string in quotes" in {
-
-        val df = List(
-          ("\"Hello\"", " Dolly"),
-          ("Here's a song", " Dolly")
-        ).toTypedDF("a", "b")
-
-        df.select(
-          FuncStrings
-            .concat(df("a"), List(lit(" world!")).toNel.get)
-            .as("sentences")
-        ).collect shouldEqual Array(
-          Row("Hello world!"),
-          Row("Here's a song world!")
-        )
-      }
-
-      "concatenate a literal string with a column" in {
-
-        val df = List(
-          ("Hello", " Dolly"),
-          ("Here's a song", " Dolly")
-        ).toTypedDF("a", "b")
-
-        df.select(
-          FuncStrings.concat(lit("Ciao"), List(df("b")).toNel.get).as("verses")
-        ).collect shouldEqual Array(
-          Row("Ciao Dolly"),
-          Row("Ciao Dolly")
-        )
-      }
-
-      "concatenate a literal string with a column in quotes" in {
-
-        val df = List(
-          ("Hello", "\" Dolly\""),
-          ("Here's a song", " Dolly")
-        ).toTypedDF("a", "b")
-
-        df.select(
-          FuncStrings.concat(lit("Ciao"), List(df("b")).toNel.get).as("verses")
-        ).collect shouldEqual Array(
-          Row("Ciao Dolly"),
-          Row("Ciao Dolly")
-        )
-      }
-
-      "concatenate mixing literals and string columns multiple times" in {
-
-        val df = List(
-          ("Hello", "\" Dolly\""),
-          ("Here's a song", " Dolly")
-        ).toTypedDF("a", "b")
-
-        df.select(
-          FuncStrings.concat(lit("Ciao"), List(df("b")).toNel.get).as("verses")
-        ).collect shouldEqual Array(
-          Row("Ciao Dolly"),
-          Row("Ciao Dolly")
+        ).untype.collect shouldEqual Array(
+          Row("\"Hello world!\""),
+          Row("\"Here's a song world!\"")
         )
       }
 
       "www3c tests" in {
 
         val cases = List(
-          ("foo", "bar", "foobar"),
+          ("\"foo\"", "\"bar\"", "\"foobar\""),
           ("\"foo\"@en", "\"bar\"@en", "\"foobar\"@en"),
           (
             "\"foo\"^^<http://www.w3.org/2001/XMLSchema#string>",
             "\"bar\"^^<http://www.w3.org/2001/XMLSchema#string>",
-            "\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>"
+            "\"foobar\""
           ),
           (
-            "foo",
+            "\"foo\"",
             "\"bar\"^^<http://www.w3.org/2001/XMLSchema#string>",
-            "foobar"
+            "\"foobar\""
           ),
-          ("\"foo\"@en", "bar", "foobar"),
+          ("\"foo\"@en", "\"bar\"", "\"foobar\""),
           (
             "\"foo\"@en",
             "\"bar\"^^<http://www.w3.org/2001/XMLSchema#string>",
-            "foobar"
+            "\"foobar\""
           )
         )
 
         cases.map { case (arg1, arg2, expected) =>
-          val df = List(arg1).toTypedDF("arg1")
-          val concat = FuncStrings.concat(df("arg1"), List(lit(arg2)).toNel.get)
-          val result =
-            df.select(concat).as("result").collect()
+          val df = List((arg1, arg2)).toTypedDF("arg1", "arg2")
+          val concat = FuncStrings.concat(df("arg1"), NonEmptyList.of(df("arg2"))).as("result")
+          val result = df.select(concat).untype.collect()
           result shouldEqual Array(Row(expected))
         }
       }
