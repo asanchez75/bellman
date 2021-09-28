@@ -174,10 +174,8 @@ object FuncStrings {
     * @return
     */
   def concat(appendTo: Column, append: NonEmptyList[Column]): Column = {
-    val lvalue = appendTo.value
-    val ltag   = appendTo.lang
 
-    val concatValues = append.toList.foldLeft(lvalue) { case (acc, elem) =>
+    val concatValues = append.toList.foldLeft(appendTo.value) { case (acc, elem) =>
       cc(acc, elem.value)
     }
 

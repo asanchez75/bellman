@@ -1,14 +1,12 @@
 package com.gsk.kg.engine.typed.functions
 
 import cats.data.NonEmptyList
-
+import com.gsk.kg.engine.DataFrameTyper
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions.lit
-
 import com.gsk.kg.engine.compiler.SparkSpec
 import com.gsk.kg.engine.scalacheck.CommonGenerators
 import com.gsk.kg.engine.syntax._
-
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
@@ -307,8 +305,6 @@ class FuncStringsSpec
             .untype
             .collect()
 
-          df.show(false)
-
           result shouldEqual Array(Row(expect))
         }
       }
@@ -334,8 +330,6 @@ class FuncStringsSpec
           ("\"asdfsd345978a4534534fdsaf\"", "\"asdfsd345978a4534534fdsaf\""),
           ("\"\"", "\"\"")
         ).toTypedDF("input", "expected")
-
-        initial.show(100, false)
 
         val df = initial.withColumn(
           "result",
@@ -375,7 +369,7 @@ class FuncStringsSpec
 
         df.select(
           FuncStrings
-            .concat(df("a"), NonEmptyList.of(lit(" world!")))
+            .concat(df("a"), NonEmptyList.of(DataFrameTyper.parse(lit("\" world!\""))))
             .as("sentences")
         ).untype
           .collect shouldEqual Array(
@@ -435,7 +429,6 @@ class FuncStringsSpec
             FuncStrings.langMatches(initial("tags"), range)
           )
 
-        df.show(false)
         df.collect.foreach { case Row(_, expected, result) =>
           expected shouldEqual result
         }
