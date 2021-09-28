@@ -334,6 +334,8 @@ class FuncStringsSpec
           ("\"\"", "\"\"")
         ).toTypedDF("input", "expected")
 
+        initial.show(100, false)
+
         val df = initial.withColumn(
           "result",
           FuncStrings.encodeForURI(initial("input"))
