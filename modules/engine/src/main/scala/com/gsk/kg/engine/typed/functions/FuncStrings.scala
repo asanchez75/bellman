@@ -1,17 +1,20 @@
 package com.gsk.kg.engine.typed.functions
 
 import cats.data.NonEmptyList
-import com.gsk.kg.engine.syntax._
-import com.gsk.kg.engine._
-import com.gsk.kg.engine.typed.functions.FuncStrings.StringFuncUtils._
-import com.gsk.kg.engine.functions.Literals._
-import org.apache.commons.codec.binary.Hex
+
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.{concat => cc, _}
+
+import com.gsk.kg.engine._
+import com.gsk.kg.engine.functions.Literals._
+import com.gsk.kg.engine.syntax._
+import com.gsk.kg.engine.typed.functions.FuncStrings.StringFuncUtils._
 
 import java.nio.charset.StandardCharsets
 import java.util.Locale
 import java.util.regex.Pattern
+
+import org.apache.commons.codec.binary.Hex
 
 object FuncStrings {
 
@@ -241,7 +244,6 @@ object FuncStrings {
     * | replace("AAAA", "A+", "b")                 | "b"                        |
     * | replace("AAAA", "A+?", "b")                | "bbbb"                     |
     * | replace("darted", "^(.*?)d(.*)$", "$1c$2") | "carted"                   |
-    *
     *
     * @see https://www.w3.org/TR/sparql11-query/#func-replace
     * @see https://www.w3.org/TR/xpath-functions/#func-replace
