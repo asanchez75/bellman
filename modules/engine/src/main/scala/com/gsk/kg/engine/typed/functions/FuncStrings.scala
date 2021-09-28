@@ -244,6 +244,7 @@ object FuncStrings {
     * | replace("AAAA", "A+?", "b")                | "bbbb"                     |
     * | replace("darted", "^(.*?)d(.*)$", "$1c$2") | "carted"                   |
     *
+    *
     * @see https://www.w3.org/TR/sparql11-query/#func-replace
     * @see https://www.w3.org/TR/xpath-functions/#func-replace
     * @param col
