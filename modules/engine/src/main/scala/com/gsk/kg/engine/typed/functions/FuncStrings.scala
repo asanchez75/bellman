@@ -220,7 +220,7 @@ object FuncStrings {
     * @return
     */
   def regex(col: Column, pattern: String, flags: String): Column =
-    col.rlike(s"(?$flags)$pattern")
+    RdfType.Boolean(col.value.rlike(s"(?$flags)$pattern"))
 
   /** Implementation of SparQL REPLACE on Spark dataframes.
     *

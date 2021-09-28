@@ -463,28 +463,30 @@ class FuncStringsSpec
       "return true if a field matches the given regex pattern" in {
 
         val df = List(
-          "Alice",
-          "Alison"
+          "\"Alice\"",
+          "\"Alison\""
         ).toTypedDF("text")
 
         df.select(FuncStrings.regex(df("text"), "^ali", "i").as("result"))
+          .untype
           .collect shouldEqual Array(
-          Row(true),
-          Row(true)
+          Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"),
+          Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
         )
       }
 
       "return false otherwise" in {
 
         val df = List(
-          "Alice",
-          "Alison"
+          "\"Alice\"",
+          "\"Alison\""
         ).toTypedDF("text")
 
         df.select(FuncStrings.regex(df("text"), "^ali", "").as("result"))
+          .untype
           .collect shouldEqual Array(
-          Row(false),
-          Row(false)
+          Row("\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>"),
+          Row("\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
         )
       }
     }
