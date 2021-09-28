@@ -171,22 +171,18 @@ object FuncStrings {
     * @return
     */
   def concat(appendTo: Column, append: NonEmptyList[Column]): Column = {
-    val (lvalue, ltag) = unfold(appendTo)
+    val lvalue = appendTo.value
+    val ltag = appendTo.lang
+
     val concatValues = append.toList.foldLeft(lvalue) { case (acc, elem) =>
-      val (rvalue, _) = unfold(elem)
-      cc(acc, rvalue)
+      cc(acc, elem.value)
     }
 
     when(
-      areAllArgsSameTypeAndSameTags(appendTo, append.toList),
-      when(
-        RdfFormatter.isLocalizedString(appendTo),
-        format_string("\"%s\"@%s", concatValues, ltag)
-      ).otherwise(
-        format_string("\"%s\"^^%s", concatValues, ltag)
-      )
+      allArgsAreSameTypeAndLang(appendTo, append.toList),
+      DataFrameTyper.createRecord(concatValues, RdfType.String.repr, appendTo.lang)
     ).otherwise(
-      concatValues
+      RdfType.String(concatValues)
     )
   }
 
@@ -286,10 +282,10 @@ object FuncStrings {
       (getValue, getTag)
     }
 
-    def areAllArgsSameTypeAndSameTags(
-                                       arg1: Column,
-                                       args: List[Column]
-                                     ): Column = {
+    def allArgsAreSameTypeAndLang(
+                                   arg1: Column,
+                                   args: List[Column]
+                                 ): Column = {
       when(
         arg1.lang.isNotNull, {
           args.foldLeft(lit(true)) { case (acc, elem) =>
