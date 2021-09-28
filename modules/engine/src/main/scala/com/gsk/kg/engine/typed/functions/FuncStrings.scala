@@ -180,7 +180,11 @@ object FuncStrings {
 
     when(
       allArgsAreSameTypeAndLang(appendTo, append.toList),
-      DataFrameTyper.createRecord(concatValues, RdfType.String.repr, appendTo.lang)
+      DataFrameTyper.createRecord(
+        concatValues,
+        RdfType.String.repr,
+        appendTo.lang
+      )
     ).otherwise(
       RdfType.String(concatValues)
     )
@@ -238,6 +242,7 @@ object FuncStrings {
     * | replace("AAAA", "A+?", "b")                | "bbbb"                     |
     * | replace("darted", "^(.*?)d(.*)$", "$1c$2") | "carted"                   |
     *
+    *
     * @see https://www.w3.org/TR/sparql11-query/#func-replace
     * @see https://www.w3.org/TR/xpath-functions/#func-replace
     * @param col
@@ -247,7 +252,11 @@ object FuncStrings {
     * @return
     */
   def replace(col: Column, pattern: String, by: String, flags: String): Column =
-    regexp_replace(col, s"(?$flags)$pattern", by)
+    DataFrameTyper.createRecord(
+      regexp_replace(col.value, s"(?$flags)$pattern", by),
+      RdfType.String.repr,
+      col.lang
+    )
 
   object StringFuncUtils {
 

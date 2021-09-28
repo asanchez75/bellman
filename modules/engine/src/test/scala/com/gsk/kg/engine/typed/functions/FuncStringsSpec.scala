@@ -298,7 +298,6 @@ class FuncStringsSpec
           ("\"abc\"@en", "", "\"abc\"@en")
         )
 
-
         cases.map { case (arg1, arg2, expect) =>
           val df = List(arg1).toTypedDF("arg1")
           val strafter = FuncStrings.strafter(df("arg1"), arg2).as("result")
@@ -359,7 +358,8 @@ class FuncStringsSpec
 
         df.select(
           FuncStrings.concat(df("a"), NonEmptyList.of(df("b"))).as("verses")
-        ).untype.collect shouldEqual Array(
+        ).untype
+          .collect shouldEqual Array(
           Row("\"Hello Dolly\""),
           Row("\"Here's a song Dolly\"")
         )
@@ -376,7 +376,8 @@ class FuncStringsSpec
           FuncStrings
             .concat(df("a"), NonEmptyList.of(lit(" world!")))
             .as("sentences")
-        ).untype.collect shouldEqual Array(
+        ).untype
+          .collect shouldEqual Array(
           Row("\"Hello world!\""),
           Row("\"Here's a song world!\"")
         )
@@ -407,7 +408,9 @@ class FuncStringsSpec
 
         cases.map { case (arg1, arg2, expected) =>
           val df = List((arg1, arg2)).toTypedDF("arg1", "arg2")
-          val concat = FuncStrings.concat(df("arg1"), NonEmptyList.of(df("arg2"))).as("result")
+          val concat = FuncStrings
+            .concat(df("arg1"), NonEmptyList.of(df("arg2")))
+            .as("result")
           val result = df.select(concat).untype.collect()
           result shouldEqual Array(Row(expected))
         }
@@ -496,92 +499,110 @@ class FuncStringsSpec
       "replace when pattern occurs" in {
 
         val df = List(
-          "abcd",
-          "abaB",
-          "bbBB",
-          "aaaa"
+          "\"abcd\"",
+          "\"abaB\"",
+          "\"bbBB\"",
+          "\"aaaa\""
         ).toTypedDF("text")
 
         val result =
-          df.select(FuncStrings.replace(df("text"), "b", "Z", "")).collect
+          df.select(FuncStrings.replace(df("text"), "b", "Z", "").as("result"))
+            .untype
+            .collect
 
         result shouldEqual Array(
-          Row("aZcd"),
-          Row("aZaB"),
-          Row("ZZBB"),
-          Row("aaaa")
+          Row("\"aZcd\""),
+          Row("\"aZaB\""),
+          Row("\"ZZBB\""),
+          Row("\"aaaa\"")
         )
       }
 
       "replace(abracadabra, bra, *) returns a*cada*" in {
 
-        val df = List("abracadabra").toTypedDF("text")
+        val df = List("\"abracadabra\"").toTypedDF("text")
 
         val result =
-          df.select(FuncStrings.replace(df("text"), "bra", "*", "")).collect
+          df.select(
+            FuncStrings.replace(df("text"), "bra", "*", "").as("result")
+          ).untype
+            .collect
 
         result shouldEqual Array(
-          Row("a*cada*")
+          Row("\"a*cada*\"")
         )
       }
 
       "replace(abracadabra, a.*a, *) returns *" in {
 
-        val df = List("abracadabra").toTypedDF("text")
+        val df = List("\"abracadabra\"").toTypedDF("text")
 
         val result =
-          df.select(FuncStrings.replace(df("text"), "a.*a", "*", "")).collect
+          df.select(
+            FuncStrings.replace(df("text"), "a.*a", "*", "").as("result")
+          ).untype
+            .collect
 
         result shouldEqual Array(
-          Row("*")
+          Row("\"*\"")
         )
       }
 
       "replace(abracadabra, a.*?a, *) returns *c*bra" in {
 
-        val df = List("abracadabra").toTypedDF("text")
+        val df = List("\"abracadabra\"").toTypedDF("text")
 
         val result =
-          df.select(FuncStrings.replace(df("text"), "a.*?a", "*", "")).collect
+          df.select(
+            FuncStrings.replace(df("text"), "a.*?a", "*", "").as("result")
+          ).untype
+            .collect
 
         result shouldEqual Array(
-          Row("*c*bra")
+          Row("\"*c*bra\"")
         )
       }
 
       "replace(abracadabra, a, \"\") returns brcdbr" in {
 
-        val df = List("abracadabra").toTypedDF("text")
+        val df = List("\"abracadabra\"").toTypedDF("text")
 
         val result =
-          df.select(FuncStrings.replace(df("text"), "a", "", "")).collect
+          df.select(FuncStrings.replace(df("text"), "a", "", "").as("result"))
+            .untype
+            .collect
 
         result shouldEqual Array(
-          Row("brcdbr")
+          Row("\"brcdbr\"")
         )
       }
 
       "replace(abracadabra, a(.), a$1$1) returns abbraccaddabbra" in {
 
-        val df = List("abracadabra").toTypedDF("text")
+        val df = List("\"abracadabra\"").toTypedDF("text")
 
         val result =
-          df.select(FuncStrings.replace(df("text"), "a(.)", "a$1$1", ""))
+          df.select(
+            FuncStrings.replace(df("text"), "a(.)", "a$1$1", "").as("result")
+          ).untype
             .collect
 
         result shouldEqual Array(
-          Row("abbraccaddabbra")
+          Row("\"abbraccaddabbra\"")
         )
       }
 
       "replace(abracadabra, .*?, $1) raises an error, because the pattern matches the zero-length string" in {
 
         val df = List(
-          "abracadabra"
+          "\"abracadabra\""
         ).toTypedDF("text")
 
         val caught = intercept[IndexOutOfBoundsException] {
-          df.select(FuncStrings.replace(df("text"), ".*?", "$1", "")).collect
+          df.select(
+            FuncStrings.replace(df("text"), ".*?", "$1", "").as("result")
+          ).untype
+            .collect
         }
 
         caught.getMessage shouldEqual "No group 1"
@@ -589,63 +610,70 @@ class FuncStringsSpec
 
       "replace(AAAA, A+, b) returns b" in {
 
-        val df = List("AAAA").toTypedDF("text")
+        val df = List("\"AAAA\"").toTypedDF("text")
 
         val result =
-          df.select(FuncStrings.replace(df("text"), "A+", "b", "")).collect
+          df.select(FuncStrings.replace(df("text"), "A+", "b", "").as("result"))
+            .untype
+            .collect
 
         result shouldEqual Array(
-          Row("b")
+          Row("\"b\"")
         )
       }
 
       "replace(AAAA, A+?, b) returns bbbb" in {
 
         val df = List(
-          "AAAA"
+          "\"AAAA\""
         ).toTypedDF("text")
 
         val result =
-          df.select(FuncStrings.replace(df("text"), "A+?", "b", "")).collect
+          df.select(FuncStrings.replace(df("text"), "A+?", "b", "").as("result"))
+            .untype
+            .collect
 
         result shouldEqual Array(
-          Row("bbbb")
+          Row("\"bbbb\"")
         )
       }
 
       "replace(darted, ^(.*?)d(.*)$, $1c$2) returns carted. (The first d is replaced.)" in {
 
         val df = List(
-          "darted"
+          "\"darted\""
         ).toTypedDF("text")
 
         val result =
           df.select(
-            FuncStrings.replace(df("text"), "^(.*?)d(.*)$", "$1c$2", "")
-          ).collect
+            FuncStrings.replace(df("text"), "^(.*?)d(.*)$", "$1c$2", "").as("result")
+          ).untype
+            .collect
 
         result shouldEqual Array(
-          Row("carted")
+          Row("\"carted\"")
         )
       }
 
       "replace when pattern occurs with flags" in {
 
         val df = List(
-          "abcd",
-          "abaB",
-          "bbBB",
-          "aaaa"
+          "\"abcd\"",
+          "\"abaB\"",
+          "\"bbBB\"",
+          "\"aaaa\""
         ).toTypedDF("text")
 
         val result =
-          df.select(FuncStrings.replace(df("text"), "b", "Z", "i")).collect
+          df.select(FuncStrings.replace(df("text"), "b", "Z", "i").as("result"))
+            .untype
+            .collect
 
         result shouldEqual Array(
-          Row("aZcd"),
-          Row("aZaZ"),
-          Row("ZZZZ"),
-          Row("aaaa")
+          Row("\"aZcd\""),
+          Row("\"aZaZ\""),
+          Row("\"ZZZZ\""),
+          Row("\"aaaa\"")
         )
       }
     }
