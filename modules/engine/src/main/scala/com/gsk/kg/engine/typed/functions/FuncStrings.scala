@@ -100,23 +100,7 @@ object FuncStrings {
       when(substring_index(c, s, 1) === c, lit(""))
         .otherwise(substring_index(c, s, 1))
 
-    if (isEmptyPattern(str)) {
-      cc(lit("\"\""), substring_index(col, "\"", -1))
-    } else {
-      when(
-        isLocalizedLocalizedArgs(col, str),
-        strFuncArgsLocalizedLocalized(col, str, "\"%s\"@")(getLeftOrEmpty)
-      ).when(
-        isLocalizedPlainArgs(col),
-        strFuncArgsLocalizedPlain(col, str, "\"%s\"@")(getLeftOrEmpty)
-      ).when(
-        isTypedTypedArgs(col, str),
-        strFuncArgsTypedTyped(col, str, "\"%s\"^^")(getLeftOrEmpty)
-      ).when(
-        isTypedPlainArgs(col),
-        strFuncArgsTypedPlain(col, str, "\"%s\"^^")(getLeftOrEmpty)
-      ).otherwise(getLeftOrEmpty(col, str))
-    }
+    DataFrameTyper.createRecord(getLeftOrEmpty(col.value, str), col.`type`, col.lang)
   }
 
   /** Implementation of SparQL STRAFTER on Spark dataframes.
@@ -135,8 +119,6 @@ object FuncStrings {
     * | strafter("abc"@en, ""@en)      | "abc"@en          |
     * | strafter("abc"@en, "")         | "abc"@en          |
     *
-    * TODO (pepegar): Implement argument compatibility checks
-    *
     * @see [[https://www.w3.org/TR/sparql11-query/#func-strafter]]
     * @param col
     * @param str
@@ -151,19 +133,7 @@ object FuncStrings {
     if (isEmptyPattern(str)) {
       col
     } else {
-      when(
-        isLocalizedLocalizedArgs(col, str),
-        strFuncArgsLocalizedLocalized(col, str, "\"%s\"@")(getLeftOrEmpty)
-      ).when(
-        isLocalizedPlainArgs(col),
-        strFuncArgsLocalizedPlain(col, str, "\"%s\"@")(getLeftOrEmpty)
-      ).when(
-        isTypedTypedArgs(col, str),
-        strFuncArgsTypedTyped(col, str, "\"%s\"^^")(getLeftOrEmpty)
-      ).when(
-        isTypedPlainArgs(col),
-        strFuncArgsTypedPlain(col, str, "\"%s\"^^")(getLeftOrEmpty)
-      ).otherwise(getLeftOrEmpty(col, str))
+      DataFrameTyper.createRecord(getLeftOrEmpty(col.value, str), col.`type`, col.lang)
     }
   }
 
