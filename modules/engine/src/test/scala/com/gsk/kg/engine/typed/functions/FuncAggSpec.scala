@@ -1,5 +1,6 @@
 package com.gsk.kg.engine.typed.functions
 
+import com.gsk.kg.engine.syntax._
 import com.gsk.kg.engine.compiler.SparkSpec
 import com.gsk.kg.engine.scalacheck.CommonGenerators
 import org.apache.spark.sql.Row
@@ -24,11 +25,17 @@ class FuncAggSpec
 
     "return an arbitrary value from the column" in {
 
-      val elems = List(1, 2, 3, 4, 5)
-      val df = elems.toDF("a")
+      val elems = List(
+        "\"1\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+        "\"2\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+        "\"3\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+        "\"4\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+        "\"5\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+      )
+      val df = elems.toTypedDF("a")
 
       elems.toSet should contain(
-        df.select(FuncAgg.sample(df("a"))).collect().head.get(0)
+        df.select(FuncAgg.sample(df("a"))).untype.collect().head.get(0)
       )
     }
   }
@@ -39,15 +46,15 @@ class FuncAggSpec
       val df = List(
         "1",
         "1.5",
-        "\"2\"^^xsd:int",
-        "\"3\"^^xsd:decimal",
-        "\"2.0\"^^xsd:float",
-        "\"3.5\"^^xsd:float",
-        "\"4.2\"^^xsd:double",
-        "\"4.5\"^^xsd:numeric",
-        "non numeric type",
-        "\"non numeric type\"^^xsd:string"
-      ).toDF("v")
+        "\"2\"^^<http://www.w3.org/2001/XMLSchema#int>",
+        "\"3\"^^<http://www.w3.org/2001/XMLSchema#decimal>",
+        "\"2.0\"^^<http://www.w3.org/2001/XMLSchema#float>",
+        "\"3.5\"^^<http://www.w3.org/2001/XMLSchema#float>",
+        "\"4.2\"^^<http://www.w3.org/2001/XMLSchema#double>",
+        "\"4.5\"^^<http://www.w3.org/2001/XMLSchema#numeric>",
+        "\"non numeric type\"",
+        "\"non numeric type\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      ).toTypedDF("v")
 
       val result = df.select(FuncAgg.countAgg(df("v"))).collect()
 
@@ -62,19 +69,19 @@ class FuncAggSpec
       val df = List(
         "1",
         "1.5",
-        "\"2\"^^xsd:int",
-        "\"3\"^^xsd:decimal",
-        "\"2.0\"^^xsd:float",
-        "\"3.5\"^^xsd:float",
-        "\"4.2\"^^xsd:double",
-        "\"4.5\"^^xsd:numeric",
-        "non numeric type",
-        "\"non numeric type\"^^xsd:string"
-      ).toDF("v")
+        "\"2\"^^<http://www.w3.org/2001/XMLSchema#int>",
+        "\"3\"^^<http://www.w3.org/2001/XMLSchema#decimal>",
+        "\"2.0\"^^<http://www.w3.org/2001/XMLSchema#float>",
+        "\"3.5\"^^<http://www.w3.org/2001/XMLSchema#float>",
+        "\"4.2\"^^<http://www.w3.org/2001/XMLSchema#double>",
+        "\"4.5\"^^<http://www.w3.org/2001/XMLSchema#numeric>",
+        "\"non numeric type\"",
+        "\"non numeric type\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      ).toTypedDF("v")
 
-      val result = df.select(FuncAgg.avgAgg(df("v"))).collect()
+      val result = df.select(FuncAgg.avgAgg(df("v")).as("result")).untype.collect()
 
-      result.toSet shouldEqual Set(Row(2.7125))
+      result.toSet shouldEqual Set(Row("\"2.7125\"^^<http://www.w3.org/2001/XMLSchema#double>"))
     }
   }
 
@@ -85,19 +92,19 @@ class FuncAggSpec
       val df = List(
         "1",
         "1.5",
-        "\"2\"^^xsd:int",
-        "\"3\"^^xsd:decimal",
-        "\"2.0\"^^xsd:float",
-        "\"3.5\"^^xsd:float",
-        "\"4.2\"^^xsd:double",
-        "\"4.5\"^^xsd:numeric",
-        "non numeric type",
-        "\"non numeric type\"^^xsd:string"
-      ).toDF("v")
+        "\"2\"^^<http://www.w3.org/2001/XMLSchema#int>",
+        "\"3\"^^<http://www.w3.org/2001/XMLSchema#decimal>",
+        "\"2.0\"^^<http://www.w3.org/2001/XMLSchema#float>",
+        "\"3.5\"^^<http://www.w3.org/2001/XMLSchema#float>",
+        "\"4.2\"^^<http://www.w3.org/2001/XMLSchema#double>",
+        "\"4.5\"^^<http://www.w3.org/2001/XMLSchema#numeric>",
+        "\"non numeric type\"",
+        "\"non numeric type\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      ).toTypedDF("v")
 
-      val result = df.select(FuncAgg.sumAgg(df("v"))).collect()
+      val result = df.select(FuncAgg.sumAgg(df("v")).as("result")).untype.collect()
 
-      result.toSet shouldEqual Set(Row(21.7))
+      result.toSet shouldEqual Set(Row("\"21.7\"^^<http://www.w3.org/2001/XMLSchema#double>"))
     }
   }
 
@@ -108,45 +115,45 @@ class FuncAggSpec
       val df = List(
         "1",
         "1.5",
-        "\"2\"^^xsd:int",
-        "\"3\"^^xsd:decimal",
-        "\"2.0\"^^xsd:float",
-        "\"3.5\"^^xsd:float",
-        "\"4.2\"^^xsd:double",
-        "\"4.5\"^^xsd:numeric"
-      ).toDF("v")
+        "\"2\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+        "\"3\"^^<http://www.w3.org/2001/XMLSchema#decimal>",
+        "\"2.0\"^^<http://www.w3.org/2001/XMLSchema#float>",
+        "\"3.5\"^^<http://www.w3.org/2001/XMLSchema#float>",
+        "\"4.2\"^^<http://www.w3.org/2001/XMLSchema#double>",
+        "\"4.5\"^^<http://www.w3.org/2001/XMLSchema#numeric>"
+      ).toTypedDF("v")
 
-      val result = df.select(FuncAgg.minAgg(df("v"))).collect()
+      val result = df.select(FuncAgg.minAgg(df("v")).as("result")).untype.collect()
 
-      result.toSet shouldEqual Set(Row("1"))
+      result shouldEqual Array(Row("\"1\"^^<http://www.w3.org/2001/XMLSchema#integer>"))
     }
 
     "operate correctly on string types" in {
 
       val df = List(
-        "alice",
-        "bob",
-        "\"alice\"^^xsd:string",
-        "\"bob\"^^xsd:string"
-      ).toDF("v")
+        "\"alice\"",
+        "\"bob\"",
+        "\"alice\"^^<http://www.w3.org/2001/XMLSchema#string>",
+        "\"bob\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      ).toTypedDF("v")
 
-      val result = df.select(FuncAgg.minAgg(df("v"))).collect()
+      val result = df.select(FuncAgg.minAgg(df("v")).as("result")).untype.collect()
 
-      result.toSet shouldEqual Set(Row("alice"))
+      result.toSet shouldEqual Set(Row("\"alice\""))
     }
 
     "operate correctly mixing types" in {
 
       val df = List(
         "1.0",
-        "\"2.2\"^^xsd:float",
-        "alice",
-        "\"bob\"^^xsd:string"
-      ).toDF("v")
+        "\"2.2\"^^<http://www.w3.org/2001/XMLSchema#float>",
+        "\"alice\"",
+        "\"bob\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      ).toTypedDF("v")
 
-      val result = df.select(FuncAgg.minAgg(df("v"))).collect()
+      val result = df.select(FuncAgg.minAgg(df("v")).as("result")).untype.collect()
 
-      result.toSet shouldEqual Set(Row("1.0"))
+      result.toSet shouldEqual Set(Row("\"1.0\"^^<http://www.w3.org/2001/XMLSchema#decimal>"))
     }
   }
 
@@ -157,45 +164,47 @@ class FuncAggSpec
       val df = List(
         "1",
         "1.5",
-        "\"2\"^^xsd:int",
-        "\"3\"^^xsd:decimal",
-        "\"2.0\"^^xsd:float",
-        "\"3.5\"^^xsd:float",
-        "\"4.2\"^^xsd:double",
-        "\"4.5\"^^xsd:numeric"
-      ).toDF("v")
+        "\"2\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+        "\"3\"^^<http://www.w3.org/2001/XMLSchema#decimal>",
+        "\"2.0\"^^<http://www.w3.org/2001/XMLSchema#float>",
+        "\"3.5\"^^<http://www.w3.org/2001/XMLSchema#float>",
+        "\"4.2\"^^<http://www.w3.org/2001/XMLSchema#double>",
+        "\"4.5\"^^<http://www.w3.org/2001/XMLSchema#numeric>"
+      ).toTypedDF("v")
 
-      val result = df.select(FuncAgg.maxAgg(df("v"))).collect()
+      val result = df.select(FuncAgg.maxAgg(df("v")).as("result")).untype.collect()
 
-      result.toSet shouldEqual Set(Row("4.5"))
+      result.toSet shouldEqual Set(Row("\"4.5\"^^<http://www.w3.org/2001/XMLSchema#integer>"))
     }
 
     "operate correctly on string types" in {
 
       val df = List(
-        "alice",
-        "bob",
-        "\"alice\"^^xsd:string",
-        "\"bob\"^^xsd:string"
-      ).toDF("v")
+        "\"alice\"",
+        "\"bob\"",
+        "\"alice\"^^<http://www.w3.org/2001/XMLSchema#string>",
+        "\"bob\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      ).toTypedDF("v")
 
-      val result = df.select(FuncAgg.maxAgg(df("v"))).collect()
+      val result = df.select(FuncAgg.maxAgg(df("v")).as("result")).untype.collect()
 
-      result.toSet shouldEqual Set(Row("bob"))
+      result.toSet shouldEqual Set(Row("\"bob\""))
     }
 
     "operate correctly mixing types" in {
 
       val df = List(
         "1.0",
-        "\"2.2\"^^xsd:float",
-        "alice",
-        "\"bob\"^^xsd:string"
-      ).toDF("v")
+        "\"2.2\"^^<http://www.w3.org/2001/XMLSchema#float>",
+        "\"alice\"",
+        "\"bob\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      ).toTypedDF("v")
 
-      val result = df.select(FuncAgg.maxAgg(df("v"))).collect()
+      val result = df.select(FuncAgg.maxAgg(df("v")).as("result")).untype.collect()
 
-      result.toSet shouldEqual Set(Row("bob"))
+      // TODO: we need to see how to calculate these types later on.  For now this won't be a problem since we're not
+      //       mixing types in our own queries.
+      result.toSet shouldEqual Set(Row("\"bob\"^^<http://www.w3.org/2001/XMLSchema#decimal>"))
     }
   }
 
