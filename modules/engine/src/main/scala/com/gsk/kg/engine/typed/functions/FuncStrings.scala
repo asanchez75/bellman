@@ -2,8 +2,8 @@ package com.gsk.kg.engine.typed.functions
 
 import cats.data.NonEmptyList
 import com.gsk.kg.engine.syntax._
-import com.gsk.kg.engine.{DataFrameTyper, RdfFormatter, RdfType}
-import com.gsk.kg.engine.functions.FuncStrings.StringFuncUtils._
+import com.gsk.kg.engine._
+import com.gsk.kg.engine.typed.functions.FuncStrings.StringFuncUtils._
 import com.gsk.kg.engine.functions.Literals._
 import org.apache.commons.codec.binary.Hex
 import org.apache.spark.sql.Column
@@ -43,7 +43,6 @@ object FuncStrings {
         case None => col.value.substr(lit(pos), length(col.value) - pos + 1)
       }
     }
-
 
   /** Implementation of SparQL UCASE on Spark dataframes.
     *
@@ -100,7 +99,11 @@ object FuncStrings {
       when(substring_index(c, s, 1) === c, lit(""))
         .otherwise(substring_index(c, s, 1))
 
-    DataFrameTyper.createRecord(getLeftOrEmpty(col.value, str), col.`type`, col.lang)
+    DataFrameTyper.createRecord(
+      getLeftOrEmpty(col.value, str),
+      col.`type`,
+      col.lang
+    )
   }
 
   /** Implementation of SparQL STRAFTER on Spark dataframes.
@@ -133,7 +136,11 @@ object FuncStrings {
     if (isEmptyPattern(str)) {
       col
     } else {
-      DataFrameTyper.createRecord(getLeftOrEmpty(col.value, str), col.`type`, col.lang)
+      DataFrameTyper.createRecord(
+        getLeftOrEmpty(col.value, str),
+        col.`type`,
+        col.lang
+      )
     }
   }
 
@@ -144,7 +151,7 @@ object FuncStrings {
     * @return
     */
   def encodeForURI(str: String): Column =
-    lit(encodeUri(extractStringLiteral(str)))
+    RdfType.String(lit(encodeUri(extractStringLiteral(str))))
 
   /** Implementation of SparQL ENCODE_FOR_URI on Spark dataframes.
     *
@@ -154,7 +161,7 @@ object FuncStrings {
     */
   def encodeForURI(col: Column): Column = {
     val efu = udf((str: String) => encodeUri(str))
-    efu(extractStringLiteral(col))
+    RdfType.String(efu(col.value))
   }
 
   /** Concatenate two [[Column]] into a new one
@@ -234,7 +241,6 @@ object FuncStrings {
     * | replace("AAAA", "A+?", "b")                | "bbbb"                     |
     * | replace("darted", "^(.*?)d(.*)$", "$1c$2") | "carted"                   |
     *
-    *
     * @see https://www.w3.org/TR/sparql11-query/#func-replace
     * @see https://www.w3.org/TR/xpath-functions/#func-replace
     * @param col
@@ -285,30 +291,19 @@ object FuncStrings {
                                        args: List[Column]
                                      ): Column = {
       when(
-        RdfFormatter.isLocalizedString(arg1), {
-          val l = LocalizedLiteral(arg1)
+        arg1.lang.isNotNull, {
           args.foldLeft(lit(true)) { case (acc, elem) =>
             acc && when(
-              RdfFormatter.isLocalizedString(elem), {
-                val r = LocalizedLiteral(elem)
-                l.tag === r.tag
-              }
+              elem.lang.isNotNull,
+              elem.lang === arg1.lang
             ).otherwise(lit(false))
           }
         }
-      ).when(
-        RdfFormatter.isDatatypeLiteral(arg1), {
-          val l = TypedLiteral(arg1)
-          args.foldLeft(lit(true)) { case (acc, elem) =>
-            acc && when(
-              RdfFormatter.isDatatypeLiteral(elem), {
-                val r = TypedLiteral(elem)
-                l.tag === r.tag
-              }
-            ).otherwise(lit(false))
-          }
+      ).otherwise {
+        args.foldLeft(lit(true)) { case (acc, elem) =>
+          acc && elem.`type` === arg1.`type`
         }
-      ).otherwise(lit(false))
+      }
     }
 
     def isLocalizedLocalizedArgs(arg1: Column, arg2: String): Column =
