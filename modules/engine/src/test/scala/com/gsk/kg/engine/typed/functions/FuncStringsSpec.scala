@@ -437,6 +437,7 @@ class FuncStringsSpec
             FuncStrings.langMatches(initial("tags"), range)
           )
 
+        df.show(false)
         df.collect.foreach { case Row(_, expected, result) =>
           expected shouldEqual result
         }
