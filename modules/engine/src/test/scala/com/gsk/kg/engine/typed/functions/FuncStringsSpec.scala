@@ -14,7 +14,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class FuncStringsSpec
-  extends AnyWordSpec
+    extends AnyWordSpec
     with Matchers
     with SparkSpec
     with ScalaCheckDrivenPropertyChecks
@@ -300,7 +300,7 @@ class FuncStringsSpec
         )
 
         cases.map { case (arg1, arg2, expect) =>
-          val df = List(arg1).toTypedDF("arg1")
+          val df       = List(arg1).toTypedDF("arg1")
           val strafter = FuncStrings.strafter(df("arg1"), arg2).as("result")
           val result = df
             .select(strafter)
