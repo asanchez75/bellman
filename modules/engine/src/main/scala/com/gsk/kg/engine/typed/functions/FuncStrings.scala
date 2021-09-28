@@ -43,7 +43,7 @@ object FuncStrings {
     RdfType.String {
       len match {
         case Some(l) => col.value.substr(pos, l)
-        case None => col.value.substr(lit(pos), length(col.value) - pos + 1)
+        case None    => col.value.substr(lit(pos), length(col.value) - pos + 1)
       }
     }
 
@@ -175,7 +175,7 @@ object FuncStrings {
     */
   def concat(appendTo: Column, append: NonEmptyList[Column]): Column = {
     val lvalue = appendTo.value
-    val ltag = appendTo.lang
+    val ltag   = appendTo.lang
 
     val concatValues = append.toList.foldLeft(lvalue) { case (acc, elem) =>
       cc(acc, elem.value)
@@ -295,9 +295,9 @@ object FuncStrings {
     }
 
     def allArgsAreSameTypeAndLang(
-                                   arg1: Column,
-                                   args: List[Column]
-                                 ): Column = {
+        arg1: Column,
+        args: List[Column]
+    ): Column = {
       when(
         arg1.lang.isNotNull, {
           args.foldLeft(lit(true)) { case (acc, elem) =>
@@ -331,13 +331,13 @@ object FuncStrings {
       RdfFormatter.isLocalizedString(arg1)
 
     def strFuncArgsLocalizedLocalized(
-                                       col: Column,
-                                       str: String,
-                                       localizedFormat: String
-                                     )(
-                                       f: (Column, String) => Column
-                                     ): Column = {
-      val left = LocalizedLiteral(col)
+        col: Column,
+        str: String,
+        localizedFormat: String
+    )(
+        f: (Column, String) => Column
+    ): Column = {
+      val left  = LocalizedLiteral(col)
       val right = LocalizedLiteral(str)
       when(
         left.tag =!= right.tag,
@@ -348,20 +348,20 @@ object FuncStrings {
     }
 
     def strFuncArgsLocalizedPlain(
-                                   col: Column,
-                                   str: String,
-                                   localizedFormat: String
-                                 )(
-                                   f: (Column, String) => Column
-                                 ): Column = {
+        col: Column,
+        str: String,
+        localizedFormat: String
+    )(
+        f: (Column, String) => Column
+    ): Column = {
       val left = LocalizedLiteral(col)
       LocalizedLiteral.formatLocalized(left, str, localizedFormat)(f)
     }
 
     def strFuncArgsTypedTyped(col: Column, str: String, typedFormat: String)(
-      f: (Column, String) => Column
+        f: (Column, String) => Column
     ): Column = {
-      val left = TypedLiteral(col)
+      val left  = TypedLiteral(col)
       val right = TypedLiteral(str)
       when(
         left.tag =!= right.tag,
@@ -372,7 +372,7 @@ object FuncStrings {
     }
 
     def strFuncArgsTypedPlain(col: Column, str: String, typedFormat: String)(
-      f: (Column, String) => Column
+        f: (Column, String) => Column
     ): Column = {
       val left = TypedLiteral(col)
       TypedLiteral.formatTyped(left, str, typedFormat)(f)
@@ -403,7 +403,7 @@ object FuncStrings {
   }
 
   private def formatRdfString(col: Column, sep: String)(
-    f: Column => Column
+      f: Column => Column
   ): Column = {
     format_string(
       "%s",
