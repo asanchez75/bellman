@@ -206,8 +206,9 @@ object FuncStrings {
 
     val langMatch =
       udf((tag: String, range: String) => hasMatchingLangTag(tag, range))
-    when(col === lit("") && range == "*", lit(false))
-      .otherwise(langMatch(col, lit(range)))
+
+    when(col.value === lit("") && range == "*", RdfType.Boolean.False)
+      .otherwise(RdfType.Boolean(langMatch(col.value, lit(range))))
   }
 
   /** Implementation of SparQL REGEX on Spark dataframes.

@@ -418,10 +418,10 @@ class FuncStringsSpec
 
       "correctly apply function when used with range" in {
         val initial = List(
-          ("fr", true),
-          ("fr-BE", true),
-          ("en", false),
-          ("", false)
+          ("\"fr\"", "true"),
+          ("\"fr-BE\"", "true"),
+          ("\"en\"", "false"),
+          ("\"\"", "false")
         ).toTypedDF("tags", "expected")
 
         val range = "FR"
@@ -439,10 +439,10 @@ class FuncStringsSpec
 
       "correctly apply function when used with wildcard" in {
         val initial = List(
-          ("fr", true),
-          ("fr-BE", true),
-          ("en", true),
-          ("", false)
+          ("\"fr\"", "true"),
+          ("\"fr-BE\"", "true"),
+          ("\"en\"", "true"),
+          ("\"\"", "false")
         ).toTypedDF("tags", "expected")
 
         val range = "*"
