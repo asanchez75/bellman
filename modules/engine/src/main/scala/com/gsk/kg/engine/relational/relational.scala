@@ -32,6 +32,7 @@ import simulacrum.typeclass
   def leftSemi(left: A, right: A, columns: Seq[String]): A
   def leftAnti(left: A, right: A, columns: Seq[String]): A
   def leftOuter(df: A, right: A, columns: Seq[String]): A
+  def leftOuter(df: A, right: A, joinCondition: Column): A
   def union(left: A, right: A): A
   def unionByName(left: A, right: A): A
   def minus(left: A, right: A): A
@@ -56,6 +57,7 @@ import simulacrum.typeclass
   def collect(df: A): Array[Row]
   def show(df: A, truncate: Boolean): Unit
   def toDataFrame(df: A): DataFrame
+  def as(df: A, alias: String): A
 }
 
 object Relational extends RelationalInstances {
@@ -139,6 +141,14 @@ trait RelationalInstances {
           columns: Seq[String]
       ): DataFrame @@ Untyped = @@ {
         left.unwrap.join(right.unwrap, columns, "left_outer")
+      }
+
+      def leftOuter(
+          left: DataFrame @@ Untyped,
+          right: DataFrame @@ Untyped,
+          joinCondition: Column
+      ): DataFrame @@ Untyped = @@ {
+        left.unwrap.join(right.unwrap, joinCondition, "left_outer")
       }
 
       def union(
@@ -261,6 +271,9 @@ trait RelationalInstances {
 
       def toDataFrame(df: DataFrame @@ Untyped): DataFrame =
         df.unwrap
+
+      def as(df: DataFrame @@ Untyped, alias: String): DataFrame @@ Untyped =
+        df.unwrap.as(alias).toDF.@@
     }
 }
 

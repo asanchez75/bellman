@@ -2,9 +2,11 @@ package com.gsk.kg.engine.optimizer
 
 import cats.Functor
 import cats.implicits._
+
 import higherkindness.droste._
 import higherkindness.droste.data._
 import higherkindness.droste.syntax.all._
+
 import com.gsk.kg.engine.DAG
 import com.gsk.kg.engine.DAG.{Project => _, _}
 import com.gsk.kg.engine.Log
@@ -20,6 +22,7 @@ import com.gsk.kg.sparqlparser.PropertyExpression
 import com.gsk.kg.sparqlparser.PropertyExpression._
 import com.gsk.kg.sparqlparser.StringVal
 import com.gsk.kg.sparqlparser.StringVal.VARIABLE
+
 import monocle.POptional
 
 /** This optimization rewrites the DAG for Property Path expressions by performing multiple phases. To explain what
@@ -443,6 +446,8 @@ object PropertyPathRewrite {
     import RewriteOptics.UnionUpdaters._
 
     CVAlgebra {
+      case Union(l :< _, r :< _) =>
+        unionR(l, r)
       case Join(
             ll :< Join(_, _),
             _ :< Path(_, per, or, gr, rev)
@@ -506,6 +511,16 @@ object PropertyPathRewrite {
       g: List[StringVal]
   ): CVCoalgebra[DAG, PropertyExpression] =
     CVCoalgebra[DAG, PropertyExpression] {
+//      case OneOrMore(Alternative(pel, per)) =>
+//        Union(
+//          Coattr.pure(OneOrMore(pel)),
+//          Coattr.pure(OneOrMore(per))
+//        )
+//      case OneOrMore(SeqExpression(pel, per)) =>
+//        Union(
+//          Coattr.pure(OneOrMore(pel)),
+//          Coattr.pure(OneOrMore(per))
+//        )
       case SeqExpression(pel, per) =>
         Join(Coattr.pure(pel), Coattr.pure(per))
       case Alternative(pel, per) =>
@@ -575,9 +590,7 @@ object PropertyPathRewrite {
       val dagHisto = scheme.zoo.histo(dagAlgebra)
 
       val reversedPushedDown = peFutu(pe)
-      val unfoldedPaths =
-        peAna(reversedPushedDown)
-//          .getOrElse(pathR(s, reversedPushedDown, o, g, rev))
+      val unfoldedPaths      = peAna(reversedPushedDown)
       val internalVarReplace = dagHisto(unfoldedPaths)
 
       T.coalgebra(internalVarReplace)
