@@ -433,9 +433,9 @@ object PropertyPathRewrite {
       case Reverse(BetweenZeroAndN(n, e)) =>
         BetweenZeroAndNF(n, Coattr.pure(Reverse(e)))
       case x =>
-        val a = P.coalgebra
+        P.coalgebra
           .apply(x)
-        a.map(Coattr.pure)
+          .map(Coattr.pure)
     }
 
   def dagAlgebra[T](implicit
@@ -511,16 +511,6 @@ object PropertyPathRewrite {
       g: List[StringVal]
   ): CVCoalgebra[DAG, PropertyExpression] =
     CVCoalgebra[DAG, PropertyExpression] {
-//      case OneOrMore(Alternative(pel, per)) =>
-//        Union(
-//          Coattr.pure(OneOrMore(pel)),
-//          Coattr.pure(OneOrMore(per))
-//        )
-//      case OneOrMore(SeqExpression(pel, per)) =>
-//        Union(
-//          Coattr.pure(OneOrMore(pel)),
-//          Coattr.pure(OneOrMore(per))
-//        )
       case SeqExpression(pel, per) =>
         Join(Coattr.pure(pel), Coattr.pure(per))
       case Alternative(pel, per) =>
