@@ -11,11 +11,11 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class FuncAggSpec
-  extends AnyWordSpec
-    with Matchers
-    with SparkSpec
-    with ScalaCheckDrivenPropertyChecks
-    with CommonGenerators {
+    extends AnyWordSpec
+      with Matchers
+      with SparkSpec
+      with ScalaCheckDrivenPropertyChecks
+      with CommonGenerators {
 
   import sqlContext.implicits._
 
