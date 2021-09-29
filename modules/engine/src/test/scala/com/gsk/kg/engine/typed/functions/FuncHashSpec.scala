@@ -1,9 +1,11 @@
 package com.gsk.kg.engine.typed.functions
 
-import com.gsk.kg.engine.syntax._
+import org.apache.spark.sql.Row
+
 import com.gsk.kg.engine.compiler.SparkSpec
 import com.gsk.kg.engine.scalacheck.CommonGenerators
-import org.apache.spark.sql.Row
+import com.gsk.kg.engine.syntax._
+
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
@@ -44,7 +46,10 @@ class FuncHashSpec
       "correctly return hash" in {
         val initial = List(
           ("\"abc\"", "\"a9993e364706816aba3e25717850c26c9cd0d89d\""),
-          ("\"abc\"^^xsd:string", "\"a9993e364706816aba3e25717850c26c9cd0d89d\"")
+          (
+            "\"abc\"^^xsd:string",
+            "\"a9993e364706816aba3e25717850c26c9cd0d89d\""
+          )
         ).toTypedDF("input", "expected")
 
         val df = initial.withColumn("result", FuncHash.sha1(initial("input")))

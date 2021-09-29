@@ -1,9 +1,12 @@
 package com.gsk.kg.engine.typed.functions
 
-import com.gsk.kg.engine.{DataFrameTyper, RdfType}
-import com.gsk.kg.engine.syntax._
-import org.apache.spark.sql.{Column, functions}
+import org.apache.spark.sql.Column
+import org.apache.spark.sql.functions
 import org.apache.spark.sql.functions._
+
+import com.gsk.kg.engine.DataFrameTyper
+import com.gsk.kg.engine.RdfType
+import com.gsk.kg.engine.syntax._
 
 object FuncHash {
 
@@ -82,7 +85,6 @@ object FuncHash {
     */
   def sha384(str: String): Column =
     sha384(DataFrameTyper.parse(lit(str)))
-
 
   /** Implementation of SparQL SHA512 on Spark dataframes.
     *
