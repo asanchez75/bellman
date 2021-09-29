@@ -334,6 +334,8 @@ class FuncStringsSpec
           ("\"\"", "\"\"")
         ).toTypedDF("input", "expected")
 
+        initial.show(100, false)
+
         val df = initial.withColumn(
           "result",
           FuncStrings.encodeForURI(initial("input"))
@@ -435,6 +437,7 @@ class FuncStringsSpec
             FuncStrings.langMatches(initial("tags"), range)
           )
 
+        df.show(false)
         df.collect.foreach { case Row(_, expected, result) =>
           expected shouldEqual result
         }
