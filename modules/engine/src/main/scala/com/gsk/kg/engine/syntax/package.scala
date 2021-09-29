@@ -60,11 +60,18 @@ trait DataFrameSyntax {
       }
 
     /** Compile query with dataframe with default configuration
+      *
       * @param query
       * @return
       */
     def sparql(query: String): DataFrame =
       sparql(query, Config.default)
+
+    def untype: DataFrame =
+      RdfFormatter.formatDataFrame(
+        df,
+        Config.default.copy(typeDataframe = true, formatRdfOutput = true)
+      )
   }
 
   final case class EngineException(error: EngineError)
