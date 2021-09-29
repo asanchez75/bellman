@@ -16,10 +16,10 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class FuncStringsSpec
     extends AnyWordSpec
-      with Matchers
-      with SparkSpec
-      with ScalaCheckDrivenPropertyChecks
-      with CommonGenerators {
+    with Matchers
+    with SparkSpec
+    with ScalaCheckDrivenPropertyChecks
+    with CommonGenerators {
 
   import sqlContext.implicits._
 
