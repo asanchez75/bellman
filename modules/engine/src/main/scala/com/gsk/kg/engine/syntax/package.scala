@@ -34,9 +34,6 @@ trait DataFrameSyntax {
   ) {
     import sc.implicits._
 
-    def toTypedDF(): DataFrame =
-      toTypedDF()
-
     def toTypedDF(colNames: String*): DataFrame =
       DataFrameTyper.typeDataFrame(
         lst.toDF(colNames: _*),

@@ -1,9 +1,13 @@
 package com.gsk.kg.engine.typed.functions
 
-import com.gsk.kg.engine.functions.Literals.{NumericLiteral, isDateTimeLiteral, nullLiteral}
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.{month => sMonth, year => sYear, _}
-import org.apache.spark.sql.types.{DoubleType, IntegerType}
+import org.apache.spark.sql.types.IntegerType
+
+import com.gsk.kg.engine.RdfType
+import com.gsk.kg.engine.syntax._
+import com.gsk.kg.engine.typed.functions.TypedLiterals.isDateTimeLiteral
+import com.gsk.kg.engine.typed.functions.TypedLiterals.nullLiteral
 
 object FuncDates {
 
@@ -15,12 +19,10 @@ object FuncDates {
     *
     * @return
     */
-  def now: Column = {
-    format_string(
-      "\"%s\"^^xsd:dateTime",
+  def now: Column =
+    RdfType.DateTime(
       date_format(current_timestamp, "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
     )
-  }
 
   /** Returns the year part of arg as an integer.
     *
@@ -82,23 +84,22 @@ object FuncDates {
   def timezone(col: Column): Column = {
 
     val timeZone = getTimeZoneComponents(col)
-    when(timeZone.isNull, nullLiteral)
-      .when(timeZone.like("Z"), lit("\"PT0S\"^^xsd:dateTime"))
+    when(timeZone.value.isNull, nullLiteral)
+      .when(timeZone.value.like("Z"), RdfType.DateTime(lit("PT0S")))
       .when(
-        timeZone.rlike("-[0-9]{1,2}:[0-9]{1,2}"), {
+        timeZone.value.rlike("-[0-9]{1,2}:[0-9]{1,2}"), {
           val PosSign = 1
           val PosHours = 2
           val PosMinutes = 5
           buildTimeZone(timeZone, Some(PosSign), PosHours, PosMinutes)
-
         }
       )
       .when(
-        timeZone.rlike("[0-9]{1,2}:[0-9]{1,2}"), {
+        timeZone.value.rlike("[0-9]{1,2}:[0-9]{1,2}"), {
           val PosSign = None
           val PosHours = 1
           val PosMinutes = 4
-          buildTimeZone(timeZone, None, PosHours, PosMinutes)
+          buildTimeZone(timeZone, PosSign, PosHours, PosMinutes)
         }
       )
   }
@@ -111,7 +112,7 @@ object FuncDates {
     */
   def tz(col: Column): Column = {
     val timeZone = getTimeZoneComponents(col)
-    when(timeZone.isNull, lit(""))
+    when(timeZone.value.isNull, RdfType.String(lit("")))
       .otherwise(timeZone)
   }
 
@@ -124,8 +125,8 @@ object FuncDates {
   private def apply(f: Column => Column, col: Column): Column =
     when(
       isDateTimeLiteral(col),
-      f(NumericLiteral(col).value)
-    ).otherwise(nullLiteral)
+      RdfType.Int(f(col.value))
+    )
 
   /** Get hours, minutes of dateTime column
     *
@@ -139,20 +140,23 @@ object FuncDates {
     val dateTimeRegex: String =
       "[0-9]{1,4}-[0-9]{1,2}-[0-9]{1,2}T[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}"
 
+    val `type` = pos match {
+      case Seconds => RdfType.Double
+      case _ => RdfType.Int
+    }
+
     when(
-      col.rlike(dateTimeRegex),
-      split(
-        regexp_replace(
-          NumericLiteral(col).value,
-          "[:TZ+]",
+      col.value.rlike(dateTimeRegex),
+      `type`(
+        split(
+          regexp_replace(
+            col.value,
+            "[:TZ+]",
+            "-"
+          ),
           "-"
-        ),
-        "-"
-      ).getItem(pos)
-        .cast(pos match {
-          case Seconds => DoubleType
-          case _ => IntegerType
-        })
+        ).getItem(pos)
+      )
     ).otherwise(nullLiteral)
   }
 
@@ -182,11 +186,11 @@ object FuncDates {
     val LenHoursMinutes = 2
 
     when(
-      col.rlike(dateTimeWithTimeZoneRegex) || col.rlike(
+      col.value.rlike(dateTimeWithTimeZoneRegex) || col.value.rlike(
         dateTimeWithTimeZoneWithoutDecimalSecondsRegex
       ), {
         val timeZone = substring(
-          NumericLiteral(col).value,
+          col.value,
           PosTimeZone,
           LenTimeZone
         )
@@ -198,16 +202,18 @@ object FuncDates {
 
         val signFormatted = when(sign.like("-"), sign).otherwise(lit(""))
 
-        format_string(
-          "%s%s:%s",
-          signFormatted,
-          hoursTimeZone,
-          minutesTimeZone
+        RdfType.String(
+          format_string(
+            "%s%s:%s",
+            signFormatted,
+            hoursTimeZone,
+            minutesTimeZone
+          )
         )
       }
     ).when(
-      col.rlike(dateTimeWithoutTimeZoneRegex),
-      lit("Z")
+      col.value.rlike(dateTimeWithoutTimeZoneRegex),
+      RdfType.String(lit("Z"))
     ).otherwise(nullLiteral)
   }
 
@@ -232,22 +238,24 @@ object FuncDates {
     val LenHoursMinutes = 2
 
     val sign = PosSignOpt
-      .map(posSing => substring(timeZone, posSing, LenSign))
+      .map(posSing => substring(timeZone.value, posSing, LenSign))
       .getOrElse(lit(""))
     val signFormatted = when(sign.like("-"), sign).otherwise(lit(""))
     val hoursTimeZone =
-      substring(timeZone, PosHours, LenHoursMinutes).cast(IntegerType)
-    val minutesTimeZone = substring(timeZone, PosMinutes, LenHoursMinutes)
+      substring(timeZone.value, PosHours, LenHoursMinutes).cast(IntegerType)
+    val minutesTimeZone = substring(timeZone.value, PosMinutes, LenHoursMinutes)
     val minutesFormatted =
       when(minutesTimeZone.like("00"), lit("")).otherwise(
         concat(minutesTimeZone.cast(IntegerType), lit("M"))
       )
 
-    format_string(
-      "\"%sPT%sH%s\"^^xsd:dateTime",
-      signFormatted,
-      hoursTimeZone,
-      minutesFormatted
+    RdfType.DateTime(
+      format_string(
+        "%sPT%sH%s",
+        signFormatted,
+        hoursTimeZone,
+        minutesFormatted
+      )
     )
   }
 }
