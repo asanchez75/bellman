@@ -1,18 +1,21 @@
 package com.gsk.kg.engine.typed.functions
 
 import cats.data.NonEmptyList
-import com.gsk.kg.engine.DataFrameTyper
+
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions.lit
+
+import com.gsk.kg.engine.DataFrameTyper
 import com.gsk.kg.engine.compiler.SparkSpec
 import com.gsk.kg.engine.scalacheck.CommonGenerators
 import com.gsk.kg.engine.syntax._
+
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class FuncStringsSpec
-    extends AnyWordSpec
+  extends AnyWordSpec
     with Matchers
     with SparkSpec
     with ScalaCheckDrivenPropertyChecks
@@ -369,7 +372,10 @@ class FuncStringsSpec
 
         df.select(
           FuncStrings
-            .concat(df("a"), NonEmptyList.of(DataFrameTyper.parse(lit("\" world!\""))))
+            .concat(
+              df("a"),
+              NonEmptyList.of(DataFrameTyper.parse(lit("\" world!\"")))
+            )
             .as("sentences")
         ).untype
           .collect shouldEqual Array(
