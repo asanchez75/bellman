@@ -15,7 +15,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class FuncDatesSpec
-  extends AnyWordSpec
+    extends AnyWordSpec
     with Matchers
     with SparkSpec
     with ScalaCheckDrivenPropertyChecks {
@@ -31,10 +31,10 @@ class FuncDatesSpec
     "now function" should {
 
       val nowColName = "now"
-      val startPos = 2
+      val startPos   = 2
 
       "now function returns current date" in {
-        val df = List(1, 2, 3).toDF()
+        val df            = List(1, 2, 3).toDF()
         val dfCurrentTime = df.select(FuncDates.now.as(nowColName))
 
         dfCurrentTime
@@ -188,10 +188,10 @@ class FuncDatesSpec
     ).toTypedDF("date")
 
   private def eval(
-                    f: Column => Column,
-                    expected: Array[Row],
-                    df: DataFrame
-                  ): Assertion = {
+      f: Column => Column,
+      expected: Array[Row],
+      df: DataFrame
+  ): Assertion = {
     df
       .select(f(col(df.columns.head)).as("r"))
       .untype
