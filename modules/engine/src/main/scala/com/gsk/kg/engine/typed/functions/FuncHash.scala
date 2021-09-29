@@ -1,6 +1,7 @@
 package com.gsk.kg.engine.typed.functions
 
-import com.gsk.kg.engine.functions.Literals.extractStringLiteral
+import com.gsk.kg.engine.{DataFrameTyper, RdfType}
+import com.gsk.kg.engine.syntax._
 import org.apache.spark.sql.{Column, functions}
 import org.apache.spark.sql.functions._
 
@@ -13,7 +14,7 @@ object FuncHash {
     * @return
     */
   def md5(col: Column): Column =
-    functions.md5(extractStringLiteral(col))
+    RdfType.String(functions.md5(col.value))
 
   /** Implementation of SparQL MD5 on Spark dataframes.
     *
@@ -22,7 +23,7 @@ object FuncHash {
     * @return
     */
   def md5(str: String): Column =
-    functions.md5(lit(extractStringLiteral(str)))
+    RdfType.String(functions.md5(DataFrameTyper.parse(lit(str))))
 
   /** Implementation of SparQL SHA1 on Spark dataframes.
     *
@@ -31,7 +32,7 @@ object FuncHash {
     * @return
     */
   def sha1(col: Column): Column =
-    functions.sha1(extractStringLiteral(col))
+    RdfType.String(functions.sha1(col.value))
 
   /** Implementation of SparQL SHA1 on Spark dataframes.
     *
@@ -40,7 +41,7 @@ object FuncHash {
     * @return
     */
   def sha1(str: String): Column =
-    functions.sha1(lit(extractStringLiteral(str)))
+    RdfType.String(functions.sha1(DataFrameTyper.parse(lit(str))))
 
   /** Implementation of SparQL SHA256 on Spark dataframes.
     *
@@ -50,7 +51,7 @@ object FuncHash {
     */
   def sha256(col: Column): Column = {
     val numBits = 256
-    sha2(extractStringLiteral(col), numBits)
+    RdfType.String(sha2(col.value, numBits))
   }
 
   /** Implementation of SparQL SHA256 on Spark dataframes.
@@ -59,10 +60,8 @@ object FuncHash {
     * @param str
     * @return
     */
-  def sha256(str: String): Column = {
-    val numBits = 256
-    sha2(lit(extractStringLiteral(str)), numBits)
-  }
+  def sha256(str: String): Column =
+    sha256(DataFrameTyper.parse(lit(str)))
 
   /** Implementation of SparQL SHA384 on Spark dataframes.
     *
@@ -72,7 +71,7 @@ object FuncHash {
     */
   def sha384(col: Column): Column = {
     val numBits = 384
-    sha2(extractStringLiteral(col), numBits)
+    RdfType.String(sha2(col.value, numBits))
   }
 
   /** Implementation of SparQL SHA384 on Spark dataframes.
@@ -81,10 +80,9 @@ object FuncHash {
     * @param str
     * @return
     */
-  def sha384(str: String): Column = {
-    val numBits = 384
-    sha2(lit(extractStringLiteral(str)), numBits)
-  }
+  def sha384(str: String): Column =
+    sha384(DataFrameTyper.parse(lit(str)))
+
 
   /** Implementation of SparQL SHA512 on Spark dataframes.
     *
@@ -94,7 +92,7 @@ object FuncHash {
     */
   def sha512(col: Column): Column = {
     val numBits = 512
-    sha2(extractStringLiteral(col), numBits)
+    RdfType.String(sha2(col.value, numBits))
   }
 
   /** Implementation of SparQL SHA512 on Spark dataframes.
@@ -103,8 +101,6 @@ object FuncHash {
     * @param str
     * @return
     */
-  def sha512(str: String): Column = {
-    val numBits = 512
-    sha2(lit(extractStringLiteral(str)), numBits)
-  }
+  def sha512(str: String): Column =
+    sha512(DataFrameTyper.parse(lit(str)))
 }
