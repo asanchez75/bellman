@@ -1,9 +1,11 @@
 package com.gsk.kg.engine.typed.functions
 
-import com.gsk.kg.engine.syntax._
+import org.apache.spark.sql.Row
+
 import com.gsk.kg.engine.compiler.SparkSpec
 import com.gsk.kg.engine.scalacheck.CommonGenerators
-import org.apache.spark.sql.Row
+import com.gsk.kg.engine.syntax._
+
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
@@ -79,9 +81,12 @@ class FuncAggSpec
         "\"non numeric type\"^^<http://www.w3.org/2001/XMLSchema#string>"
       ).toTypedDF("v")
 
-      val result = df.select(FuncAgg.avgAgg(df("v")).as("result")).untype.collect()
+      val result =
+        df.select(FuncAgg.avgAgg(df("v")).as("result")).untype.collect()
 
-      result.toSet shouldEqual Set(Row("\"2.7125\"^^<http://www.w3.org/2001/XMLSchema#double>"))
+      result.toSet shouldEqual Set(
+        Row("\"2.7125\"^^<http://www.w3.org/2001/XMLSchema#double>")
+      )
     }
   }
 
@@ -102,9 +107,12 @@ class FuncAggSpec
         "\"non numeric type\"^^<http://www.w3.org/2001/XMLSchema#string>"
       ).toTypedDF("v")
 
-      val result = df.select(FuncAgg.sumAgg(df("v")).as("result")).untype.collect()
+      val result =
+        df.select(FuncAgg.sumAgg(df("v")).as("result")).untype.collect()
 
-      result.toSet shouldEqual Set(Row("\"21.7\"^^<http://www.w3.org/2001/XMLSchema#double>"))
+      result.toSet shouldEqual Set(
+        Row("\"21.7\"^^<http://www.w3.org/2001/XMLSchema#double>")
+      )
     }
   }
 
@@ -123,9 +131,12 @@ class FuncAggSpec
         "\"4.5\"^^<http://www.w3.org/2001/XMLSchema#numeric>"
       ).toTypedDF("v")
 
-      val result = df.select(FuncAgg.minAgg(df("v")).as("result")).untype.collect()
+      val result =
+        df.select(FuncAgg.minAgg(df("v")).as("result")).untype.collect()
 
-      result shouldEqual Array(Row("\"1\"^^<http://www.w3.org/2001/XMLSchema#integer>"))
+      result shouldEqual Array(
+        Row("\"1\"^^<http://www.w3.org/2001/XMLSchema#integer>")
+      )
     }
 
     "operate correctly on string types" in {
@@ -137,7 +148,8 @@ class FuncAggSpec
         "\"bob\"^^<http://www.w3.org/2001/XMLSchema#string>"
       ).toTypedDF("v")
 
-      val result = df.select(FuncAgg.minAgg(df("v")).as("result")).untype.collect()
+      val result =
+        df.select(FuncAgg.minAgg(df("v")).as("result")).untype.collect()
 
       result.toSet shouldEqual Set(Row("\"alice\""))
     }
@@ -151,9 +163,12 @@ class FuncAggSpec
         "\"bob\"^^<http://www.w3.org/2001/XMLSchema#string>"
       ).toTypedDF("v")
 
-      val result = df.select(FuncAgg.minAgg(df("v")).as("result")).untype.collect()
+      val result =
+        df.select(FuncAgg.minAgg(df("v")).as("result")).untype.collect()
 
-      result.toSet shouldEqual Set(Row("\"1.0\"^^<http://www.w3.org/2001/XMLSchema#decimal>"))
+      result.toSet shouldEqual Set(
+        Row("\"1.0\"^^<http://www.w3.org/2001/XMLSchema#decimal>")
+      )
     }
   }
 
@@ -172,9 +187,12 @@ class FuncAggSpec
         "\"4.5\"^^<http://www.w3.org/2001/XMLSchema#numeric>"
       ).toTypedDF("v")
 
-      val result = df.select(FuncAgg.maxAgg(df("v")).as("result")).untype.collect()
+      val result =
+        df.select(FuncAgg.maxAgg(df("v")).as("result")).untype.collect()
 
-      result.toSet shouldEqual Set(Row("\"4.5\"^^<http://www.w3.org/2001/XMLSchema#integer>"))
+      result.toSet shouldEqual Set(
+        Row("\"4.5\"^^<http://www.w3.org/2001/XMLSchema#integer>")
+      )
     }
 
     "operate correctly on string types" in {
@@ -186,7 +204,8 @@ class FuncAggSpec
         "\"bob\"^^<http://www.w3.org/2001/XMLSchema#string>"
       ).toTypedDF("v")
 
-      val result = df.select(FuncAgg.maxAgg(df("v")).as("result")).untype.collect()
+      val result =
+        df.select(FuncAgg.maxAgg(df("v")).as("result")).untype.collect()
 
       result.toSet shouldEqual Set(Row("\"bob\""))
     }
@@ -200,11 +219,14 @@ class FuncAggSpec
         "\"bob\"^^<http://www.w3.org/2001/XMLSchema#string>"
       ).toTypedDF("v")
 
-      val result = df.select(FuncAgg.maxAgg(df("v")).as("result")).untype.collect()
+      val result =
+        df.select(FuncAgg.maxAgg(df("v")).as("result")).untype.collect()
 
       // TODO: we need to see how to calculate these types later on.  For now this won't be a problem since we're not
       //       mixing types in our own queries.
-      result.toSet shouldEqual Set(Row("\"bob\"^^<http://www.w3.org/2001/XMLSchema#decimal>"))
+      result.toSet shouldEqual Set(
+        Row("\"bob\"^^<http://www.w3.org/2001/XMLSchema#decimal>")
+      )
     }
   }
 

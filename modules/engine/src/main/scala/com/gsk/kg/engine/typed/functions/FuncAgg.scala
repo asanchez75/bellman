@@ -1,10 +1,11 @@
 package com.gsk.kg.engine.typed.functions
 
-import com.gsk.kg.engine.syntax._
-import com.gsk.kg.engine.{DataFrameTyper, RdfFormatter, RdfType}
-import TypedLiterals._
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions._
+
+import com.gsk.kg.engine.DataFrameTyper
+import com.gsk.kg.engine.RdfType
+import com.gsk.kg.engine.syntax._
 
 object FuncAgg {
 
@@ -35,7 +36,6 @@ object FuncAgg {
   def avgAgg(col: Column): Column =
     RdfType.Double(avg(col.value))
 
-
   /** This function calculates the sum on a numeric type group
     *
     * @param col
@@ -51,7 +51,6 @@ object FuncAgg {
     */
   def minAgg(col: Column): Column =
     DataFrameTyper.createRecord(min(col.value), first(col.`type`))
-
 
   /** This funciton calculates the maximum of a group when numeric or other literals like strings
     *
