@@ -44,21 +44,21 @@ object PropertyExpressionF {
           case SeqExpressionF(_, _) =>
             unknownPropertyPath("seqExpression")
           case OneOrMoreF(e) =>
-            M.liftF(FuncProperty.betweenNAndM(df, Some(1), None, e))
+            M.liftF(FuncProperty.betweenNAndM(df, Some(1), None, e, false))
           case ZeroOrMoreF(e) =>
-            M.liftF(FuncProperty.betweenNAndM(df, Some(0), None, e))
+            M.liftF(FuncProperty.betweenNAndM(df, Some(0), None, e, false))
           case ZeroOrOneF(e) =>
-            M.liftF(FuncProperty.betweenNAndM(df, Some(0), Some(1), e))
+            M.liftF(FuncProperty.betweenNAndM(df, Some(0), Some(1), e, false))
           case NotOneOfF(es) =>
             M.liftF(FuncProperty.notOneOf(df, es))
           case BetweenNAndMF(n, m, e) =>
-            M.liftF(FuncProperty.betweenNAndM(df, Some(n), Some(m), e))
+            M.liftF(FuncProperty.betweenNAndM(df, Some(n), Some(m), e, true))
           case ExactlyNF(n, e) =>
-            M.liftF(FuncProperty.betweenNAndM(df, Some(n), Some(n), e))
+            M.liftF(FuncProperty.betweenNAndM(df, Some(n), Some(n), e, true))
           case NOrMoreF(n, e) =>
-            M.liftF(FuncProperty.betweenNAndM(df, Some(n), None, e))
+            M.liftF(FuncProperty.betweenNAndM(df, Some(n), None, e, true))
           case BetweenZeroAndNF(n, e) =>
-            M.liftF(FuncProperty.betweenNAndM(df, None, Some(n), e))
+            M.liftF(FuncProperty.betweenNAndM(df, None, Some(n), e, true))
           case UriF(s) => FuncProperty.uri(df, s).pure[M]
         }
 
