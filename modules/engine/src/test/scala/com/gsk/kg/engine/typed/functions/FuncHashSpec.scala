@@ -12,10 +12,10 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class FuncHashSpec
     extends AnyWordSpec
-      with Matchers
-      with SparkSpec
-      with ScalaCheckDrivenPropertyChecks
-      with CommonGenerators {
+    with Matchers
+    with SparkSpec
+    with ScalaCheckDrivenPropertyChecks
+    with CommonGenerators {
 
   import sqlContext.implicits._
 
