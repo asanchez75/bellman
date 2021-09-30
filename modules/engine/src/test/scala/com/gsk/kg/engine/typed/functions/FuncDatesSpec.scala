@@ -147,12 +147,12 @@ class FuncDatesSpec
     "timezone function" should {
 
       val expected = Array(
-        Row("\"-PT5H29M\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"),
-        Row("\"PT0S\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"),
-        Row("\"PT0S\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"),
-        Row("\"-PT5H9M\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"),
-        Row("\"PT5H9M\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"),
-        Row("\"PT5H\"^^<http://www.w3.org/2001/XMLSchema#dateTime>")
+        Row("\"-PT5H29M\"^^<http://www.w3.org/2001/XMLSchema#datetime>"),
+        Row("\"PT0S\"^^<http://www.w3.org/2001/XMLSchema#datetime>"),
+        Row("\"PT0S\"^^<http://www.w3.org/2001/XMLSchema#datetime>"),
+        Row("\"-PT5H9M\"^^<http://www.w3.org/2001/XMLSchema#datetime>"),
+        Row("\"PT5H9M\"^^<http://www.w3.org/2001/XMLSchema#datetime>"),
+        Row("\"PT5H\"^^<http://www.w3.org/2001/XMLSchema#datetime>")
       )
 
       "timezone function returns min of datetime" in {
@@ -179,12 +179,12 @@ class FuncDatesSpec
 
   private def getInitialDataFrame(): DataFrame =
     List(
-      "\"2011-01-10T14:45:13.815-05:29\"^^<http://www.w3.org/2001/XMLSchema#dateTime>",
-      "\"2020-12-09T01:50:24Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>",
-      "\"2020-12-09T01:50:24.888Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>",
-      "\"2011-01-10T14:45:13-05:09\"^^<http://www.w3.org/2001/XMLSchema#dateTime>",
-      "\"2011-01-10T14:45:13.815+05:09\"^^<http://www.w3.org/2001/XMLSchema#dateTime>",
-      "\"2011-01-10T14:45:13.815+05:00\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
+      "\"2011-01-10T14:45:13.815-05:29\"^^<http://www.w3.org/2001/XMLSchema#datetime>",
+      "\"2020-12-09T01:50:24Z\"^^<http://www.w3.org/2001/XMLSchema#datetime>",
+      "\"2020-12-09T01:50:24.888Z\"^^<http://www.w3.org/2001/XMLSchema#datetime>",
+      "\"2011-01-10T14:45:13-05:09\"^^<http://www.w3.org/2001/XMLSchema#datetime>",
+      "\"2011-01-10T14:45:13.815+05:09\"^^<http://www.w3.org/2001/XMLSchema#datetime>",
+      "\"2011-01-10T14:45:13.815+05:00\"^^<http://www.w3.org/2001/XMLSchema#datetime>"
     ).toTypedDF("date")
 
   private def eval(

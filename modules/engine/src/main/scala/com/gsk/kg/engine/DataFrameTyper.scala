@@ -62,7 +62,7 @@ object RdfType {
   }
 
   case object DateTime extends RdfType {
-    val repr = lit("http://www.w3.org/2001/XMLSchema#dateTime")
+    val repr = lit("http://www.w3.org/2001/XMLSchema#datetime")
   }
 
   case object Blank extends RdfType {
