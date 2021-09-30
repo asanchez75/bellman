@@ -177,13 +177,17 @@ object PathFrame {
       val cols = Seq(SIdx.toString, PIdx.toString, oSlice.toString) :+ gCol
 
       val nPaths = pathFrame
-        .select(cols.map(col))
         .filter(cols.foldLeft(lit(true)) { case (acc, elem) =>
           acc && pathFrame.getColumn(elem).isNotNull
         })
-        .withColumnRenamed(s"$oSlice", s"$OIdx")
 
-      nPaths
+      val selection = (SIdx to oSlice).map(_.toString) :+ gCol
+
+      val distinctRows = nPaths.select(selection.map(col)).distinct
+
+      distinctRows
+        .select(cols.map(col))
+        .withColumnRenamed(s"$oSlice", s"$OIdx")
     }
   }
 
@@ -240,7 +244,7 @@ object PathFrame {
   ): Monoid[PathFrame] =
     new Monoid[PathFrame] {
       def combine(x: PathFrame, y: PathFrame): PathFrame =
-        merge(x, y).distinct
+        merge(x, y)
       def empty: PathFrame = Relational[PathFrame].empty
     }
 }

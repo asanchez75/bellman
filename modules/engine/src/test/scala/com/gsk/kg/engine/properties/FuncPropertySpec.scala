@@ -108,7 +108,7 @@ class FuncPropertySpec
 
           // ?s foaf:knows{1, 3} ?o
           val result =
-            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc)
+            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc, true)
 
           result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
@@ -211,7 +211,7 @@ class FuncPropertySpec
 
           // ?s foaf:knows{3, 2} ?o
           val result =
-            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc)
+            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc, true)
 
           result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
@@ -272,7 +272,7 @@ class FuncPropertySpec
 
           // ?s foaf:knows{0, 2} ?o
           val result =
-            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc)
+            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc, true)
 
           result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
@@ -399,7 +399,7 @@ class FuncPropertySpec
 
           // ?s foaf:knows{-1, -1} ?o
           val result =
-            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc)
+            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc, true)
 
           result shouldBe a[Left[_, _]]
         }
@@ -444,7 +444,7 @@ class FuncPropertySpec
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           val result =
-            FuncProperty.betweenNAndM(df, Some(1), None, knowsUriFunc)
+            FuncProperty.betweenNAndM(df, Some(1), None, knowsUriFunc, false)
 
           result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
@@ -550,7 +550,7 @@ class FuncPropertySpec
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           val result =
-            FuncProperty.betweenNAndM(df, Some(0), None, knowsUriFunc)
+            FuncProperty.betweenNAndM(df, Some(0), None, knowsUriFunc, false)
 
           result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
@@ -692,7 +692,7 @@ class FuncPropertySpec
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           val result =
-            FuncProperty.betweenNAndM(df, Some(0), Some(1), knowsUriFunc)
+            FuncProperty.betweenNAndM(df, Some(0), Some(1), knowsUriFunc, false)
 
           result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
@@ -801,7 +801,7 @@ class FuncPropertySpec
 
           // ?s foaf:knows{3, 3} ?o
           val result =
-            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc)
+            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc, true)
 
           result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
@@ -861,7 +861,7 @@ class FuncPropertySpec
 
           // ?s foaf:knows{2,} ?o
           val result =
-            FuncProperty.betweenNAndM(df, Some(n), None, knowsUriFunc)
+            FuncProperty.betweenNAndM(df, Some(n), None, knowsUriFunc, true)
 
           result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
@@ -945,7 +945,7 @@ class FuncPropertySpec
 
           // ?s foaf:knows{,2} ?o
           val result =
-            FuncProperty.betweenNAndM(df, None, Some(n), knowsUriFunc)
+            FuncProperty.betweenNAndM(df, None, Some(n), knowsUriFunc, true)
 
           result.right.get.right.get.collect.toSet shouldEqual Set(
             Row(
@@ -1068,7 +1068,7 @@ class FuncPropertySpec
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           val result =
-            FuncProperty.betweenNAndM(df, None, None, knowsUriFunc)
+            FuncProperty.betweenNAndM(df, None, None, knowsUriFunc, true)
 
           result shouldBe a[Left[_, _]]
         }

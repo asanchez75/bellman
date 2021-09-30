@@ -25,7 +25,8 @@ object FuncProperty {
       df: DataFrame @@ Untyped,
       maybeN: Option[Int],
       maybeM: Option[Int],
-      e: ColOrDf
+      e: ColOrDf,
+      duplicates: Boolean
   )(implicit
       sc: SQLContext
   ): Result[ColOrDf] = {
@@ -55,10 +56,17 @@ object FuncProperty {
     }
 
     checkArgs.flatMap { case (effectiveN, effectiveM) =>
-      val onePaths = getOneLengthPaths(e match {
-        case Right(predDf) => predDf
-        case Left(predCol) => df.filter(predCol)
-      })
+      val (nonZeroPaths, zeroPaths) = e match {
+        case Right(predDf) =>
+          (
+            predDf.filter(col(pCol).isNotNull),
+            predDf.filter(col(pCol).isNull)
+          )
+        case Left(predCol) =>
+          (df.filter(predCol), df.filter(predCol && col(pCol).isNull))
+      }
+
+      val onePaths = getOneLengthPaths(nonZeroPaths)
 
       val (maxLength, pathsFrame) =
         constructPathFrame(onePaths, limit = Some(effectiveM))
@@ -67,14 +75,21 @@ object FuncProperty {
         effectiveN to (if (effectiveM > maxLength) maxLength else effectiveM)
 
       val paths =
-        effectiveRange
-          .map(i => getNLengthPathTriples(df, pathsFrame, i))
-          .toList
+        effectiveRange.map { i =>
+          getNLengthPathTriples(df, pathsFrame, i)
+        }.toList
 
-      val betweenNAndMPaths = Foldable[List]
-        .fold(paths)
+      val combinedPaths = Foldable[List].fold(paths)
+      val betweenNAndMPaths = if (duplicates) { combinedPaths }
+      else { combinedPaths.distinct }
 
-      toSPOG(betweenNAndMPaths)
+      val merged = merge(toSPOG(betweenNAndMPaths), zeroPaths)
+      val (mergedNoZeroPaths, mergedZeroPaths) = (
+        merged.filter(col(pCol).isNotNull),
+        merged.filter(col(pCol).isNull).distinct
+      )
+
+      merge(mergedNoZeroPaths, mergedZeroPaths)
         .asRight[Column]
         .asRight[EngineError]
     }
