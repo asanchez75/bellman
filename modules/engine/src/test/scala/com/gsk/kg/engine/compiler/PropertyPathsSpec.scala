@@ -835,7 +835,7 @@ class PropertyPathsSpec
                 |
                 |SELECT ?s ?o
                 |WHERE {
-                | ?s ^(foaf:knows/foaf:friend/foaf:name) ?o .
+                | ?s (^foaf:knows/^foaf:friend/^foaf:name) ?o .
                 |}
                 |""".stripMargin
 
@@ -5633,7 +5633,7 @@ class PropertyPathsSpec
 
       "mix +" when {
 
-        "with |" ignore {
+        "with |" in {
 
           val df = List(
             (
@@ -5675,22 +5675,6 @@ class PropertyPathsSpec
 
           val result = Compiler.compile(df, query, config)
 
-          /*
-          | <http://example.org/Charles> | <http://example.org/Daniel>  |
-| <http://example.org/Charles> | <http://example.org/Erick>   |
-| <http://example.org/Charles> | "Charles"                    |
-| <http://example.org/Bob>     | <http://example.org/Charles> |
-| <http://example.org/Bob>     | <http://example.org/Daniel>  |
-| <http://example.org/Bob>     | <http://example.org/Erick>   |
-| <http://example.org/Bob>     | "Charles"                    |
-| <http://example.org/Daniel>  | <http://example.org/Erick>   |
-| <http://example.org/Alice>   | <http://example.org/Bob>     |
-| <http://example.org/Alice>   | <http://example.org/Charles> |
-| <http://example.org/Alice>   | <http://example.org/Daniel>  |
-| <http://example.org/Alice>   | <http://example.org/Erick>   |
-| <http://example.org/Alice>   | "Charles"                    |
-           */
-
           result.right.get.collect().toSeq should contain theSameElementsAs Seq(
             Row(
               "<http://example.org/Charles>",
@@ -5711,7 +5695,7 @@ class PropertyPathsSpec
           )
         }
 
-        "with /" ignore {
+        "with /" in {
 
           val df = List(
             (
@@ -6164,7 +6148,7 @@ class PropertyPathsSpec
 
       "mix *" when {
 
-        "with |" ignore {
+        "with |" in {
 
           val df = List(
             (
@@ -6232,7 +6216,7 @@ class PropertyPathsSpec
           rows should contain theSameElementsAs expectedRows
         }
 
-        "with /" ignore {
+        "with /" in {
 
           val df = List(
             (
@@ -6716,7 +6700,7 @@ class PropertyPathsSpec
 
       "mix ?" when {
 
-        "with |" ignore {
+        "with |" in {
 
           val df = List(
             (
@@ -6784,7 +6768,7 @@ class PropertyPathsSpec
           rows should contain theSameElementsAs expectedRows
         }
 
-        "with /" ignore {
+        "with /" in {
 
           val df = List(
             (

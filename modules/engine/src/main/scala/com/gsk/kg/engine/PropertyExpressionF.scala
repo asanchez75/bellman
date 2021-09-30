@@ -37,12 +37,12 @@ object PropertyExpressionF {
     df => {
       val algebraM: AlgebraM[M, PropertyExpressionF, ColOrDf] =
         AlgebraM.apply[M, PropertyExpressionF, ColOrDf] {
-          case AlternativeF(_, _) =>
-            unknownPropertyPath("alternative")
-          case ReverseF(_) =>
-            unknownPropertyPath("reverse")
-          case SeqExpressionF(_, _) =>
-            unknownPropertyPath("seqExpression")
+          case AlternativeF(pel, per) =>
+            M.liftF(FuncProperty.alternative(pel, per))
+          case ReverseF(pe) =>
+            M.liftF(FuncProperty.reverse(pe))
+          case SeqExpressionF(pel, per) =>
+            M.liftF(FuncProperty.seq(df, pel, per))
           case OneOrMoreF(e) =>
             M.liftF(FuncProperty.betweenNAndM(df, Some(1), None, e, false))
           case ZeroOrMoreF(e) =>

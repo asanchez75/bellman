@@ -2,12 +2,9 @@ package com.gsk.kg.engine.relational
 
 import higherkindness.droste.contrib.NewTypesSyntax.NewTypesOps
 import higherkindness.droste.util.newtypes.@@
-
 import org.apache.spark.sql._
 import org.apache.spark.sql.types.StructType
-
 import com.gsk.kg.engine.relational.Relational.Untyped
-
 import simulacrum.typeclass
 
 /** The [[Relational]] typeclass captures the idea of a datatype [[A]] with
@@ -22,6 +19,7 @@ import simulacrum.typeclass
   * }}}
   */
 @typeclass trait Relational[A] {
+  def emptyWithSchema(schema: StructType)(implicit sc: SQLContext): A
   def empty(implicit sc: SQLContext): A
   def isEmpty(df: A): Boolean
   def crossJoin(left: A, right: A): A
@@ -78,6 +76,13 @@ trait RelationalInstances {
     */
   implicit val untypedDataFrameRelational: Relational[DataFrame @@ Untyped] =
     new Relational[DataFrame @@ Untyped] {
+
+      def emptyWithSchema(schema: StructType)(implicit
+          sc: SQLContext
+      ): DataFrame @@ Untyped = @@(
+        sc.createDataFrame(sc.sparkContext.emptyRDD[Row], schema)
+      )
+
       def empty(implicit sc: SQLContext): DataFrame @@ Untyped = @@(
         sc.emptyDataFrame
       )
