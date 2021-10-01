@@ -16,10 +16,10 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class FuncNumericsSpec
-  extends AnyWordSpec
-    with Matchers
-    with SparkSpec
-    with ScalaCheckDrivenPropertyChecks {
+    extends AnyWordSpec
+      with Matchers
+      with SparkSpec
+      with ScalaCheckDrivenPropertyChecks {
 
   import sqlContext.implicits._
 
@@ -89,7 +89,13 @@ class FuncNumericsSpec
       "\"10.5\"^^<http://www.w3.org/2001/XMLSchema#decimal>",
       "\"-11\"^^<http://www.w3.org/2001/XMLSchema#integer>"
     ),
-    ("\"-10.5\"^^<http://www.w3.org/2001/XMLSchema#string>", nullValue, nullValue, nullValue, nullValue),
+    (
+      "\"-10.5\"^^<http://www.w3.org/2001/XMLSchema#string>",
+      nullValue,
+      nullValue,
+      nullValue,
+      nullValue
+    ),
     ("2.8", "3", "3", "2.8", "2"),
     ("2", "2", "2", "2.0", "2")
   )

@@ -30,7 +30,8 @@ object FuncNumerics {
     * @param col
     * @return
     */
-  def round(col: Column): Column = apply(sRound, col, c => RdfType.Int(c.cast(IntegerType)))
+  def round(col: Column): Column =
+    apply(sRound, col, c => RdfType.Int(c.cast(IntegerType)))
 
   /** Returns the smallest (closest to negative infinity) number with no fractional part
     * that is not less than the value of arg. An error is raised if arg is not a numeric value.
@@ -38,7 +39,8 @@ object FuncNumerics {
     * @param col
     * @return
     */
-  def ceil(col: Column): Column = apply(sCeil, col, c => RdfType.Int(c.cast(IntegerType)))
+  def ceil(col: Column): Column =
+    apply(sCeil, col, c => RdfType.Int(c.cast(IntegerType)))
 
   /** Returns the largest (closest to positive infinity) number with no fractional part that is not greater
     * than the value of arg. An error is raised if arg is not a numeric value.
@@ -46,7 +48,8 @@ object FuncNumerics {
     * @param col
     * @return
     */
-  def floor(col: Column): Column = apply(sFloor, col, c => RdfType.Int(c.cast(IntegerType)))
+  def floor(col: Column): Column =
+    apply(sFloor, col, c => RdfType.Int(c.cast(IntegerType)))
 
   /** Returns a pseudo-random number between 0 (inclusive) and 1.0e0 (exclusive). Different numbers can be
     * produced every time this function is invoked. Numbers should be produced with approximately equal probability.
@@ -70,7 +73,11 @@ object FuncNumerics {
     * @param col
     * @return
     */
-  private def apply(f: Column => Column, col: Column, `type`: Column => Column): Column =
+  private def apply(
+                     f: Column => Column,
+                     col: Column,
+                     `type`: Column => Column
+                   ): Column =
     when(
       isNumericLiteral(col),
       `type`(f(col.value))
