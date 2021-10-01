@@ -53,8 +53,7 @@ class FuncPropertySpec
         val uriFunc = FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
         uriFunc shouldBe a[Left[_, _]]
 
-        val result = df.select(uriFunc.left.get)
-        result.collect.toSet shouldEqual Set(
+        uriFunc.collect.toSet shouldEqual Set(
           Row(true),
           Row(false)
         )
@@ -110,7 +109,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc, true)
 
-          result.right.get.right.get.collect.toSet shouldEqual Set(
+          result.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
@@ -213,7 +212,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc, true)
 
-          result.right.get.right.get.collect.toSet shouldEqual Set(
+          result.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
@@ -274,7 +273,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc, true)
 
-          result.right.get.right.get.collect.toSet shouldEqual Set(
+          result.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               null,
@@ -446,7 +445,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.betweenNAndM(df, Some(1), None, knowsUriFunc, false)
 
-          result.right.get.right.get.collect.toSet shouldEqual Set(
+          result.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
@@ -552,7 +551,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.betweenNAndM(df, Some(0), None, knowsUriFunc, false)
 
-          result.right.get.right.get.collect.toSet shouldEqual Set(
+          result.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               null,
@@ -694,7 +693,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.betweenNAndM(df, Some(0), Some(1), knowsUriFunc, false)
 
-          result.right.get.right.get.collect.toSet shouldEqual Set(
+          result.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               null,
@@ -803,7 +802,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc, true)
 
-          result.right.get.right.get.collect.toSet shouldEqual Set(
+          result.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
@@ -863,7 +862,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.betweenNAndM(df, Some(n), None, knowsUriFunc, true)
 
-          result.right.get.right.get.collect.toSet shouldEqual Set(
+          result.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
@@ -947,7 +946,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.betweenNAndM(df, None, Some(n), knowsUriFunc, true)
 
-          result.right.get.right.get.collect.toSet shouldEqual Set(
+          result.right.get.collect.toSet shouldEqual Set(
             Row(
               "\"Charles\"",
               null,
@@ -1116,7 +1115,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.notOneOf(df, List(knowsUriFunc))
 
-          result.right.get.right.get.collect.toSet shouldEqual Set(
+          result.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
@@ -1164,7 +1163,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.notOneOf(df, List(knowsUriFunc, fooUriFunc))
 
-          result.right.get.right.get.collect.toSet shouldEqual Set(
+          result.right.get.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
