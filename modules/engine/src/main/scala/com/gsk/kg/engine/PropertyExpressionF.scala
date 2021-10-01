@@ -7,14 +7,12 @@ import higherkindness.droste.macros.deriveTraverse
 import higherkindness.droste.syntax.all._
 import higherkindness.droste.util.newtypes.@@
 
-import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
 
 import com.gsk.kg.config.Config
 import com.gsk.kg.engine.properties.FuncProperty
 import com.gsk.kg.engine.relational.Relational.Untyped
-import com.gsk.kg.sparqlparser.EngineError
 import com.gsk.kg.sparqlparser.PropertyExpression
 import com.gsk.kg.sparqlparser.PropertyExpression._
 import com.gsk.kg.sparqlparser.Result
@@ -25,24 +23,22 @@ import monocle.macros.Lenses
 
 object PropertyExpressionF {
 
-  type ColOrDf = Either[Column, DataFrame @@ Untyped]
-
   def compile[T](
       t: T,
       config: Config
   )(implicit
       T: Basis[PropertyExpressionF, T],
       sc: SQLContext
-  ): DataFrame @@ Untyped => Result[ColOrDf] =
+  ): DataFrame @@ Untyped => Result[DataFrame @@ Untyped] =
     df => {
-      val algebraM: AlgebraM[M, PropertyExpressionF, ColOrDf] =
-        AlgebraM.apply[M, PropertyExpressionF, ColOrDf] {
-          case AlternativeF(_, _) =>
-            unknownPropertyPath("alternative")
-          case ReverseF(_) =>
-            unknownPropertyPath("reverse")
-          case SeqExpressionF(_, _) =>
-            unknownPropertyPath("seqExpression")
+      val algebraM: AlgebraM[M, PropertyExpressionF, DataFrame @@ Untyped] =
+        AlgebraM.apply[M, PropertyExpressionF, DataFrame @@ Untyped] {
+          case AlternativeF(pel, per) =>
+            M.liftF(FuncProperty.alternative(pel, per))
+          case ReverseF(pe) =>
+            M.liftF(FuncProperty.reverse(pe))
+          case SeqExpressionF(pel, per) =>
+            M.liftF(FuncProperty.seq(pel, per))
           case OneOrMoreF(e) =>
             M.liftF(FuncProperty.betweenNAndM(df, Some(1), None, e, false))
           case ZeroOrMoreF(e) =>
@@ -62,15 +58,11 @@ object PropertyExpressionF {
           case UriF(s) => FuncProperty.uri(df, s).pure[M]
         }
 
-      val eval = scheme.cataM[M, PropertyExpressionF, T, ColOrDf](algebraM)
+      val eval =
+        scheme.cataM[M, PropertyExpressionF, T, DataFrame @@ Untyped](algebraM)
 
       eval(t).runA(config, df)
     }
-
-  private def unknownPropertyPath(name: String): M[ColOrDf] =
-    M.liftF[Result, Config, Log, DataFrame @@ Untyped, ColOrDf](
-      EngineError.UnknownPropertyPath(name).asLeft[ColOrDf]
-    )
 
   @Lenses final case class AlternativeF[A](pel: A, per: A)
       extends PropertyExpressionF[A]

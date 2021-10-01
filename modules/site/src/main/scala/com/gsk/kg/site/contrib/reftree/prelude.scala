@@ -140,14 +140,13 @@ object prelude {
       )
     case dag @ DAG.Sequence(bps) =>
       RefTree.Ref(dag, bps.map(_.refTree.toField))
-    case dag @ DAG.Path(s, p, o, g, rev) =>
+    case dag @ DAG.Path(s, p, o, g) =>
       RefTree.Ref(
         dag,
         Seq(
           s.refTree.toField,
           p.toString.refTree.toField,
-          o.refTree.toField,
-          rev.refTree.toField
+          o.refTree.toField
         ) ++ g.map(
           _.refTree.toField
         )
