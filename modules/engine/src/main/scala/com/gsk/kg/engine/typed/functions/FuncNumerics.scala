@@ -55,6 +55,9 @@ object FuncNumerics {
     */
   def rand: Column = RdfType.Double(sRand())
 
+  private def apply(f: Column => Column, col: Column): Column =
+    apply(f, col, DataFrameTyper.parse)
+
   /** Apply function f over column col detecting malformed data
     * e.g.
     * case col = 10                      ==> f(10)
