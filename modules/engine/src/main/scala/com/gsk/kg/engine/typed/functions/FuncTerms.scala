@@ -1,12 +1,13 @@
 package com.gsk.kg.engine.typed.functions
 
-import com.gsk.kg.engine.syntax._
-import com.gsk.kg.engine.{DataFrameTyper, RdfType}
-import com.gsk.kg.engine.typed.functions.TypedLiterals.isNumericLiteral
-import com.gsk.kg.engine.functions.Literals.{TypedLiteral, nullLiteral}
 import org.apache.spark.sql.Column
-import org.apache.spark.sql.expressions.UserDefinedFunction
-import org.apache.spark.sql.functions.{concat => cc, _}
+import org.apache.spark.sql.functions.{concat => _, _}
+
+import com.gsk.kg.engine.DataFrameTyper
+import com.gsk.kg.engine.RdfType
+import com.gsk.kg.engine.functions.Literals.nullLiteral
+import com.gsk.kg.engine.syntax._
+import com.gsk.kg.engine.typed.functions.TypedLiterals.isNumericLiteral_
 
 object FuncTerms {
 

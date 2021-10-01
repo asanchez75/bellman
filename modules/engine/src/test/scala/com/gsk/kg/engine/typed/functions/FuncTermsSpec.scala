@@ -1,11 +1,13 @@
 package com.gsk.kg.engine.typed.functions
 
-import com.gsk.kg.engine.RdfType
-import com.gsk.kg.engine.syntax._
-import com.gsk.kg.engine.compiler.SparkSpec
-import com.gsk.kg.engine.scalacheck.CommonGenerators
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions.col
+
+import com.gsk.kg.engine.RdfType
+import com.gsk.kg.engine.compiler.SparkSpec
+import com.gsk.kg.engine.scalacheck.CommonGenerators
+import com.gsk.kg.engine.syntax._
+
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
@@ -70,7 +72,8 @@ class FuncTermsSpec
         val result = df
           .select(
             FuncTerms
-              .strdt(df("s"), "<http://www.w3.org/2001/XMLSchema#integer>").as("result")
+              .strdt(df("s"), "<http://www.w3.org/2001/XMLSchema#integer>")
+              .as("result")
           )
           .untype
           .collect
@@ -109,7 +112,8 @@ class FuncTermsSpec
 
         df.select(
           FuncTerms.datatype(df("literals")).as("result")
-        ).untype.collect shouldEqual Array(
+        ).untype
+          .collect shouldEqual Array(
           Row("<http://www.w3.org/2001/XMLSchema#double>"),
           Row("<http://www.w3.org/2001/XMLSchema#string>"),
           Row("<http://www.w3.org/2001/XMLSchema#string>")
@@ -170,7 +174,8 @@ class FuncTermsSpec
           "_:name"
         ).toTypedDF("text")
 
-        val result = df.select(FuncTerms.isBlank(df("text")).as("result")).untype.collect
+        val result =
+          df.select(FuncTerms.isBlank(df("text")).as("result")).untype.collect
 
         result shouldEqual Array(
           Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"),
@@ -249,11 +254,15 @@ class FuncTermsSpec
 
         dfResult
           .select(
-            RdfType.Boolean(col(uuidColName).value.rlike(uuidRegex)).as(uuidRegexColName)
+            RdfType
+              .Boolean(col(uuidColName).value.rlike(uuidRegex))
+              .as(uuidRegexColName)
           )
           .untype
           .collect()
-          .toSet shouldEqual Set(Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"))
+          .toSet shouldEqual Set(
+          Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
+        )
       }
     }
 
@@ -278,11 +287,15 @@ class FuncTermsSpec
 
         dfResult
           .select(
-            RdfType.Boolean(col(uuidColName).value.rlike(uuidRegex)).as(uuidRegexColName)
+            RdfType
+              .Boolean(col(uuidColName).value.rlike(uuidRegex))
+              .as(uuidRegexColName)
           )
           .untype
           .collect()
-          .toSet shouldEqual Set(Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"))
+          .toSet shouldEqual Set(
+          Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
+        )
       }
     }
   }
