@@ -1,5 +1,7 @@
 package com.gsk.kg.engine.typed.functions
 
+import com.gsk.kg.engine.RdfType
+import com.gsk.kg.engine.syntax._
 import com.gsk.kg.engine.compiler.SparkSpec
 import com.gsk.kg.engine.scalacheck.CommonGenerators
 import org.apache.spark.sql.Row
@@ -28,9 +30,9 @@ class FuncTermsSpec
       "remove angle brackets from uris" in {
 
         val initial = List(
-          ("<mailto:pepe@examplle.com>", "mailto:pepe@examplle.com"),
-          ("<http://example.com>", "http://example.com")
-        ).toDF("input", "expected")
+          ("<mailto:pepe@examplle.com>", "\"mailto:pepe@examplle.com\""),
+          ("<http://example.com>", "\"http://example.com\"")
+        ).toTypedDF("input", "expected")
 
         val df = initial.withColumn("result", FuncTerms.str(initial("input")))
 
@@ -42,12 +44,12 @@ class FuncTermsSpec
       "don't modify non-uri strings" in {
 
         val initial = List(
-          ("mailto:pepe@examplle.com>", "mailto:pepe@examplle.com>"),
-          ("http://example.com>", "http://example.com>"),
-          ("hello", "hello"),
+          ("\"mailto:pepe@examplle.com>\"", "\"mailto:pepe@examplle.com>\""),
+          ("\"http://example.com>\"", "\"http://example.com>\""),
+          ("\"hello\"", "\"hello\""),
           ("\"test\"", "\"test\""),
           ("1", "1")
-        ).toDF("input", "expected")
+        ).toTypedDF("input", "expected")
 
         val df = initial.withColumn("result", FuncTerms.str(initial("input")))
 
@@ -62,14 +64,15 @@ class FuncTermsSpec
       "return a literal with lexical for and type specified" in {
 
         val df = List(
-          "123"
-        ).toDF("s")
+          "\"123\""
+        ).toTypedDF("s")
 
         val result = df
           .select(
             FuncTerms
-              .strdt(df("s"), "<http://www.w3.org/2001/XMLSchema#integer>")
+              .strdt(df("s"), "<http://www.w3.org/2001/XMLSchema#integer>").as("result")
           )
+          .untype
           .collect
 
         result shouldEqual Array(
@@ -81,11 +84,12 @@ class FuncTermsSpec
     "FuncTerms.strlang" should {
 
       "return a literal with lexical form and language tag" in {
-        val df = List("chat", "foo").toDF("s")
+        val df = List("\"chat\"", "\"foo\"").toTypedDF("s")
         val result = df
           .select(
-            FuncTerms.strlang(df("s"), "es")
+            FuncTerms.strlang(df("s"), "es").as("result")
           )
+          .untype
           .collect()
 
         result shouldEqual Array(
@@ -98,19 +102,17 @@ class FuncTermsSpec
     "FuncTerms.datatype" should {
       "return the datatype IRI of a literal" in {
         val df = List(
-          "\"1.1\"^^xsd:double", // a typed literal
+          "\"1.1\"^^<http://www.w3.org/2001/XMLSchema#double>", // a typed literal
           "\"1\"", // a simple literal
-          "\"foo\"@es", // a literal with a language tag
-          "not a literal"
-        ).toDF("literals")
+          "\"foo\"@es" // a literal with a language tag
+        ).toTypedDF("literals")
 
         df.select(
-          FuncTerms.datatype(df("literals"))
-        ).collect shouldEqual Array(
-          Row("xsd:double"),
-          Row("xsd:string"),
-          Row("rdf:langString"),
-          Row(null)
+          FuncTerms.datatype(df("literals")).as("result")
+        ).untype.collect shouldEqual Array(
+          Row("<http://www.w3.org/2001/XMLSchema#double>"),
+          Row("<http://www.w3.org/2001/XMLSchema#string>"),
+          Row("<http://www.w3.org/2001/XMLSchema#string>")
         )
       }
     }
@@ -120,11 +122,12 @@ class FuncTermsSpec
       "do nothing for IRIs" in {
 
         val df = List(
-          "http://google.com",
-          "http://other.com"
-        ).toDF("text")
+          "\"http://google.com\"",
+          "\"http://other.com\""
+        ).toTypedDF("text")
 
         df.select(FuncTerms.iri(df("text")).as("result"))
+          .untype
           .collect shouldEqual Array(
           Row("<http://google.com>"),
           Row("<http://other.com>")
@@ -140,15 +143,15 @@ class FuncTermsSpec
 
       "correctly return language tag" in {
         val initial = List(
-          ("\"Los Angeles\"@en", "en"),
-          ("\"Los Angeles\"@es", "es"),
-          ("\"Los Angeles\"@en-US", "en-US"),
-          ("Los Angeles", "")
-        ).toDF("input", "expected")
+          ("\"Los Angeles\"@en", "\"en\""),
+          ("\"Los Angeles\"@es", "\"es\""),
+          ("\"Los Angeles\"@en-US", "\"en-US\""),
+          ("\"Los Angeles\"", "\"\"")
+        ).toTypedDF("input", "expected")
 
         val df = initial.withColumn("result", FuncTerms.lang(initial("input")))
 
-        df.collect.foreach { case Row(_, expected, result) =>
+        df.untype.collect.foreach { case Row(_, expected, result) =>
           expected shouldEqual result
         }
       }
@@ -160,22 +163,22 @@ class FuncTermsSpec
 
         val df = List(
           "_:a",
-          "a:a",
+          "\"a:a\"",
           "_:1",
-          "1:1",
-          "foaf:name",
+          "true",
+          "1",
           "_:name"
-        ).toDF("text")
+        ).toTypedDF("text")
 
-        val result = df.select(FuncTerms.isBlank(df("text"))).collect
+        val result = df.select(FuncTerms.isBlank(df("text")).as("result")).untype.collect
 
         result shouldEqual Array(
-          Row(true),
-          Row(false),
-          Row(true),
-          Row(false),
-          Row(false),
-          Row(true)
+          Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"),
+          Row("\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>"),
+          Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"),
+          Row("\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>"),
+          Row("\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>"),
+          Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
         )
       }
     }
@@ -184,33 +187,33 @@ class FuncTermsSpec
 
       "return true when the term is numeric" in {
         val initial = List(
-          ("\"1\"^^xsd:int", true),
-          ("\"1.1\"^^xsd:decimal", true),
-          ("\"1.1\"^^xsd:float", true),
-          ("\"1.1\"^^xsd:double", true),
-          ("1", true),
-          ("1.111111", true),
-          ("-1.111", true),
-          ("-1", true),
-          ("0.0", true),
-          ("0", true)
-        ).toDF("input", "expected")
+          ("\"1\"^^<http://www.w3.org/2001/XMLSchema#integer>", "true"),
+          ("\"1.1\"^^<http://www.w3.org/2001/XMLSchema#decimal>", "true"),
+          ("\"1.1\"^^<http://www.w3.org/2001/XMLSchema#float>", "true"),
+          ("\"1.1\"^^<http://www.w3.org/2001/XMLSchema#double>", "true"),
+          ("1", "true"),
+          ("1.111111", "true"),
+          ("-1.111", "true"),
+          ("-1", "true"),
+          ("0.0", "true"),
+          ("0", "true")
+        ).toTypedDF("input", "expected")
 
         val df =
           initial.withColumn("result", FuncTerms.isNumeric(initial("input")))
 
-        df.collect.foreach { case Row(_, expected, result) =>
-          expected shouldEqual result
+        df.untype.collect.foreach { case Row(_, expected, result) =>
+          result shouldEqual expected
         }
       }
 
       "return false when the term is not numeric" in {
         val initial = List(
-          ("\"1200\"^^xsd:byte", false),
-          ("\"1.1\"^^xsd:something", false),
-          ("asdfsadfasdf", false),
-          ("\"1.1\"", false)
-        ).toDF("input", "expected")
+          ("\"1200\"^^<http://www.w3.org/2001/XMLSchema#byte>", "false"),
+          ("\"1.1\"^^<http://www.w3.org/2001/XMLSchema#something>", "false"),
+          ("\"asdfsadfasdf\"", "false"),
+          ("\"1.1\"", "false")
+        ).toTypedDF("input", "expected")
 
         val df =
           initial.withColumn("result", FuncTerms.isNumeric(initial("input")))
@@ -234,10 +237,10 @@ class FuncTermsSpec
         val uuidColName = "uuid"
         val uuidRegexColName = "uuidR"
 
-        val elems = List(1, 2, 3)
-        val df = elems.toDF()
+        val elems = List("1", "2", "3")
+        val df = elems.toTypedDF("value")
         val projection = Seq(
-          FuncTerms.uuid().as(uuidColName)
+          FuncTerms.uuid.as(uuidColName)
         )
         val dfResult = df
           .select(
@@ -246,10 +249,11 @@ class FuncTermsSpec
 
         dfResult
           .select(
-            col(uuidColName).rlike(uuidRegex).as(uuidRegexColName)
+            RdfType.Boolean(col(uuidColName).value.rlike(uuidRegex)).as(uuidRegexColName)
           )
+          .untype
           .collect()
-          .toSet shouldEqual Set(Row(true))
+          .toSet shouldEqual Set(Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"))
       }
     }
 
@@ -262,8 +266,8 @@ class FuncTermsSpec
         val uuidColName = "uuid"
         val uuidRegexColName = "uuidR"
 
-        val elems = List(1, 2, 3)
-        val df = elems.toDF()
+        val elems = List("1", "2", "3")
+        val df = elems.toTypedDF("value")
         val projection = Seq(
           FuncTerms.strUuid.as(uuidColName)
         )
@@ -274,10 +278,11 @@ class FuncTermsSpec
 
         dfResult
           .select(
-            col(uuidColName).rlike(uuidRegex).as(uuidRegexColName)
+            RdfType.Boolean(col(uuidColName).value.rlike(uuidRegex)).as(uuidRegexColName)
           )
+          .untype
           .collect()
-          .toSet shouldEqual Set(Row(true))
+          .toSet shouldEqual Set(Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"))
       }
     }
   }

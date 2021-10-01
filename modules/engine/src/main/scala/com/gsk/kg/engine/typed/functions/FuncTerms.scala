@@ -1,6 +1,8 @@
 package com.gsk.kg.engine.typed.functions
 
-import com.gsk.kg.engine.functions.Literals.TypedLiteral.isTypedLiteral
+import com.gsk.kg.engine.syntax._
+import com.gsk.kg.engine.{DataFrameTyper, RdfType}
+import com.gsk.kg.engine.typed.functions.TypedLiterals.isNumericLiteral
 import com.gsk.kg.engine.functions.Literals.{TypedLiteral, nullLiteral}
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.expressions.UserDefinedFunction
@@ -15,8 +17,10 @@ object FuncTerms {
     * @return
     */
   def str(col: Column): Column =
-    when(col.startsWith("<") && col.endsWith(">"), rtrim(ltrim(col, "<"), ">"))
-      .otherwise(col)
+    when(
+      col.hasType(RdfType.Uri),
+      RdfType.String(col.value)
+    ).otherwise(col)
 
   /** Returns the string representation of a column.  It only modifies the data in the column if
     * it contains an URI wrapped in angle brackets, in which case it removes it.
@@ -25,7 +29,7 @@ object FuncTerms {
     * @return
     */
   def str(value: String): Column =
-    str(lit(value))
+    str(DataFrameTyper.parse(lit(value)))
 
   /** Implementation of SparQL STRDT on Spark dataframes.
     * The STRDT function constructs a literal with lexical form and type as specified by the arguments.
@@ -39,7 +43,7 @@ object FuncTerms {
     * @return
     */
   def strdt(col: Column, uri: String): Column =
-    cc(lit("\""), col, lit("\""), lit(s"^^$uri"))
+    DataFrameTyper.createRecord(col.value, DataFrameTyper.parse(lit(uri)).value)
 
   /** Implementation of SparQL STRLANG on Spark dataframes.
     * The STRLANG function constructs a literal with lexical form and language tag as specified by the arguments.
@@ -52,7 +56,7 @@ object FuncTerms {
     * @return
     */
   def strlang(col: Column, tag: String): Column =
-    cc(lit("\""), col, lit("\""), lit(s"@$tag"))
+    DataFrameTyper.createRecord(col.value, col.`type`, lit(tag))
 
   /** The IRI function constructs an IRI by resolving the string
     * argument (see RFC 3986 and RFC 3987 or any later RFC that
@@ -80,9 +84,9 @@ object FuncTerms {
     */
   def iri(col: Column): Column =
     when(
-      col.startsWith("<") && col.endsWith(">"),
-      col
-    ).otherwise(format_string("<%s>", col))
+      col.hasType(RdfType.String) || col.hasType(RdfType.Uri),
+      RdfType.Uri(col.value)
+    ).otherwise(nullLiteral)
 
   /** synonym for [[FuncTerms.iri]]
     *
@@ -98,22 +102,7 @@ object FuncTerms {
     * @return a Column containing the datatype IRI of for each literal
     */
   def datatype(col: Column): Column =
-    when( // if the literal is a typed literal, return the datatype IRI
-      isTypedLiteral(col),
-      TypedLiteral(col).tag
-    ).otherwise(
-      when( // if the literal has a language tag, return rdf:langString
-        !lang(col).equalTo(lit("")),
-        "rdf:langString"
-      ).otherwise(
-        when( // if the literal is a simple literal, return xsd:string
-          isLiteral(col),
-          "xsd:string"
-        ).otherwise( // input was not a literal; behavior not defined by w3 spec
-          nullLiteral
-        )
-      )
-    )
+    RdfType.Uri(col.`type`)
 
   /** Implementation of SparQL LANG on Spark dataframes.
     *
@@ -123,9 +112,9 @@ object FuncTerms {
     */
   def lang(col: Column): Column =
     when(
-      col.startsWith("\"") && col.contains("\"@"),
-      trim(substring_index(col, "\"@", -1), "\"")
-    ).otherwise(lit(""))
+      col.lang.isNotNull,
+      RdfType.String(col.lang)
+    ).otherwise(RdfType.String(lit("")))
 
   /** Returns a column with 'true' or 'false' rows indicating whether a column has blank nodes
     *
@@ -133,8 +122,7 @@ object FuncTerms {
     * @return
     */
   def isBlank(col: Column): Column =
-    when(regexp_extract(col, "^_:.*$", 0) =!= "", true)
-      .otherwise(false)
+    RdfType.Boolean(col.hasType(RdfType.Blank))
 
   /** Implementation of SparQL ISNUMERIC on Spark dataframes.
     *
@@ -142,50 +130,8 @@ object FuncTerms {
     * @param col
     * @return
     */
-  def isNumeric(col: Column): Column = {
-
-    /*
-    This is a bit of a trick here...any valid numeric type will return true,
-    even though the cast is to int
-     */
-    when(col.cast("int").isNotNull, lit(true))
-      .when(
-        TypedLiteral(col).tag.isInCollection(
-          Set(
-            "xsd:int",
-            "xsd:integer",
-            "xsd:decimal",
-            "xsd:float",
-            "xsd:double",
-            "xsd:nonPositiveInteger",
-            "xsd:negativeInteger",
-            "xsd:long",
-            "xsd:short",
-            "xsd:nonNegativeInteger",
-            "xsd:unsignedLong",
-            "xsd:unsignedInt",
-            "xsd:unsignedShort",
-            "xsd:positiveInteger",
-            "<http://www.w3.org/2001/XMLSchema#int>",
-            "<http://www.w3.org/2001/XMLSchema#integer>",
-            "<http://www.w3.org/2001/XMLSchema#float>",
-            "<http://www.w3.org/2001/XMLSchema#decimal>",
-            "<http://www.w3.org/2001/XMLSchema#double>",
-            "<http://www.w3.org/2001/XMLSchema#nonPositiveInteger>",
-            "<http://www.w3.org/2001/XMLSchema#negativeInteger>",
-            "<http://www.w3.org/2001/XMLSchema#long>",
-            "<http://www.w3.org/2001/XMLSchema#short>",
-            "<http://www.w3.org/2001/XMLSchema#nonNegativeInteger",
-            "<http://www.w3.org/2001/XMLSchema#unsignedLong>",
-            "<http://www.w3.org/2001/XMLSchema#unsignedInt>",
-            "<http://www.w3.org/2001/XMLSchema#unsignedShort>",
-            "<http://www.w3.org/2001/XMLSchema#positiveInteger>"
-          )
-        ),
-        lit(true)
-      )
-      .otherwise(lit(false))
-  }
+  def isNumeric(col: Column): Column =
+    RdfType.Boolean(isNumericLiteral(col))
 
   /** Implementation of SparQL ISLITERAL on Spark dataframes.
     *
@@ -209,11 +155,11 @@ object FuncTerms {
     *
     * @return
     */
-  def uuid: UserDefinedFunction = {
+  def uuid: Column = {
     def uuidGen: () => String = () =>
       "urn:uuid:" + java.util.UUID.randomUUID().toString
 
-    udf(uuidGen)
+    RdfType.Uri(udf(uuidGen).apply())
   }
 
   /** Return uuid
@@ -221,9 +167,9 @@ object FuncTerms {
     * @return
     */
   def strUuid: Column = {
-    val u = uuid()
+    val u = uuid
     val startPos = lit("urn:uuid:".length + 1)
-    val endPos = length(u)
-    u.substr(startPos, endPos)
+    val endPos = length(u.value)
+    RdfType.String(u.value.substr(startPos, endPos))
   }
 }
