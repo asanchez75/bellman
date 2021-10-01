@@ -13,7 +13,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class FuncTermsSpec
-  extends AnyWordSpec
+    extends AnyWordSpec
     with Matchers
     with SparkSpec
     with ScalaCheckDrivenPropertyChecks
@@ -106,8 +106,8 @@ class FuncTermsSpec
       "return the datatype IRI of a literal" in {
         val df = List(
           "\"1.1\"^^<http://www.w3.org/2001/XMLSchema#double>", // a typed literal
-          "\"1\"", // a simple literal
-          "\"foo\"@es" // a literal with a language tag
+          "\"1\"",                                              // a simple literal
+          "\"foo\"@es"                                          // a literal with a language tag
         ).toTypedDF("literals")
 
         df.select(
@@ -239,11 +239,11 @@ class FuncTermsSpec
 
         val uuidRegex =
           "urn:uuid:[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-        val uuidColName = "uuid"
+        val uuidColName      = "uuid"
         val uuidRegexColName = "uuidR"
 
         val elems = List("1", "2", "3")
-        val df = elems.toTypedDF("value")
+        val df    = elems.toTypedDF("value")
         val projection = Seq(
           FuncTerms.uuid.as(uuidColName)
         )
@@ -272,11 +272,11 @@ class FuncTermsSpec
 
         val uuidRegex =
           "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-        val uuidColName = "uuid"
+        val uuidColName      = "uuid"
         val uuidRegexColName = "uuidR"
 
         val elems = List("1", "2", "3")
-        val df = elems.toTypedDF("value")
+        val df    = elems.toTypedDF("value")
         val projection = Seq(
           FuncTerms.strUuid.as(uuidColName)
         )

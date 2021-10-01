@@ -7,7 +7,7 @@ import com.gsk.kg.engine.DataFrameTyper
 import com.gsk.kg.engine.RdfType
 import com.gsk.kg.engine.functions.Literals.nullLiteral
 import com.gsk.kg.engine.syntax._
-import com.gsk.kg.engine.typed.functions.TypedLiterals.isNumericLiteral_
+import com.gsk.kg.engine.typed.functions.TypedLiterals.isNumericLiteral
 
 object FuncTerms {
 
@@ -168,9 +168,9 @@ object FuncTerms {
     * @return
     */
   def strUuid: Column = {
-    val u = uuid
+    val u        = uuid
     val startPos = lit("urn:uuid:".length + 1)
-    val endPos = length(u.value)
+    val endPos   = length(u.value)
     RdfType.String(u.value.substr(startPos, endPos))
   }
 }
