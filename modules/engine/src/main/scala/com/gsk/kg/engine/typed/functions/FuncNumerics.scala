@@ -21,7 +21,7 @@ object FuncNumerics {
     * @param col
     * @return
     */
-  def abs(col: Column): Column = apply(sAbs, col)
+  def abs(col: Column): Column = apply(sAbs(_), col)
 
   /** Returns the number with no fractional part that is closest to the argument.
     * If there are two such numbers, then the one that is closest to positive infinity
