@@ -17,9 +17,9 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class FuncNumericsSpec
     extends AnyWordSpec
-      with Matchers
-      with SparkSpec
-      with ScalaCheckDrivenPropertyChecks {
+    with Matchers
+    with SparkSpec
+    with ScalaCheckDrivenPropertyChecks {
 
   import sqlContext.implicits._
 
@@ -27,13 +27,13 @@ class FuncNumericsSpec
 
   override implicit def enableHiveSupport: Boolean = false
 
-  val inColName = "in"
-  val ceilExpectedColName = "ceilExpected"
+  val inColName            = "in"
+  val ceilExpectedColName  = "ceilExpected"
   val roundExpectedColName = "roundExpected"
-  val randExpectedColName = "randExpected"
-  val absExpectedColName = "absExpected"
+  val randExpectedColName  = "randExpected"
+  val absExpectedColName   = "absExpected"
   val floorExpectedColName = "floorExpected"
-  val nullValue = null
+  val nullValue            = null
 
   lazy val elems = List(
     ("1.1", "2", "1", "1.1", "1"),
@@ -168,19 +168,19 @@ class FuncNumericsSpec
   }
 
   private def eval(
-                    df: DataFrame,
-                    f: Column => Column,
-                    expectedColName: String
-                  ): Assertion = {
-    val dfR = df.select(f(col(inColName)))
+      df: DataFrame,
+      f: Column => Column,
+      expectedColName: String
+  ): Assertion = {
+    val dfR      = df.select(f(col(inColName)))
     val expected = df.select(expectedColName)
     dfR.collect().toList shouldEqual expected.collect().toList
   }
 
   private def eval(
-                    df: DataFrame,
-                    f: Column
-                  ): Assertion = {
+      df: DataFrame,
+      f: Column
+  ): Assertion = {
     val dfR = df
       .select(f.as("r"))
       .select(

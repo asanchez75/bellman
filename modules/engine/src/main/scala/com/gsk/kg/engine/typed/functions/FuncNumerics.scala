@@ -74,10 +74,10 @@ object FuncNumerics {
     * @return
     */
   private def apply(
-                     f: Column => Column,
-                     col: Column,
-                     `type`: Column => Column
-                   ): Column =
+      f: Column => Column,
+      col: Column,
+      `type`: Column => Column
+  ): Column =
     when(
       isNumericLiteral(col),
       `type`(f(col.value))
