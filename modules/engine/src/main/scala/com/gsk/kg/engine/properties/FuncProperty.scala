@@ -4,12 +4,14 @@ import cats.Foldable
 import cats.implicits.catsStdInstancesForList
 import cats.implicits.catsSyntaxEitherId
 import cats.syntax.either._
+
 import higherkindness.droste.util.newtypes.@@
+
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions._
+
 import com.gsk.kg.engine.functions.PathFrame._
-import com.gsk.kg.engine.relational.Relational
 import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.engine.relational.Relational.ops._
 import com.gsk.kg.sparqlparser.EngineError
@@ -138,12 +140,9 @@ object FuncProperty {
       implicit sc: SQLContext
   ): Result[DataFrame @@ Untyped] = {
 
-    val emptyDfWithSchema =
-      Relational[DataFrame @@ Untyped].emptyWithSchema(df.schema)
-
     val result = es
-      .foldLeft(emptyDfWithSchema) { case (acc, eDf) =>
-        acc union df.except(eDf)
+      .foldLeft(df) { case (acc, eDf) =>
+        acc.except(eDf)
       }
       .distinct
 
