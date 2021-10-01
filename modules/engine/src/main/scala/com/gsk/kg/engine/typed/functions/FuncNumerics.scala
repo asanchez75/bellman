@@ -70,7 +70,7 @@ object FuncNumerics {
     * @param col
     * @return
     */
-  private def apply(f: Column => Column, col: Column, `type`: Column => Column = DataFrameTyper.parse): Column =
+  private def apply(f: Column => Column, col: Column, `type`: Column => Column): Column =
     when(
       isNumericLiteral(col),
       `type`(f(col.value))
