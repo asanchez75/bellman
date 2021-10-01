@@ -1,9 +1,18 @@
 package com.gsk.kg.engine.typed.functions
 
-import com.gsk.kg.engine.functions.Literals._
 import org.apache.spark.sql.Column
-import org.apache.spark.sql.functions.{format_string, lit, when, abs => sAbs, ceil => sCeil, floor => sFloor, rand => sRand, round => sRodund}
-import org.apache.spark.sql.types.{DoubleType, IntegerType}
+import org.apache.spark.sql.functions.when
+import org.apache.spark.sql.functions.{abs => sAbs}
+import org.apache.spark.sql.functions.{ceil => sCeil}
+import org.apache.spark.sql.functions.{floor => sFloor}
+import org.apache.spark.sql.functions.{rand => sRand}
+import org.apache.spark.sql.functions.{round => sRound}
+import org.apache.spark.sql.types.IntegerType
+
+import com.gsk.kg.engine.DataFrameTyper
+import com.gsk.kg.engine.RdfType
+import com.gsk.kg.engine.syntax._
+import com.gsk.kg.engine.typed.functions.TypedLiterals._
 
 object FuncNumerics {
 
@@ -12,7 +21,7 @@ object FuncNumerics {
     * @param col
     * @return
     */
-  def abs: Column => Column = col => apply(sAbs, col)
+  def abs(col: Column): Column = apply(sAbs, col)
 
   /** Returns the number with no fractional part that is closest to the argument.
     * If there are two such numbers, then the one that is closest to positive infinity
@@ -21,7 +30,7 @@ object FuncNumerics {
     * @param col
     * @return
     */
-  def round: Column => Column = col => apply(sRodund, col)
+  def round(col: Column): Column = apply(sRound, col, c => RdfType.Int(c.cast(IntegerType)))
 
   /** Returns the smallest (closest to negative infinity) number with no fractional part
     * that is not less than the value of arg. An error is raised if arg is not a numeric value.
@@ -29,7 +38,7 @@ object FuncNumerics {
     * @param col
     * @return
     */
-  def ceil: Column => Column = col => apply(sCeil, col)
+  def ceil(col: Column): Column = apply(sCeil, col, c => RdfType.Int(c.cast(IntegerType)))
 
   /** Returns the largest (closest to positive infinity) number with no fractional part that is not greater
     * than the value of arg. An error is raised if arg is not a numeric value.
@@ -37,14 +46,14 @@ object FuncNumerics {
     * @param col
     * @return
     */
-  def floor: Column => Column = col => apply(sFloor, col)
+  def floor(col: Column): Column = apply(sFloor, col, c => RdfType.Int(c.cast(IntegerType)))
 
   /** Returns a pseudo-random number between 0 (inclusive) and 1.0e0 (exclusive). Different numbers can be
     * produced every time this function is invoked. Numbers should be produced with approximately equal probability.
     *
     * @return
     */
-  def rand: Column = format_string("\"%s\"^^%s", sRand(), lit("xsd:double"))
+  def rand: Column = RdfType.Double(sRand())
 
   /** Apply function f over column col detecting malformed data
     * e.g.
@@ -58,24 +67,9 @@ object FuncNumerics {
     * @param col
     * @return
     */
-  private def apply(f: Column => Column, col: Column): Column =
+  private def apply(f: Column => Column, col: Column, `type`: Column => Column = DataFrameTyper.parse): Column =
     when(
-      isPlainLiteral(col) && col.cast(DoubleType).isNotNull,
-      f(col)
-    ).when(
-      isNumericLiteral(col), {
-        val numericLiteral = NumericLiteral(col)
-        val n = numericLiteral.value
-        val tag = numericLiteral.tag
-        when(
-          isIntNumericLiteral(col) && n.cast(IntegerType).isNotNull && !n
-            .contains("."),
-          format_string("\"%s\"^^%s", f(n).cast(IntegerType), tag)
-        ).when(
-          isIntNumericLiteral(col) && n.cast(IntegerType).isNotNull && n
-            .contains("."),
-          nullLiteral
-        ).otherwise(format_string("\"%s\"^^%s", f(n), tag))
-      }
+      isNumericLiteral(col),
+      `type`(f(col.value))
     ).otherwise(nullLiteral)
 }
