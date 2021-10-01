@@ -45,8 +45,7 @@ object Expr {
       s: StringVal,
       p: PropertyExpression,
       o: StringVal,
-      g: List[StringVal],
-      reverse: Boolean = false
+      g: List[StringVal]
   ) extends Expr
   final case class Quad(
       s: StringVal,

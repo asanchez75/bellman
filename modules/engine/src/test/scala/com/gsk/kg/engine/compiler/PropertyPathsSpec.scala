@@ -6192,7 +6192,7 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
-            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
             Row("\"Charles\"", "\"Charles\""),
             Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
             Row("<http://example.org/Charles>", "<http://example.org/Daniel>"),
@@ -6260,7 +6260,7 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
-            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
             Row("\"Charles\"", "\"Charles\""),
             Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
             Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
@@ -6744,25 +6744,17 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
-            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
             Row("\"Charles\"", "\"Charles\""),
             Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
             Row("<http://example.org/Charles>", "<http://example.org/Daniel>"),
-            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
             Row("<http://example.org/Charles>", "\"Charles\""),
-            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
             Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
-            Row("<http://example.org/Bob>", "<http://example.org/Daniel>"),
-            Row("<http://example.org/Bob>", "<http://example.org/Erick>"),
-            Row("<http://example.org/Bob>", "\"Charles\""),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
             Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
             Row("<http://example.org/Daniel>", "<http://example.org/Erick>"),
             Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
-            Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
-            Row("<http://example.org/Alice>", "<http://example.org/Charles>"),
-            Row("<http://example.org/Alice>", "<http://example.org/Daniel>"),
-            Row("<http://example.org/Alice>", "<http://example.org/Erick>"),
-            Row("<http://example.org/Alice>", "\"Charles\"")
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>")
           ).sorted
 
           rows should contain theSameElementsAs expectedRows
@@ -6812,11 +6804,11 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
-            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
             Row("\"Charles\"", "\"Charles\""),
             Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
-            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
             Row("<http://example.org/Bob>", "\"Charles\""),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
             Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
             Row("<http://example.org/Alice>", "<http://example.org/Alice>")
           ).sorted
@@ -7198,9 +7190,79 @@ class PropertyPathsSpec
         }
       }
 
+      "mix ^" when {
+
+        "with |" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s ^(foaf:knows|foaf:name) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("<http://example.org/Daniel>", "<http://example.org/Charles>"),
+            Row("\"Charles\"", "<http://example.org/Charles>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Alice>")
+          )
+        }
+
+        "with /" in {}
+
+        "with *" in {}
+
+        "with +" in {}
+
+        "with ?" in {}
+
+        "with {n,m}" in {}
+
+        "with {n,}" in {}
+
+        "with {,n}" in {}
+
+        "with {n}" in {}
+      }
+
       "mix {n,m}" when {
 
-        "with |" ignore {
+        "with |" in {
 
           val df = List(
             (
@@ -7244,31 +7306,24 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
-            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
-            Row("\"Charles\"", "\"Charles\""),
-            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
             Row("<http://example.org/Charles>", "<http://example.org/Daniel>"),
             Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
             Row("<http://example.org/Charles>", "\"Charles\""),
-            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
             Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
             Row("<http://example.org/Bob>", "<http://example.org/Daniel>"),
             Row("<http://example.org/Bob>", "<http://example.org/Erick>"),
             Row("<http://example.org/Bob>", "\"Charles\""),
-            Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
             Row("<http://example.org/Daniel>", "<http://example.org/Erick>"),
-            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
             Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
             Row("<http://example.org/Alice>", "<http://example.org/Charles>"),
             Row("<http://example.org/Alice>", "<http://example.org/Daniel>"),
-            Row("<http://example.org/Alice>", "<http://example.org/Erick>"),
             Row("<http://example.org/Alice>", "\"Charles\"")
           ).sorted
 
           rows should contain theSameElementsAs expectedRows
         }
 
-        "with /" ignore {
+        "with /" in {
 
           val df = List(
             (
@@ -7312,13 +7367,7 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
-            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
-            Row("\"Charles\"", "\"Charles\""),
-            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
-            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
-            Row("<http://example.org/Bob>", "\"Charles\""),
-            Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
-            Row("<http://example.org/Alice>", "<http://example.org/Alice>")
+            Row("<http://example.org/Bob>", "\"Charles\"")
           ).sorted
 
           rows should contain theSameElementsAs expectedRows
@@ -7718,7 +7767,7 @@ class PropertyPathsSpec
 
       "mix {n,}" when {
 
-        "with |" ignore {
+        "with |" in {
 
           val df = List(
             (
@@ -7762,12 +7811,16 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
+            Row("<http://example.org/Bob>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Alice>", "\"Charles\"")
           ).sorted
 
           rows should contain theSameElementsAs expectedRows
         }
 
-        "with /" ignore {
+        "with /" in {
 
           val df = List(
             (
@@ -7809,9 +7862,8 @@ class PropertyPathsSpec
 
           val result = Compiler.compile(df, query, config)
 
-          val rows = result.right.get.collect().toSeq.sorted
-          val expectedRows = Seq(
-          ).sorted
+          val rows         = result.right.get.collect().toSeq.sorted
+          val expectedRows = Seq().sorted
 
           rows should contain theSameElementsAs expectedRows
         }
@@ -8149,7 +8201,7 @@ class PropertyPathsSpec
 
       "mix {,n}" when {
 
-        "with |" ignore {
+        "with |" in {
 
           val df = List(
             (
@@ -8193,12 +8245,31 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Charles>", "\"Charles\""),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Bob>", "\"Charles\""),
+            Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Bobl>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Charles>")
           ).sorted
+
+          rows.foreach(println)
+          println("\n")
+          expectedRows.foreach(println)
 
           rows should contain theSameElementsAs expectedRows
         }
 
-        "with /" ignore {
+        "with /" in {
 
           val df = List(
             (
@@ -8242,6 +8313,12 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>")
           ).sorted
 
           rows should contain theSameElementsAs expectedRows
@@ -8654,7 +8731,7 @@ class PropertyPathsSpec
 
       "mix {n}" when {
 
-        "with |" ignore {
+        "with |" in {
 
           val df = List(
             (
@@ -8698,12 +8775,16 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
+            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Bob>", "\"Charles\""),
+            Row("<http://example.org/Alice>", "<http://example.org/Charles>")
           ).sorted
 
           rows should contain theSameElementsAs expectedRows
         }
 
-        "with /" ignore {
+        "with /" in {
 
           val df = List(
             (

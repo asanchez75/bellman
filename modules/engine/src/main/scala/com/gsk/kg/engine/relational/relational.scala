@@ -22,6 +22,7 @@ import simulacrum.typeclass
   def emptyWithSchema(schema: StructType)(implicit sc: SQLContext): A
   def empty(implicit sc: SQLContext): A
   def isEmpty(df: A): Boolean
+  def except(left: A, right: A): A
   def crossJoin(left: A, right: A): A
   def innerJoin(left: A, right: A, columns: Seq[String]): A
   def leftJoin(left: A, right: A, columns: Seq[String]): A
@@ -89,6 +90,12 @@ trait RelationalInstances {
 
       def isEmpty(df: DataFrame @@ Untyped): Boolean =
         df.unwrap.isEmpty
+
+      def except(
+          left: DataFrame @@ Untyped,
+          right: DataFrame @@ Untyped
+      ): DataFrame @@ Untyped =
+        @@(left.unwrap.except(right.unwrap))
 
       def crossJoin(
           left: DataFrame @@ Untyped,

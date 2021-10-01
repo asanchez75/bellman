@@ -80,15 +80,14 @@ object ToTree extends LowPriorityToTreeInstances0 {
               Stream(Leaf(variable.toString), expression.toTree, r)
             )
           case DAG.Sequence(bps) => Node("Sequence", bps.toStream)
-          case DAG.Path(s, p, o, g, rev) =>
+          case DAG.Path(s, p, o, g) =>
             TreeRep.Node(
               s"Path",
               Stream(
                 s.s.toTree,
                 p.toTree,
                 o.s.toTree,
-                g.toString().toTree,
-                rev.toTree
+                g.toString().toTree
               )
             )
           case DAG.BGP(quads) => Node("BGP", Stream(quads.toTree))

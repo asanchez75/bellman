@@ -1,7 +1,6 @@
 package com.gsk.kg.engine
 
 import cats.Foldable
-import cats.data.NonEmptyChain
 import cats.data.NonEmptyList
 import cats.implicits.toTraverseOps
 import cats.instances.all._
@@ -55,7 +54,7 @@ object Engine {
       case DAG.Bind(variable, expression, r) =>
         evaluateBind(variable, expression, r)
       case DAG.Sequence(bps)           => evaluateSequence(bps)
-      case DAG.Path(s, p, o, g, rev)   => evaluatePath(s, p, o, g, rev)
+      case DAG.Path(s, p, o, g)        => evaluatePath(s, p, o, g)
       case DAG.BGP(quads)              => evaluateBGP(quads)
       case DAG.LeftJoin(l, r, filters) => evaluateLeftJoin(l, r, filters)
       case DAG.Union(l, r)             => evaluateUnion(l, r)
@@ -246,20 +245,8 @@ object Engine {
       s: StringVal,
       p: PropertyExpression,
       o: StringVal,
-      g: List[StringVal],
-      rev: Boolean
+      g: List[StringVal]
   )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] = {
-
-    def genPlaceholderChunk(
-        s: StringVal,
-        o: StringVal,
-        g: List[StringVal],
-        rev: Boolean
-    ): NonEmptyChain[Quad] = if (rev) {
-      Chunk(Quad(o, STRING(""), s, g))
-    } else {
-      Chunk(Quad(s, STRING(""), o, g))
-    }
 
     def genGraphCnd(df: DataFrame @@ Untyped, g: List[StringVal]): Column =
       g.foldLeft(lit(false)) { case (acc, elem) =>
@@ -271,24 +258,17 @@ object Engine {
         PropertyExpressionF
           .compile[PropertyExpression](p, config)
           .apply(df)
-          .map {
-            case Right(accDf) =>
-              val chunk    = genPlaceholderChunk(s, o, g, rev)
-              val graphCnd = genGraphCnd(accDf, g)
+          .map { accDf =>
+            val chunk    = Chunk(Quad(s, STRING(""), o, g))
+            val graphCnd = genGraphCnd(accDf, g)
 
-              val filtered = accDf.filter(graphCnd)
-              val result   = applyChunkToDf(chunk, filtered)
-              result.copy(relational =
-                result.relational
-                  .withColumnRenamed("s", s.s)
-                  .withColumnRenamed("o", o.s)
-              )
-            case Left(cond) =>
-              val chunk    = genPlaceholderChunk(s, o, g, rev)
-              val graphCnd = genGraphCnd(df, g)
-
-              val filtered = df.filter(cond && graphCnd)
-              applyChunkToDf(chunk, filtered)
+            val filtered = accDf.filter(graphCnd)
+            val result   = applyChunkToDf(chunk, filtered)
+            result.copy(relational =
+              result.relational
+                .withColumnRenamed("s", s.s)
+                .withColumnRenamed("o", o.s)
+            )
           }
       }
     }

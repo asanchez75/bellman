@@ -5,11 +5,9 @@ import cats.implicits.catsStdInstancesForList
 import cats.implicits.catsSyntaxEitherId
 import cats.syntax.either._
 import higherkindness.droste.util.newtypes.@@
-import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions._
-import com.gsk.kg.engine.PropertyExpressionF.ColOrDf
 import com.gsk.kg.engine.functions.PathFrame._
 import com.gsk.kg.engine.relational.Relational
 import com.gsk.kg.engine.relational.Relational.Untyped
@@ -20,49 +18,31 @@ import com.gsk.kg.sparqlparser.Result
 object FuncProperty {
 
   def alternative(
-      pel: ColOrDf,
-      per: ColOrDf
-  ): Result[ColOrDf] = {
-    (pel, per) match {
-      case (Left(l), Left(r)) =>
-        (l || r).asLeft.asRight
-      case (Right(lDf), Right(rDf)) =>
-        lDf.union(rDf).asRight.asRight
-      case _ =>
-        EngineError
-          .InvalidPropertyPathArguments(
-            s"Invalid arguments on property path: seq, pel: ${pel.toString}, per: ${per.toString}," +
-              s" both should be of type column"
-          )
-          .asLeft
-    }
-  }
+      pel: DataFrame @@ Untyped,
+      per: DataFrame @@ Untyped
+  ): Result[DataFrame @@ Untyped] =
+    pel.union(per).asRight
 
   def seq(
-      df: DataFrame @@ Untyped,
-      pel: ColOrDf,
-      per: ColOrDf
-  ): Result[ColOrDf] = {
+      pel: DataFrame @@ Untyped,
+      per: DataFrame @@ Untyped
+  ): Result[DataFrame @@ Untyped] = {
 
-    val resultL: Result[DataFrame @@ Untyped] = (pel match {
-      case Left(col)    => df.filter(col(pCol) === col)
-      case Right(accDf) => accDf
-    })
-      .withColumnRenamed(sCol, "sl")
-      .withColumnRenamed(pCol, "pl")
-      .withColumnRenamed(oCol, "ol")
-      .withColumnRenamed(gCol, "gl")
+    val (sLeft, pLeft, oLeft, gLeft)     = ("sl", "pl", "ol", "gl")
+    val (sRight, pRight, oRight, gRight) = ("sr", "pr", "or", "gr")
+
+    val resultL: Result[DataFrame @@ Untyped] = pel
+      .withColumnRenamed(sCol, sLeft)
+      .withColumnRenamed(pCol, pLeft)
+      .withColumnRenamed(oCol, oLeft)
+      .withColumnRenamed(gCol, gLeft)
       .asRight[EngineError]
 
-    val resultR: Result[DataFrame @@ Untyped] = (per match {
-      case Left(col) =>
-        df.filter(col(pCol) === col)
-      case Right(df) =>
-        df
-    }).withColumnRenamed(sCol, "sr")
-      .withColumnRenamed(pCol, "pr")
-      .withColumnRenamed(oCol, "or")
-      .withColumnRenamed(gCol, "gr")
+    val resultR: Result[DataFrame @@ Untyped] = per
+      .withColumnRenamed(sCol, sRight)
+      .withColumnRenamed(pCol, pRight)
+      .withColumnRenamed(oCol, oRight)
+      .withColumnRenamed(gCol, gRight)
       .asRight[EngineError]
 
     for {
@@ -72,19 +52,17 @@ object FuncProperty {
       val joinResult = l
         .innerJoin(
           r,
-          (col("ol") <=> col("sr") &&
-            col("gl") <=> col("gr"))
+          (col(oLeft) <=> col(sRight) &&
+            col(gLeft) <=> col(gRight))
         )
 
-      val result = joinResult
-        .select(Seq(col("sl"), col("or"), col("pl"), col("pr"), col("gl")))
-        .withColumnRenamed("sl", sCol)
-        .withColumnRenamed("or", oCol)
-        .withColumnRenamed("gl", gCol)
-        .withColumn(pCol, lit(s"seq:${col("pl")}/${col("pr")}"))
+      joinResult
+        .select(Seq(sLeft, oRight, pLeft, pRight, gLeft).map(col))
+        .withColumnRenamed(sLeft, sCol)
+        .withColumnRenamed(oRight, oCol)
+        .withColumnRenamed(gLeft, gCol)
+        .withColumn(pCol, lit(s"seq:${col(pLeft)}/${col(pRight)}"))
         .select(Seq(sCol, pCol, oCol, gCol).map(col))
-
-      result.asRight
     }
   }
 
@@ -92,11 +70,11 @@ object FuncProperty {
       df: DataFrame @@ Untyped,
       maybeN: Option[Int],
       maybeM: Option[Int],
-      e: ColOrDf,
+      e: DataFrame @@ Untyped,
       duplicates: Boolean
   )(implicit
       sc: SQLContext
-  ): Result[ColOrDf] = {
+  ): Result[DataFrame @@ Untyped] = {
 
     val checkArgs: Either[EngineError, (Int, Int)] = (maybeN, maybeM) match {
       case (Some(n), Some(m)) if n < 0 || m < 0 =>
@@ -123,15 +101,10 @@ object FuncProperty {
     }
 
     checkArgs.flatMap { case (effectiveN, effectiveM) =>
-      val (nonZeroPaths, zeroPaths) = e match {
-        case Right(predDf) =>
-          (
-            predDf.filter(col(pCol).isNotNull),
-            predDf.filter(col(pCol).isNull)
-          )
-        case Left(predCol) =>
-          (df.filter(predCol), df.filter(predCol && col(pCol).isNull))
-      }
+      val (nonZeroPaths, zeroPaths) = (
+        e.filter(col(pCol).isNotNull),
+        e.filter(col(pCol).isNull)
+      )
 
       val onePaths = getOneLengthPaths(nonZeroPaths)
 
@@ -157,84 +130,38 @@ object FuncProperty {
       )
 
       merge(mergedNoZeroPaths, mergedZeroPaths)
-        .asRight[Column]
         .asRight[EngineError]
     }
   }
 
-  def notOneOf(df: DataFrame @@ Untyped, es: List[ColOrDf])(implicit
-      sc: SQLContext
-  ): Result[ColOrDf] = {
+  def notOneOf(df: DataFrame @@ Untyped, es: List[DataFrame @@ Untyped])(
+      implicit sc: SQLContext
+  ): Result[DataFrame @@ Untyped] = {
 
     val emptyDfWithSchema =
       Relational[DataFrame @@ Untyped].emptyWithSchema(df.schema)
 
     val result = es
-      .map(_.right.get)
       .foldLeft(emptyDfWithSchema) { case (acc, eDf) =>
-        acc union {
-          val step: DataFrame @@ Untyped = @@(
-            df.unwrap
-              .except(eDf.unwrap)
-              .toDF()
-          )
-
-          println("step")
-          step.show(false)
-
-          step
-        }
+        acc union df.except(eDf)
       }
       .distinct
 
-    println("result")
-    result.show(false)
-
-    result.asRight.asRight
-//
-//    val resolveColCnd: ColOrDf => Result[Column] = { expr: ColOrDf =>
-//      expr match {
-//        case Right(exprDf) =>
-//          val join = df.leftOuter(exprDf, Seq(sCol, pCol, oCol, gCol))
-//
-//          println("not one of:")
-//          join.show(false)
-//
-//          join.asRight
-//        case Left(predCol) =>
-//          not(predCol).asRight
-//      }
-//    }
-//
-//    val zero = lit(true).asRight[EngineError]
-//
-//    es.foldLeft(zero) { case (accOrError, colOrDf) =>
-//      for {
-//        acc    <- accOrError
-//        colCnd <- resolveColCnd(colOrDf)
-//      } yield acc && colCnd
-//    }.map { cnd =>
-//      df.filter(cnd).asRight
-//    }
+    result.asRight
   }
 
-  def uri(df: DataFrame @@ Untyped, s: String): ColOrDf =
-    df.filter(col(pCol) <=> lit(s)).asRight
+  def uri(df: DataFrame @@ Untyped, s: String): DataFrame @@ Untyped =
+    df.filter(col(pCol) <=> lit(s))
 
-  def reverse(pe: ColOrDf): Result[ColOrDf] = {
+  def reverse(pe: DataFrame @@ Untyped): Result[DataFrame @@ Untyped] = {
 
-    def reverseDf(df: DataFrame @@ Untyped): DataFrame @@ Untyped = {
-      df.withColumnRenamed(sCol, "sTemp")
-        .withColumnRenamed(oCol, "oTemp")
-        .withColumnRenamed("sTemp", oCol)
-        .withColumnRenamed("oTemp", sCol)
-        .select(Seq(sCol, pCol, oCol, gCol).map(col))
-    }
+    val (sTemp, oTemp) = ("sTemp", "oTemp")
 
-    pe match {
-      case Right(df) =>
-        reverseDf(df).asRight.asRight
-      case Left(col) => ???
-    }
+    pe.withColumnRenamed(sCol, sTemp)
+      .withColumnRenamed(oCol, oTemp)
+      .withColumnRenamed(sTemp, oCol)
+      .withColumnRenamed(oTemp, sCol)
+      .select(Seq(sCol, pCol, oCol, gCol).map(col))
+      .asRight
   }
 }
