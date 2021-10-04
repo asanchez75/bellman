@@ -54,8 +54,7 @@ object DAG {
       s: StringVal,
       p: PropertyExpression,
       o: StringVal,
-      g: List[StringVal],
-      reverse: Boolean
+      g: List[StringVal]
   )                                                              extends DAG[A]
   @Lenses final case class BGP[A](quads: ChunkedList[Expr.Quad]) extends DAG[A]
   @Lenses final case class LeftJoin[A](l: A, r: A, filters: List[Expression])
@@ -93,8 +92,8 @@ object DAG {
           f(r).map(bind(variable, expression, _))
         case DAG.Sequence(bps) =>
           bps.map(f).sequence.map(DAG.sequence)
-        case DAG.Path(s, p, o, g, reverse) =>
-          path[B](s, p, o, g, reverse).pure[G]
+        case DAG.Path(s, p, o, g) =>
+          path[B](s, p, o, g).pure[G]
         case DAG.BGP(quads) => bgp[B](quads).pure[G]
         case DAG.LeftJoin(l, r, filters) =>
           (
@@ -134,10 +133,9 @@ object DAG {
       s: StringVal,
       p: PropertyExpression,
       o: StringVal,
-      g: List[StringVal],
-      reverse: Boolean
+      g: List[StringVal]
   ): DAG[A] =
-    Path(s, p, o, g, reverse)
+    Path(s, p, o, g)
   def bgp[A](quads: ChunkedList[Expr.Quad]): DAG[A] = BGP[A](quads)
   def leftJoin[A](l: A, r: A, filters: List[Expression]): DAG[A] =
     LeftJoin[A](l, r, filters)
@@ -187,10 +185,9 @@ object DAG {
       s: StringVal,
       p: PropertyExpression,
       o: StringVal,
-      g: List[StringVal],
-      reverse: Boolean
+      g: List[StringVal]
   ): T =
-    path[T](s, p, o, g, reverse).embed
+    path[T](s, p, o, g).embed
   def bgpR[T: Embed[DAG, *]](triples: ChunkedList[Expr.Quad]): T =
     bgp[T](triples).embed
   def leftJoinR[T: Embed[DAG, *]](
@@ -258,7 +255,7 @@ object DAG {
       case JoinF(l, r)                  => join(l, r)
       case LeftJoinF(l, r)              => leftJoin(l, r, Nil)
       case ProjectF(vars, r)            => project(vars.toList, r)
-      case PathF(s, p, o, g, reverse)   => path(s, p, o, g, reverse)
+      case PathF(s, p, o, g)            => path(s, p, o, g)
       case QuadF(s, p, o, g)            => noop("QuadF not supported")
       case DistinctF(r)                 => distinct(r)
       case ReducedF(r)                  => reduced(r)
@@ -344,7 +341,7 @@ object optics {
       dag
     }(identity)
   def _path[T: Basis[DAG, *]]: Prism[DAG[T], Path[T]] =
-    Prism.partial[DAG[T], Path[T]] { case dag @ Path(s, p, o, g, reverse) =>
+    Prism.partial[DAG[T], Path[T]] { case dag @ Path(s, p, o, g) =>
       dag
     }(identity)
   def _bgp[T: Basis[DAG, *]]: Prism[DAG[T], BGP[T]] =

@@ -835,7 +835,7 @@ class PropertyPathsSpec
                 |
                 |SELECT ?s ?o
                 |WHERE {
-                | ?s ^(foaf:knows/foaf:friend/foaf:name) ?o .
+                | ?s (^foaf:knows/^foaf:friend/^foaf:name) ?o .
                 |}
                 |""".stripMargin
 
@@ -4233,6 +4233,342 @@ class PropertyPathsSpec
           }
         }
 
+        "with ^" when {
+
+          "left" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "\"Charles\""
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Erick>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (^foaf:knows|foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get
+              .collect()
+              .toSeq should contain theSameElementsAs Seq(
+              Row("<http://example.org/Erick>", "<http://example.org/Daniel>"),
+              Row("<http://example.org/Charles>", "<http://example.org/Bob>"),
+              Row("<http://example.org/Charles>", "\"Charles\""),
+              Row("<http://example.org/Bob>", "<http://example.org/Alice>"),
+              Row("<http://example.org/Daniel>", "<http://example.org/Charles>")
+            )
+          }
+
+          "right" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "\"Charles\""
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Erick>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (foaf:knows|^foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get
+              .collect()
+              .toSeq should contain theSameElementsAs Seq(
+              Row("\"Charles\"", "<http://example.org/Charles>"),
+              Row(
+                "<http://example.org/Charles>",
+                "<http://example.org/Daniel>"
+              ),
+              Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+              Row("<http://example.org/Daniel>", "<http://example.org/Erick>"),
+              Row("<http://example.org/Alice>", "<http://example.org/Bob>")
+            )
+          }
+
+          "both" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "\"Charles\""
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Erick>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (^foaf:knows|^foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get
+              .collect()
+              .toSeq should contain theSameElementsAs Seq(
+              Row("<http://example.org/Erick>", "<http://example.org/Daniel>"),
+              Row("\"Charles\"", "<http://example.org/Charles>"),
+              Row("<http://example.org/Charles>", "<http://example.org/Bob>"),
+              Row("<http://example.org/Bob>", "<http://example.org/Alice>"),
+              Row("<http://example.org/Daniel>", "<http://example.org/Charles>")
+            )
+          }
+        }
+
+        "with !" when {
+
+          "left" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "\"Charles\""
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Erick>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (!foaf:knows|foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get
+              .collect()
+              .toSeq should contain theSameElementsAs Seq(
+              Row("<http://example.org/Charles>", "\"Charles\""),
+              Row("<http://example.org/Charles>", "\"Charles\"")
+            )
+          }
+
+          "right" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "\"Charles\""
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Erick>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (foaf:knows|!foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get
+              .collect()
+              .toSeq should contain theSameElementsAs Seq(
+              Row(
+                "<http://example.org/Charles>",
+                "<http://example.org/Daniel>"
+              ),
+              Row(
+                "<http://example.org/Charles>",
+                "<http://example.org/Daniel>"
+              ),
+              Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+              Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+              Row("<http://example.org/Daniel>", "<http://example.org/Erick>"),
+              Row("<http://example.org/Daniel>", "<http://example.org/Erick>"),
+              Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
+              Row("<http://example.org/Alice>", "<http://example.org/Bob>")
+            )
+          }
+
+          "both" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "\"Charles\""
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Erick>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (!foaf:knows|!foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get
+              .collect()
+              .toSeq should contain theSameElementsAs Seq(
+              Row("<http://example.org/Charles>", "\"Charles\""),
+              Row(
+                "<http://example.org/Charles>",
+                "<http://example.org/Daniel>"
+              ),
+              Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+              Row("<http://example.org/Daniel>", "<http://example.org/Erick>"),
+              Row("<http://example.org/Alice>", "<http://example.org/Bob>")
+            )
+          }
+        }
+
         "with {n,m}" when {
 
           "left" in {
@@ -5206,6 +5542,300 @@ class PropertyPathsSpec
           }
         }
 
+        "with ^" when {
+
+          "left" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "\"Charles\""
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Erick>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (^foaf:knows/foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get
+              .collect()
+              .toSeq should contain theSameElementsAs Seq(
+              Row("<http://example.org/Daniel>", "\"Charles\"")
+            )
+          }
+
+          "right" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "\"Charles\""
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Erick>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (foaf:knows/^foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get
+              .collect()
+              .toSeq should contain theSameElementsAs Seq()
+          }
+
+          "both" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "\"Charles\""
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Erick>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (^foaf:knows/^foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get
+              .collect()
+              .toSeq should contain theSameElementsAs Seq()
+          }
+        }
+
+        "with !" when {
+
+          "left" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "\"Charles\""
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Erick>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (!foaf:knows/foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get
+              .collect()
+              .toSeq should contain theSameElementsAs Seq()
+          }
+
+          "right" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "\"Charles\""
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Erick>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (foaf:knows/!foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get
+              .collect()
+              .toSeq should contain theSameElementsAs Seq(
+              Row("<http://example.org/Alice>", "<http://example.org/Charles>"),
+              Row("<http://example.org/Bob>", "<http://example.org/Daniel>"),
+              Row("<http://example.org/Charles>", "<http://example.org/Erick>")
+            )
+          }
+
+          "both" in {
+
+            val df = List(
+              (
+                "<http://example.org/Alice>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Bob>"
+              ),
+              (
+                "<http://example.org/Bob>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Charles>"
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/name>",
+                "\"Charles\""
+              ),
+              (
+                "<http://example.org/Charles>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Daniel>"
+              ),
+              (
+                "<http://example.org/Daniel>",
+                "<http://xmlns.org/foaf/0.1/knows>",
+                "<http://example.org/Erick>"
+              )
+            ).toDF("s", "p", "o")
+
+            val query =
+              """
+                |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+                |
+                |SELECT ?s ?o
+                |WHERE {
+                | ?s (!foaf:knows/!foaf:name) ?o .
+                |}
+                |""".stripMargin
+
+            val result = Compiler.compile(df, query, config)
+
+            result.right.get
+              .collect()
+              .toSeq should contain theSameElementsAs Seq()
+          }
+        }
+
         "with {n,m}" when {
 
           "left" in {
@@ -5633,7 +6263,7 @@ class PropertyPathsSpec
 
       "mix +" when {
 
-        "with |" ignore {
+        "with |" in {
 
           val df = List(
             (
@@ -5675,22 +6305,6 @@ class PropertyPathsSpec
 
           val result = Compiler.compile(df, query, config)
 
-          /*
-          | <http://example.org/Charles> | <http://example.org/Daniel>  |
-| <http://example.org/Charles> | <http://example.org/Erick>   |
-| <http://example.org/Charles> | "Charles"                    |
-| <http://example.org/Bob>     | <http://example.org/Charles> |
-| <http://example.org/Bob>     | <http://example.org/Daniel>  |
-| <http://example.org/Bob>     | <http://example.org/Erick>   |
-| <http://example.org/Bob>     | "Charles"                    |
-| <http://example.org/Daniel>  | <http://example.org/Erick>   |
-| <http://example.org/Alice>   | <http://example.org/Bob>     |
-| <http://example.org/Alice>   | <http://example.org/Charles> |
-| <http://example.org/Alice>   | <http://example.org/Daniel>  |
-| <http://example.org/Alice>   | <http://example.org/Erick>   |
-| <http://example.org/Alice>   | "Charles"                    |
-           */
-
           result.right.get.collect().toSeq should contain theSameElementsAs Seq(
             Row(
               "<http://example.org/Charles>",
@@ -5711,7 +6325,7 @@ class PropertyPathsSpec
           )
         }
 
-        "with /" ignore {
+        "with /" in {
 
           val df = List(
             (
@@ -5883,6 +6497,121 @@ class PropertyPathsSpec
             Row("<http://example.org/Alice>", "<http://example.org/Charles>"),
             Row("<http://example.org/Alice>", "<http://example.org/Daniel>"),
             Row("<http://example.org/Alice>", "<http://example.org/Erick>")
+          ).sorted
+
+          rows should contain theSameElementsAs expectedRows
+        }
+
+        "with ^" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s ^(foaf:knows+) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          val rows = result.right.get.collect().toSeq.sorted
+          val expectedRows = Seq(
+            Row("<http://example.org/Bob>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Charles>")
+          ).sorted
+
+          rows should contain theSameElementsAs expectedRows
+        }
+
+        "with !" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s !foaf:knows* ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          val rows = result.right.get.collect.toSeq.sorted
+          val expectedRows = Seq(
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Charles>", "\"Charles\""),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>")
           ).sorted
 
           rows should contain theSameElementsAs expectedRows
@@ -6164,7 +6893,7 @@ class PropertyPathsSpec
 
       "mix *" when {
 
-        "with |" ignore {
+        "with |" in {
 
           val df = List(
             (
@@ -6208,7 +6937,7 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
-            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
             Row("\"Charles\"", "\"Charles\""),
             Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
             Row("<http://example.org/Charles>", "<http://example.org/Daniel>"),
@@ -6232,7 +6961,7 @@ class PropertyPathsSpec
           rows should contain theSameElementsAs expectedRows
         }
 
-        "with /" ignore {
+        "with /" in {
 
           val df = List(
             (
@@ -6276,7 +7005,7 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
-            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
             Row("\"Charles\"", "\"Charles\""),
             Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
             Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
@@ -6417,6 +7146,118 @@ class PropertyPathsSpec
           ).sorted
 
           rows should contain theSameElementsAs expectedRows
+        }
+
+        "with ^" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s ^(foaf:knows*) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          val rows = result.right.get.collect().toSeq.sorted
+          val expectedRows = Seq(
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Alice>")
+          ).sorted
+
+          rows should contain theSameElementsAs expectedRows
+        }
+
+        "with !" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s !foaf:knows+ ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("<http://example.org/Charles>", "\"Charles\"")
+          )
         }
 
         "with {n,m}" in {
@@ -6716,7 +7557,7 @@ class PropertyPathsSpec
 
       "mix ?" when {
 
-        "with |" ignore {
+        "with |" in {
 
           val df = List(
             (
@@ -6760,31 +7601,23 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
-            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
             Row("\"Charles\"", "\"Charles\""),
             Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
             Row("<http://example.org/Charles>", "<http://example.org/Daniel>"),
-            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
             Row("<http://example.org/Charles>", "\"Charles\""),
-            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
             Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
-            Row("<http://example.org/Bob>", "<http://example.org/Daniel>"),
-            Row("<http://example.org/Bob>", "<http://example.org/Erick>"),
-            Row("<http://example.org/Bob>", "\"Charles\""),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
             Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
             Row("<http://example.org/Daniel>", "<http://example.org/Erick>"),
             Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
-            Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
-            Row("<http://example.org/Alice>", "<http://example.org/Charles>"),
-            Row("<http://example.org/Alice>", "<http://example.org/Daniel>"),
-            Row("<http://example.org/Alice>", "<http://example.org/Erick>"),
-            Row("<http://example.org/Alice>", "\"Charles\"")
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>")
           ).sorted
 
           rows should contain theSameElementsAs expectedRows
         }
 
-        "with /" ignore {
+        "with /" in {
 
           val df = List(
             (
@@ -6828,11 +7661,11 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
-            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
             Row("\"Charles\"", "\"Charles\""),
             Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
-            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
             Row("<http://example.org/Bob>", "\"Charles\""),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
             Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
             Row("<http://example.org/Alice>", "<http://example.org/Alice>")
           ).sorted
@@ -6968,6 +7801,118 @@ class PropertyPathsSpec
           ).sorted
 
           rows should contain theSameElementsAs expectedRows
+        }
+
+        "with ^" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s ^(foaf:knows?) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          val rows = result.right.get.collect().toSeq.sorted
+          val expectedRows = Seq(
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Alice>")
+          ).sorted
+
+          rows should contain theSameElementsAs expectedRows
+        }
+
+        "with ?" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s !foaf:knows? ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Charles>", "\"Charles\""),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>")
+          )
         }
 
         "with {n,m}" in {
@@ -7214,9 +8159,648 @@ class PropertyPathsSpec
         }
       }
 
+      "mix ^" when {
+
+        "with |" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s ^(foaf:knows|foaf:name) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("<http://example.org/Daniel>", "<http://example.org/Charles>"),
+            Row("\"Charles\"", "<http://example.org/Charles>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Alice>")
+          )
+        }
+
+        "with /" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s ^(foaf:knows/foaf:name) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("\"Charles\"", "<http://example.org/Bob>")
+          )
+        }
+
+        "with *" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s ^(foaf:knows*) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Alice>")
+          )
+        }
+
+        "with +" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s ^(foaf:knows+) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("<http://example.org/Daniel>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Alice>")
+          )
+        }
+
+        "with ?" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s ^(foaf:knows?) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Alice>")
+          )
+        }
+
+        "with !" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s ^(!foaf:knows) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          val rows = result.right.get.collect.toSeq
+          val expectedRows = Seq(
+            Row("\"Charles\"", "<http://example.org/Charles>")
+          )
+
+          rows should contain theSameElementsAs expectedRows
+        }
+
+        "with {n,m}" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s ^(foaf:knows{1,3}) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("<http://example.org/Bob>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Charles>")
+          )
+        }
+
+        "with {n,}" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s ^(foaf:knows{2,}) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("<http://example.org/Charles>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Charles>")
+          )
+        }
+
+        "with {,n}" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s ^(foaf:knows{,2}) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Alice>")
+          )
+        }
+
+        "with {n}" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s ^(foaf:knows{2}) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("<http://example.org/Charles>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Charles>")
+          )
+        }
+      }
+
+      "mix !" when {
+
+        "with |" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s !(foaf:knows|foaf:name) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq()
+        }
+
+        // TODO: Fix this one
+        "with ^" ignore {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s !(^foaf:knows) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          val rows = result.right.get.collect.toSeq
+          val expectedRows = Seq(
+            Row("\"Charles\"", "<http://example.org/Charles>")
+          )
+
+          rows should contain theSameElementsAs expectedRows
+        }
+      }
+
       "mix {n,m}" when {
 
-        "with |" ignore {
+        "with |" in {
 
           val df = List(
             (
@@ -7260,31 +8844,24 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
-            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
-            Row("\"Charles\"", "\"Charles\""),
-            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
             Row("<http://example.org/Charles>", "<http://example.org/Daniel>"),
             Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
             Row("<http://example.org/Charles>", "\"Charles\""),
-            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
             Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
             Row("<http://example.org/Bob>", "<http://example.org/Daniel>"),
             Row("<http://example.org/Bob>", "<http://example.org/Erick>"),
             Row("<http://example.org/Bob>", "\"Charles\""),
-            Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
             Row("<http://example.org/Daniel>", "<http://example.org/Erick>"),
-            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
             Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
             Row("<http://example.org/Alice>", "<http://example.org/Charles>"),
             Row("<http://example.org/Alice>", "<http://example.org/Daniel>"),
-            Row("<http://example.org/Alice>", "<http://example.org/Erick>"),
             Row("<http://example.org/Alice>", "\"Charles\"")
           ).sorted
 
           rows should contain theSameElementsAs expectedRows
         }
 
-        "with /" ignore {
+        "with /" in {
 
           val df = List(
             (
@@ -7328,13 +8905,7 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
-            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
-            Row("\"Charles\"", "\"Charles\""),
-            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
-            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
-            Row("<http://example.org/Bob>", "\"Charles\""),
-            Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
-            Row("<http://example.org/Alice>", "<http://example.org/Alice>")
+            Row("<http://example.org/Bob>", "\"Charles\"")
           ).sorted
 
           rows should contain theSameElementsAs expectedRows
@@ -7528,6 +9099,111 @@ class PropertyPathsSpec
           ).sorted
 
           rows should contain theSameElementsAs expectedRows
+        }
+
+        "with ^" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s ^(foaf:knows{1,3}) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          val rows = result.right.get.collect().toSeq.sorted
+          val expectedRows = Seq(
+            Row("<http://example.org/Bob>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Charles>")
+          ).sorted
+
+          rows should contain theSameElementsAs expectedRows
+        }
+
+        "with !" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s !foaf:knows{1,3} ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("<http://example.org/Charles>", "\"Charles\"")
+          )
         }
 
         "with {n,}" in {
@@ -7734,7 +9410,7 @@ class PropertyPathsSpec
 
       "mix {n,}" when {
 
-        "with |" ignore {
+        "with |" in {
 
           val df = List(
             (
@@ -7778,12 +9454,16 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
+            Row("<http://example.org/Bob>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Alice>", "\"Charles\"")
           ).sorted
 
           rows should contain theSameElementsAs expectedRows
         }
 
-        "with /" ignore {
+        "with /" in {
 
           val df = List(
             (
@@ -7825,9 +9505,8 @@ class PropertyPathsSpec
 
           val result = Compiler.compile(df, query, config)
 
-          val rows = result.right.get.collect().toSeq.sorted
-          val expectedRows = Seq(
-          ).sorted
+          val rows         = result.right.get.collect().toSeq.sorted
+          val expectedRows = Seq().sorted
 
           rows should contain theSameElementsAs expectedRows
         }
@@ -8000,6 +9679,103 @@ class PropertyPathsSpec
           rows should contain theSameElementsAs expectedRows
         }
 
+        "with ^" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s ^(foaf:knows{3,}) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          val rows = result.right.get.collect().toSeq.sorted
+          val expectedRows = Seq(
+            Row("<http://example.org/Daniel>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Bob>")
+          ).sorted
+
+          rows should contain theSameElementsAs expectedRows
+        }
+
+        "with !" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s !foaf:knows{2,} ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq()
+        }
+
         "with {n,m}" in {
 
           val df = List(
@@ -8165,7 +9941,7 @@ class PropertyPathsSpec
 
       "mix {,n}" when {
 
-        "with |" ignore {
+        "with |" in {
 
           val df = List(
             (
@@ -8209,12 +9985,27 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Charles>", "\"Charles\""),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Bob>", "\"Charles\""),
+            Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Charles>")
           ).sorted
 
           rows should contain theSameElementsAs expectedRows
         }
 
-        "with /" ignore {
+        "with /" in {
 
           val df = List(
             (
@@ -8258,6 +10049,13 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Bob>", "\"Charles\""),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>")
           ).sorted
 
           rows should contain theSameElementsAs expectedRows
@@ -8455,6 +10253,121 @@ class PropertyPathsSpec
           ).sorted
 
           rows should contain theSameElementsAs expectedRows
+        }
+
+        "with ^" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s ^(foaf:knows{,2}) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          val rows = result.right.get.collect().toSeq.sorted
+          val expectedRows = Seq(
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Alice>")
+          ).sorted
+
+          rows should contain theSameElementsAs expectedRows
+        }
+
+        "with !" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s !foaf:knows{,2} ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("<http://example.org/Erick>", "<http://example.org/Erick>"),
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Charles>", "\"Charles\""),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>")
+          )
         }
 
         "with {n,m}" in {
@@ -8670,7 +10583,7 @@ class PropertyPathsSpec
 
       "mix {n}" when {
 
-        "with |" ignore {
+        "with |" in {
 
           val df = List(
             (
@@ -8714,12 +10627,16 @@ class PropertyPathsSpec
 
           val rows = result.right.get.collect().toSeq.sorted
           val expectedRows = Seq(
+            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Bob>", "\"Charles\""),
+            Row("<http://example.org/Alice>", "<http://example.org/Charles>")
           ).sorted
 
           rows should contain theSameElementsAs expectedRows
         }
 
-        "with /" ignore {
+        "with /" in {
 
           val df = List(
             (
@@ -8936,6 +10853,103 @@ class PropertyPathsSpec
           ).sorted
 
           rows should contain theSameElementsAs expectedRows
+        }
+
+        "with ^" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s ^(foaf:knows{2}) ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          val rows = result.right.get.collect().toSeq.sorted
+          val expectedRows = Seq(
+            Row("<http://example.org/Charles>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Erick>", "<http://example.org/Charles>")
+          ).sorted
+
+          rows should contain theSameElementsAs expectedRows
+        }
+
+        "with !" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\""
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s !foaf:knows{2} ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq()
         }
 
         "with {n,m}" in {

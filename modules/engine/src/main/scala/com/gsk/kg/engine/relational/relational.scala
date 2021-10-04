@@ -22,8 +22,10 @@ import simulacrum.typeclass
   * }}}
   */
 @typeclass trait Relational[A] {
+  def emptyWithSchema(schema: StructType)(implicit sc: SQLContext): A
   def empty(implicit sc: SQLContext): A
   def isEmpty(df: A): Boolean
+  def except(left: A, right: A): A
   def crossJoin(left: A, right: A): A
   def innerJoin(left: A, right: A, columns: Seq[String]): A
   def leftJoin(left: A, right: A, columns: Seq[String]): A
@@ -78,12 +80,25 @@ trait RelationalInstances {
     */
   implicit val untypedDataFrameRelational: Relational[DataFrame @@ Untyped] =
     new Relational[DataFrame @@ Untyped] {
+
+      def emptyWithSchema(schema: StructType)(implicit
+          sc: SQLContext
+      ): DataFrame @@ Untyped = @@(
+        sc.createDataFrame(sc.sparkContext.emptyRDD[Row], schema)
+      )
+
       def empty(implicit sc: SQLContext): DataFrame @@ Untyped = @@(
         sc.emptyDataFrame
       )
 
       def isEmpty(df: DataFrame @@ Untyped): Boolean =
         df.unwrap.isEmpty
+
+      def except(
+          left: DataFrame @@ Untyped,
+          right: DataFrame @@ Untyped
+      ): DataFrame @@ Untyped =
+        @@(left.unwrap.except(right.unwrap))
 
       def crossJoin(
           left: DataFrame @@ Untyped,
