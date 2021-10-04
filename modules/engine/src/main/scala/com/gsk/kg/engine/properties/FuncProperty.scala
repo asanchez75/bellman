@@ -11,6 +11,7 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions._
 
+import com.gsk.kg.config.Config
 import com.gsk.kg.engine.functions.PathFrame._
 import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.engine.relational.Relational.ops._
@@ -27,7 +28,8 @@ object FuncProperty {
 
   def seq(
       pel: DataFrame @@ Untyped,
-      per: DataFrame @@ Untyped
+      per: DataFrame @@ Untyped,
+      config: Config
   ): Result[DataFrame @@ Untyped] = {
 
     val (sLeft, pLeft, oLeft, gLeft)     = ("sl", "pl", "ol", "gl")
@@ -51,14 +53,14 @@ object FuncProperty {
       l <- resultL
       r <- resultR
     } yield {
-      val joinResult = l
-        .innerJoin(
-          r,
-          (col(oLeft) <=> col(sRight) &&
-            col(gLeft) <=> col(gRight))
-        )
+      val cnd = if (config.isDefaultGraphExclusive) {
+        col(oLeft) <=> col(sRight) && col(gLeft) <=> col(gRight)
+      } else {
+        col(oLeft) <=> col(sRight)
+      }
 
-      joinResult
+      l
+        .innerJoin(r, cnd)
         .select(Seq(sLeft, oRight, pLeft, pRight, gLeft).map(col))
         .withColumnRenamed(sLeft, sCol)
         .withColumnRenamed(oRight, oCol)
@@ -73,7 +75,8 @@ object FuncProperty {
       maybeN: Option[Int],
       maybeM: Option[Int],
       e: DataFrame @@ Untyped,
-      duplicates: Boolean
+      duplicates: Boolean,
+      config: Config
   )(implicit
       sc: SQLContext
   ): Result[DataFrame @@ Untyped] = {
@@ -111,14 +114,14 @@ object FuncProperty {
       val onePaths = getOneLengthPaths(nonZeroPaths)
 
       val (maxLength, pathsFrame) =
-        constructPathFrame(onePaths, limit = Some(effectiveM))
+        constructPathFrame(onePaths, limit = Some(effectiveM), config)
 
       val effectiveRange =
         effectiveN to (if (effectiveM > maxLength) maxLength else effectiveM)
 
       val paths =
         effectiveRange.map { i =>
-          getNLengthPathTriples(df, pathsFrame, i)
+          getNLengthPathTriples(df, pathsFrame, i, config)
         }.toList
 
       val combinedPaths = Foldable[List].fold(paths)

@@ -248,9 +248,13 @@ object Engine {
       g: List[StringVal]
   )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] = {
 
-    def genGraphCnd(df: DataFrame @@ Untyped, g: List[StringVal]): Column =
-      g.foldLeft(lit(false)) { case (acc, elem) =>
-        acc || df.getColumn("g") === lit(elem.s)
+    def genGraphCnd(cnf: Config, g: List[StringVal]): Column =
+      if (cnf.isDefaultGraphExclusive) {
+        g.foldLeft(lit(false)) { case (acc, elem) =>
+          acc || col("g") === lit(elem.s)
+        }
+      } else {
+        lit(true)
       }
 
     M.get[Result, Config, Log, DataFrame @@ Untyped].flatMap { df =>
@@ -260,8 +264,7 @@ object Engine {
           .apply(df)
           .map { accDf =>
             val chunk    = Chunk(Quad(s, STRING(""), o, g))
-            val graphCnd = genGraphCnd(accDf, g)
-
+            val graphCnd = genGraphCnd(config, g)
             val filtered = accDf.filter(graphCnd)
             val result   = applyChunkToDf(chunk, filtered)
             result.copy(relational =
