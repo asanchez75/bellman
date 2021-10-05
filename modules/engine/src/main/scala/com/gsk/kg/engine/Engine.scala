@@ -283,7 +283,6 @@ object Engine {
         quads.mapChunks { chunk =>
           val condition = composedConditionFromChunk(df, chunk)
           val filtered  = df.filter(condition)
-          filtered.show(false)
           applyChunkToDf(chunk, filtered)
         }
       )
