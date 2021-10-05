@@ -37,9 +37,9 @@ class IsNumericSpec
 
     "term is typed nonNegativeInteger" in {
       // isNumeric("12"^^xsd:nonNegativeInteger) -> true
-      val term     = "\"12\"^^xsd:nonNegativeInteger"
-      val expected = Row("\"12\"^^xsd:nonNegativeInteger")
-      val actual   = actTrue(term)
+      val term = "\"12\"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>"
+      val expected = Row("\"12\"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>")
+      val actual = actTrue(term)
       actual shouldEqual expected
     }
 
@@ -53,7 +53,7 @@ class IsNumericSpec
 
     "term is typed byte" in {
       // isNumeric("1200"^^xsd:byte) -> false
-      val term     = "\"1200\"^^xsd:byte"
+      val term = "\"1200\"^^<http://www.w3.org/2001/XMLSchema#byte>"
       val expected = false
       val actual   = actFalse(term)
       actual shouldEqual expected

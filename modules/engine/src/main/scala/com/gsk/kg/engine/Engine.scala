@@ -21,10 +21,11 @@ import org.apache.spark.sql.{Row => SparkRow}
 
 import com.gsk.kg.config.Config
 import com.gsk.kg.engine.SPOEncoder._
+import com.gsk.kg.engine.syntax._
 import com.gsk.kg.engine.data.ChunkedList
 import com.gsk.kg.engine.data.ChunkedList.Chunk
-import com.gsk.kg.engine.functions.FuncAgg
-import com.gsk.kg.engine.functions.FuncForms
+import com.gsk.kg.engine.typed.functions.FuncAgg
+import com.gsk.kg.engine.typed.functions.FuncForms
 import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.engine.relational.Relational.ops._
 import com.gsk.kg.engine.relational.RelationalGrouped
@@ -102,7 +103,7 @@ object Engine {
       )
       dataFrame =
         if (df.columns.length == 3) {
-          df.withColumn("g", lit(""))
+          df.withColumn("g", DataFrameTyper.parse(lit("<http://defaultgraph>")))
         } else {
           df
         }
@@ -248,13 +249,9 @@ object Engine {
       g: List[StringVal]
   )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] = {
 
-    def genGraphCnd(cnf: Config, g: List[StringVal]): Column =
-      if (cnf.isDefaultGraphExclusive) {
-        g.foldLeft(lit(false)) { case (acc, elem) =>
-          acc || col("g") === lit(elem.s)
-        }
-      } else {
-        lit(true)
+    def genGraphCnd(df: DataFrame @@ Untyped, g: List[StringVal]): Column =
+      g.foldLeft(lit(false)) { case (acc, elem) =>
+        acc || df.getColumn("g") === DataFrameTyper.parse(lit(elem.s))
       }
 
     M.get[Result, Config, Log, DataFrame @@ Untyped].flatMap { df =>
@@ -264,7 +261,8 @@ object Engine {
           .apply(df)
           .map { accDf =>
             val chunk    = Chunk(Quad(s, STRING(""), o, g))
-            val graphCnd = genGraphCnd(config, g)
+            val graphCnd = genGraphCnd(accDf, g)
+
             val filtered = accDf.filter(graphCnd)
             val result   = applyChunkToDf(chunk, filtered)
             result.copy(relational =
@@ -285,6 +283,7 @@ object Engine {
         quads.mapChunks { chunk =>
           val condition = composedConditionFromChunk(df, chunk)
           val filtered  = df.filter(condition)
+          filtered.show(false)
           applyChunkToDf(chunk, filtered)
         }
       )
@@ -307,22 +306,30 @@ object Engine {
       relational: DataFrame @@ Untyped,
       chunk: Chunk[Quad]
   ): Column = {
-    chunk
-      .map { quad =>
-        quad.getPredicates
-          .groupBy(_._2)
-          .map { case (_, vs) =>
-            vs.map { case (pred, position) =>
-              val col = relational.getColumn(position)
-              when(
-                col.startsWith("\"") && col.endsWith("\""),
-                FuncForms.equals(trim(col, "\""), lit(pred.s))
-              ).otherwise(FuncForms.equals(col, lit(pred.s)))
+    RdfType.Boolean(
+      chunk
+        .map { quad =>
+          quad.getPredicates
+            .groupBy(_._2)
+            .map { case (_, vs) =>
+              vs.map { case (pred, position) =>
+                val col = relational.getColumn(position)
+                if (pred.s == "" && position == "g") {
+                  FuncForms
+                    .equals(col, DataFrameTyper.parse(lit("<http://defaultgraph>")))
+                    .value.cast(BooleanType)
+              } else {
+                FuncForms
+                  .equals(col, DataFrameTyper.parse(lit(pred.s)))
+                  .value
+                  .cast(BooleanType)
+              }
             }.foldLeft(lit(false))(_ || _)
           }
           .foldLeft(lit(true))(_ && _)
       }
       .foldLeft(lit(true))(_ && _)
+    )
   }
 
   private def evaluateDistinct(

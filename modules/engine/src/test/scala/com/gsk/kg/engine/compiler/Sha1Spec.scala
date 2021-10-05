@@ -32,7 +32,7 @@ class Sha1Spec
     }
 
     "str is xsd:string" in {
-      val str      = "\"abc\"^^xsd:string"
+      val str = "\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>"
       val expected = Row("\"a9993e364706816aba3e25717850c26c9cd0d89d\"")
       val actual   = act(str)
       actual shouldEqual expected

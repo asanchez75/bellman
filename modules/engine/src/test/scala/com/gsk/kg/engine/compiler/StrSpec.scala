@@ -81,7 +81,7 @@ class StrSpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
         (
           "\"a\"",
           "\"b\"",
-          "\"c\"^^xsd:string"
+          "\"c\"^^<http://www.w3.org/2001/XMLSchema#string>"
         ),
         (
           "\"a\"",

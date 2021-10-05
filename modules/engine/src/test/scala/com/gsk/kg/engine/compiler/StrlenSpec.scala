@@ -29,7 +29,7 @@ class StrlenSpec
         (
           "_:alice",
           "<http://xmlns.com/foaf/0.1/name>",
-          "\"Alice\"^^xsd:string"
+          "\"Alice\"^^<http://www.w3.org/2001/XMLSchema#string>"
         ),
         (
           "_:alice",
@@ -69,7 +69,7 @@ class StrlenSpec
       result.right.get.collect.length shouldEqual 3
       result.right.get.collect.toSet shouldEqual Set(
         Row("\"Alice\""),
-        Row("\"Alice\"^^xsd:string"),
+        Row("\"Alice\"^^<http://www.w3.org/2001/XMLSchema#string>"),
         Row("\"Alice\"@en")
       )
     }

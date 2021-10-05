@@ -43,7 +43,7 @@ class EncodeForURISpec
 
     "form is typed string" in {
       // encode_for_uri("Los Angeles"^^xsd:string) -> "Los%20Angeles"
-      val str      = "\"Los Angeles\"^^xsd:string"
+      val str = "\"Los Angeles\"^^<http://www.w3.org/2001/XMLSchema#string>"
       val expected = Row("\"Los%20Angeles\"")
       val actual   = act(str)
       actual shouldEqual expected

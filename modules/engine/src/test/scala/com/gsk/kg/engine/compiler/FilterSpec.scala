@@ -205,18 +205,18 @@ class FilterSpec
           (
             "_:a",
             "<http://example.org/stats#hits>",
-            "\"2349\"^^xsd:integer",
+            "\"2349\"^^<http://www.w3.org/2001/XMLSchema#integer>",
             ""
           ),
           ("_:b", "<http://xmlns.com/foaf/0.1/name>", "Bob", ""),
           (
             "_:b",
             "<http://example.org/stats#hits>",
-            "\"105\"^^xsd:integer",
+            "\"105\"^^<http://www.w3.org/2001/XMLSchema#integer>",
             ""
           ),
           ("_:c", "<http://xmlns.com/foaf/0.1/name>", "Eve"),
-          ("_:c", "<http://example.org/stats#hits>", "\"181\"^^xsd:integer", "")
+          ("_:c", "<http://example.org/stats#hits>", "\"181\"^^<http://www.w3.org/2001/XMLSchema#integer>", "")
         ).toDF("s", "p", "o", "g")
 
         val query =
@@ -251,7 +251,7 @@ class FilterSpec
         result.right.get.collect.length shouldEqual 2
         result.right.get.collect.toSet shouldEqual Set(
           Row("_:a", "foaf:name", "\"Bob\"", ""),
-          Row("_:b", "site:hits", "\"2349\"^^xsd:integer", "")
+          Row("_:b", "site:hits", "\"2349\"^^<http://www.w3.org/2001/XMLSchema#integer>", "")
         )
       }
     }
@@ -422,7 +422,7 @@ class FilterSpec
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row(":_a", "\"Henry\"^^xsd:string")
+          Row(":_a", "\"Henry\"^^<http://www.w3.org/2001/XMLSchema#string>")
         )
       }
 
@@ -491,19 +491,19 @@ class FilterSpec
           (
             "_:Martha",
             "<http://xmlns.com/foaf/0.1/birthDay>",
-            """"2000-10-10T10:10:10.000"^^xsd:dateTime""",
+            """"2000-10-10T10:10:10.000"^^<http://www.w3.org/2001/XMLSchema#dateTime>""",
             ""
           ),
           (
             "_:Ana",
             "<http://xmlns.com/foaf/0.1/birthDay>",
-            """"2000-10-10T10:10:10.000"^^xsd:dateTime""",
+            """"2000-10-10T10:10:10.000"^^<http://www.w3.org/2001/XMLSchema#dateTime>""",
             ""
           ),
           (
             "_:Henry",
             "<http://xmlns.com/foaf/0.1/birthDay>",
-            """"1990-10-10T10:10:10.000"^^xsd:dateTime""",
+            """"1990-10-10T10:10:10.000"^^<http://www.w3.org/2001/XMLSchema#dateTime>""",
             ""
           )
         ).toDF("s", "p", "o", "g")
@@ -598,7 +598,7 @@ class FilterSpec
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row(":_b", "\"Perico\"^^xsd:string")
+          Row(":_b", "\"Perico\"^^<http://www.w3.org/2001/XMLSchema#string>")
         )
       }
 
@@ -667,19 +667,19 @@ class FilterSpec
           (
             "_:Martha",
             "<http://xmlns.com/foaf/0.1/birthDay>",
-            """"2000-10-10T10:10:10.000"^^xsd:dateTime""",
+            """"2000-10-10T10:10:10.000"^^<http://www.w3.org/2001/XMLSchema#dateTime>""",
             ""
           ),
           (
             "_:Ana",
             "<http://xmlns.com/foaf/0.1/birthDay>",
-            """"2000-10-10T10:10:10.000"^^xsd:dateTime""",
+            """"2000-10-10T10:10:10.000"^^<http://www.w3.org/2001/XMLSchema#dateTime>""",
             ""
           ),
           (
             "_:Henry",
             "<http://xmlns.com/foaf/0.1/birthDay>",
-            """"1990-10-10T10:10:10.000"^^xsd:dateTime""",
+            """"1990-10-10T10:10:10.000"^^<http://www.w3.org/2001/XMLSchema#dateTime>""",
             ""
           )
         ).toDF("s", "p", "o", "g")
@@ -771,7 +771,7 @@ class FilterSpec
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("_:b", "\"Charles\"^^xsd:string")
+          Row("_:b", "\"Charles\"^^<http://www.w3.org/2001/XMLSchema#string>")
         )
       }
 
@@ -840,19 +840,19 @@ class FilterSpec
           (
             "_:Martha",
             "<http://xmlns.com/foaf/0.1/birthDay>",
-            """"2000-10-10T10:10:10.000"^^xsd:dateTime""",
+            """"2000-10-10T10:10:10.000"^^<http://www.w3.org/2001/XMLSchema#dateTime>""",
             ""
           ),
           (
             "_:Ana",
             "<http://xmlns.com/foaf/0.1/birthDay>",
-            """"2000-10-10T10:10:10.000"^^xsd:dateTime""",
+            """"2000-10-10T10:10:10.000"^^<http://www.w3.org/2001/XMLSchema#dateTime>""",
             ""
           ),
           (
             "_:Henry",
             "<http://xmlns.com/foaf/0.1/birthDay>",
-            """"1990-10-10T10:10:10.000"^^xsd:dateTime""",
+            """"1990-10-10T10:10:10.000"^^<http://www.w3.org/2001/XMLSchema#dateTime>""",
             ""
           )
         ).toDF("s", "p", "o", "g")
@@ -947,7 +947,7 @@ class FilterSpec
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("_:a", "\"Anthony\"^^xsd:string")
+          Row("_:a", "\"Anthony\"^^<http://www.w3.org/2001/XMLSchema#string>")
         )
       }
 
@@ -1018,19 +1018,19 @@ class FilterSpec
           (
             "_:Martha",
             "<http://xmlns.com/foaf/0.1/birthDay>",
-            """"2000-10-10T10:10:10.000"^^xsd:dateTime""",
+            """"2000-10-10T10:10:10.000"^^<http://www.w3.org/2001/XMLSchema#dateTime>""",
             ""
           ),
           (
             "_:Ana",
             "<http://xmlns.com/foaf/0.1/birthDay>",
-            """"2000-10-10T10:10:10.000"^^xsd:dateTime""",
+            """"2000-10-10T10:10:10.000"^^<http://www.w3.org/2001/XMLSchema#dateTime>""",
             ""
           ),
           (
             "_:Henry",
             "<http://xmlns.com/foaf/0.1/birthDay>",
-            """"1990-10-10T10:10:10.000"^^xsd:dateTime""",
+            """"1990-10-10T10:10:10.000"^^<http://www.w3.org/2001/XMLSchema#dateTime>""",
             ""
           )
         ).toDF("s", "p", "o", "g")
@@ -1134,8 +1134,8 @@ class FilterSpec
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 2
         result.right.get.collect.toSet shouldEqual Set(
-          Row("_:b", "\"Bob\"^^xsd:string"),
-          Row("_:c", "\"Charles\"^^xsd:string")
+          Row("_:b", "\"Bob\"^^<http://www.w3.org/2001/XMLSchema#string>"),
+          Row("_:c", "\"Charles\"^^<http://www.w3.org/2001/XMLSchema#string>")
         )
       }
 
@@ -1206,19 +1206,19 @@ class FilterSpec
           (
             "_:Martha",
             "<http://xmlns.com/foaf/0.1/birthDay>",
-            """"2000-10-10T10:10:10.000"^^xsd:dateTime""",
+            """"2000-10-10T10:10:10.000"^^<http://www.w3.org/2001/XMLSchema#dateTime>""",
             ""
           ),
           (
             "_:Ana",
             "<http://xmlns.com/foaf/0.1/birthDay>",
-            """"2000-10-10T10:10:10.000"^^xsd:dateTime""",
+            """"2000-10-10T10:10:10.000"^^<http://www.w3.org/2001/XMLSchema#dateTime>""",
             ""
           ),
           (
             "_:Henry",
             "<http://xmlns.com/foaf/0.1/birthDay>",
-            """"1990-10-10T10:10:10.000"^^xsd:dateTime""",
+            """"1990-10-10T10:10:10.000"^^<http://www.w3.org/2001/XMLSchema#dateTime>""",
             ""
           )
         ).toDF("s", "p", "o", "g")
@@ -1322,8 +1322,8 @@ class FilterSpec
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 2
         result.right.get.collect.toSet shouldEqual Set(
-          Row("_:a", "\"Anthony\"^^xsd:string"),
-          Row("_:b", "\"Bob\"^^xsd:string")
+          Row("_:a", "\"Anthony\"^^<http://www.w3.org/2001/XMLSchema#string>"),
+          Row("_:b", "\"Bob\"^^<http://www.w3.org/2001/XMLSchema#string>")
         )
       }
 
@@ -1396,19 +1396,19 @@ class FilterSpec
           (
             "_:Martha",
             "<http://xmlns.com/foaf/0.1/birthDay>",
-            """"2000-10-10T10:10:10.000"^^xsd:dateTime""",
+            """"2000-10-10T10:10:10.000"^^<http://www.w3.org/2001/XMLSchema#dateTime>""",
             ""
           ),
           (
             "_:Ana",
             "<http://xmlns.com/foaf/0.1/birthDay>",
-            """"2000-10-10T10:10:10.000"^^xsd:dateTime""",
+            """"2000-10-10T10:10:10.000"^^<http://www.w3.org/2001/XMLSchema#dateTime>""",
             ""
           ),
           (
             "_:Henry",
             "<http://xmlns.com/foaf/0.1/birthDay>",
-            """"1990-10-10T10:10:10.000"^^xsd:dateTime""",
+            """"1990-10-10T10:10:10.000"^^<http://www.w3.org/2001/XMLSchema#dateTime>""",
             ""
           )
         ).toDF("s", "p", "o", "g")

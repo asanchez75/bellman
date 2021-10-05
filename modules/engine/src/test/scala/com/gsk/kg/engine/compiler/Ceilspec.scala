@@ -62,13 +62,13 @@ class Ceilspec
     }
 
     "term is xsd:double" in {
-      val term     = "\"10.5\"^^xsd:double"
-      val expected = List(Row("\"11\"^^xsd:double"))
+      val term = "\"10.5\"^^<http://www.w3.org/2001/XMLSchema#double>"
+      val expected = List(Row("\"11\"^^<http://www.w3.org/2001/XMLSchema#double>"))
       Evaluation.eval(df(term), None, query, expected)
     }
 
     "error when literal is typed but not numeric" in {
-      val term = "\"10.5\"^^xsd:string"
+      val term = "\"10.5\"^^<http://www.w3.org/2001/XMLSchema#string>"
       Evaluation.eval(df(term), None, query, nullExpected)
     }
   }

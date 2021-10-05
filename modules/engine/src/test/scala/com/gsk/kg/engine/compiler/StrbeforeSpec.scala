@@ -60,10 +60,10 @@ class StrbeforeSpec
 
     "arg1 is xsd:string and arg two is empty string simple literal" in {
       // strbefore("abc"^^xsd:string, "") -> ""^^xsd:string
-      val arg1     = "\"abc\"^^xsd:string"
-      val arg2     = "\"\""
-      val expected = Row("\"\"^^xsd:string")
-      val actual   = act(arg1, arg2)
+      val arg1 = "\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      val arg2 = "\"\""
+      val expected = Row("\"\"^^<http://www.w3.org/2001/XMLSchema#string>")
+      val actual = act(arg1, arg2)
       actual shouldEqual expected
     }
 

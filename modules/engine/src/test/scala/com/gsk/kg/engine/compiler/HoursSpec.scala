@@ -26,17 +26,17 @@ class HoursSpec
     (
       "_:a",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2011-01-10T14:45:13.815-05:00\"^^xsd:dateTime"
+      "\"2011-01-10T14:45:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
     ),
     (
       "_:b",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2012-04-10T08:45:13.815+01:00\"^^xsd:dateTime"
+      "\"2012-04-10T08:45:13.815+01:00\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
     ),
     (
       "_:c",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2012-04-10T22:45:13.815Z\"^^xsd:dateTime"
+      "\"2012-04-10T22:45:13.815Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
     )
   ).toDF("s", "p", "o")
 

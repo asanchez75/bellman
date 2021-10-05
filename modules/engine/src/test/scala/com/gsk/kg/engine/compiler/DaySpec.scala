@@ -22,17 +22,17 @@ class DaySpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
     (
       "_:a",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2011-01-10T14:45:13.815-05:00\"^^xsd:dateTime"
+      "\"2011-01-10T14:45:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
     ),
     (
       "_:b",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2012-04-14T14:45:13.815-05:00\"^^xsd:dateTime"
+      "\"2012-04-14T14:45:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
     ),
     (
       "_:c",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2013-12-09T14:45:13.815-05:00\"^^xsd:dateTime"
+      "\"2013-12-09T14:45:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
     )
   ).toDF("s", "p", "o")
 

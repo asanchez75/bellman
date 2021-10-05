@@ -48,10 +48,10 @@ class SubstrSpec
 
     "str is typed string and only pos is specified" in {
       // substr("foobar"^^xsd:string, 4) -> "bar"^^xsd:string
-      val str      = "\"foobar\"^^xsd:string"
-      val pos      = 4
-      val expected = Row("\"bar\"^^xsd:string")
-      val actual   = actWithPos(str, pos)
+      val str = "\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      val pos = 4
+      val expected = Row("\"bar\"^^<http://www.w3.org/2001/XMLSchema#string>")
+      val actual = actWithPos(str, pos)
       actual shouldEqual expected
     }
 
@@ -77,11 +77,11 @@ class SubstrSpec
 
     "str is typed string and pos and len are specified" in {
       // substr("foobar"^^xsd:string, 4, 1) -> "b"^^xsd:string
-      val str      = "\"foobar\"^^xsd:string"
-      val pos      = 4
-      val len      = 1
-      val expected = Row("\"b\"^^xsd:string")
-      val actual   = actWithPosLen(str, pos, len)
+      val str = "\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      val pos = 4
+      val len = 1
+      val expected = Row("\"b\"^^<http://www.w3.org/2001/XMLSchema#string>")
+      val actual = actWithPosLen(str, pos, len)
       actual shouldEqual expected
     }
   }

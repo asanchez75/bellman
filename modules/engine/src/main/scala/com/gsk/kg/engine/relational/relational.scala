@@ -2,12 +2,10 @@ package com.gsk.kg.engine.relational
 
 import higherkindness.droste.contrib.NewTypesSyntax.NewTypesOps
 import higherkindness.droste.util.newtypes.@@
-
 import org.apache.spark.sql._
-import org.apache.spark.sql.types.StructType
-
+import org.apache.spark.sql.types.{BooleanType, StructType}
+import com.gsk.kg.engine.syntax._
 import com.gsk.kg.engine.relational.Relational.Untyped
-
 import simulacrum.typeclass
 
 /** The [[Relational]] typeclass captures the idea of a datatype [[A]] with
@@ -204,7 +202,7 @@ trait RelationalInstances {
           df: DataFrame @@ Untyped,
           condition: Column
       ): DataFrame @@ Untyped = @@ {
-        df.unwrap.filter(condition)
+        df.unwrap.filter(condition.value.cast(BooleanType))
       }
 
       def distinct(df: DataFrame @@ Untyped): DataFrame @@ Untyped = @@ {

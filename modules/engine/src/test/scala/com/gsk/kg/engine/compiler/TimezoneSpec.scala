@@ -26,24 +26,24 @@ class TimezoneSpec
     (
       "_:a",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2011-01-10T14:45:13.815+05:00\"^^xsd:dateTime"
+      "\"2011-01-10T14:45:13.815+05:00\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
     ),
     (
       "_:b",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2012-04-14T14:38:13.815-05:00\"^^xsd:dateTime"
+      "\"2012-04-14T14:38:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
     ),
     (
       "_:c",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2013-12-09T14:09:13.815-05:11\"^^xsd:dateTime"
+      "\"2013-12-09T14:09:13.815-05:11\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
     )
   ).toDF("s", "p", "o")
 
   val expected: List[Row] = List(
-    "\"PT5H\"^^xsd:dateTime",
-    "\"-PT5H\"^^xsd:dateTime",
-    "\"-PT5H11M\"^^xsd:dateTime"
+    "\"PT5H\"^^<http://www.w3.org/2001/XMLSchema#dateTime>",
+    "\"-PT5H\"^^<http://www.w3.org/2001/XMLSchema#dateTime>",
+    "\"-PT5H11M\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
   ).map(Row(_))
 
   val projection: Option[Column] = None
