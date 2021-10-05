@@ -263,10 +263,4 @@ object FuncTerms {
         udfSpecificUUIDBNodeName(extractStringLiteral(col))
     }
   }
-
-//  def bNode(maybeString: Option[String]): Column =
-//    maybeString match {
-//    case None => bNode(None:Option[Column])
-//    case Some(col:String) => bNode(Some(lit(col)))
-//  }
 }
