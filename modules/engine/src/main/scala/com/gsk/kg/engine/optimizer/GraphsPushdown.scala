@@ -143,7 +143,11 @@ object GraphsPushdown {
           case DAG.Sequence(bps) =>
             graphsOrList => DAG.sequenceR(bps.map(_(graphsOrList)))
           case DAG.Path(s, p, o, g) =>
-            graphsOrList => DAG.pathR(s, p, o, g)
+            graphsOrList =>
+              graphsOrList.fold(
+                list => DAG.pathR(s, p, o, list),
+                graphs => DAG.pathR(s, p, o, graphs.default)
+              )
           case DAG.BGP(quads) =>
             graphsOrList =>
               graphsOrList.fold(

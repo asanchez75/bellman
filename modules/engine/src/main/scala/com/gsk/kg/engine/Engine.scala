@@ -138,7 +138,8 @@ object Engine {
         quads
           .mapChunks { chunk =>
             val condition = composedConditionFromChunk(df, chunk)
-            applyChunkToDf(chunk, condition, df)
+            val filtered  = df.filter(condition)
+            applyChunkToDf(chunk, filtered)
           }
           .foldLeft(Multiset.empty)(
             (
@@ -152,13 +153,11 @@ object Engine {
 
   private def applyChunkToDf(
       chunk: ChunkedList.Chunk[Quad],
-      condition: Column,
-      df: DataFrame @@ Untyped
+      filtered: DataFrame @@ Untyped
   )(implicit
       sc: SQLContext
   ): Multiset[DataFrame @@ Untyped] = {
     import sc.implicits._
-    val current = df.filter(condition)
     val vars =
       chunk
         .map(_.getNamesAndPositions :+ (GRAPH_VARIABLE, "g"))
@@ -166,7 +165,7 @@ object Engine {
         .toList
         .flatten
     val selected =
-      current.select(vars.map(v => $"${v._2}".as(v._1.s)))
+      filtered.select(vars.map(v => $"${v._2}".as(v._1.s)))
 
     Multiset[DataFrame @@ Untyped](
       vars.map {
@@ -222,7 +221,15 @@ object Engine {
   ): M[Multiset[DataFrame @@ Untyped]] = {
     val bindings =
       expr.bindings.filter(_.s != GRAPH_VARIABLE.s) + VARIABLE(graph)
-    val df = expr.relational.withColumn(graph, col(GRAPH_VARIABLE.s))
+
+    val graphColumnMetadata =
+      new MetadataBuilder().putString("graph_column_name", graph).build()
+    val updatedGraphCol =
+      col(GRAPH_VARIABLE.s).as("graph_column", graphColumnMetadata)
+
+    val df = expr.relational
+      .withColumn(graph, updatedGraphCol)
+
     Multiset[DataFrame @@ Untyped](
       bindings,
       df
@@ -240,34 +247,28 @@ object Engine {
       o: StringVal,
       g: List[StringVal]
   )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] = {
+
+    def genGraphCnd(df: DataFrame @@ Untyped, g: List[StringVal]): Column =
+      g.foldLeft(lit(false)) { case (acc, elem) =>
+        acc || df.getColumn("g") === lit(elem.s)
+      }
+
     M.get[Result, Config, Log, DataFrame @@ Untyped].flatMap { df =>
       M.ask[Result, Config, Log, DataFrame @@ Untyped].flatMapF { config =>
         PropertyExpressionF
           .compile[PropertyExpression](p, config)
           .apply(df)
-          .map {
-            case Right(accDf) =>
-              val vars = Quad(
-                s,
-                STRING(""),
-                o,
-                g
-              ).getNamesAndPositions :+ (GRAPH_VARIABLE, "g")
+          .map { accDf =>
+            val chunk    = Chunk(Quad(s, STRING(""), o, g))
+            val graphCnd = genGraphCnd(accDf, g)
 
-              Multiset[DataFrame @@ Untyped](
-                vars.map {
-                  case (GRAPH_VARIABLE, _) =>
-                    VARIABLE(GRAPH_VARIABLE.s)
-                  case (other, _) =>
-                    other.asInstanceOf[VARIABLE]
-                }.toSet,
-                accDf
-                  .withColumnRenamed("s", s.s)
-                  .withColumnRenamed("o", o.s)
-              )
-            case Left(cond) =>
-              val chunk = Chunk(Quad(s, STRING(""), o, g))
-              applyChunkToDf(chunk, cond, df)
+            val filtered = accDf.filter(graphCnd)
+            val result   = applyChunkToDf(chunk, filtered)
+            result.copy(relational =
+              result.relational
+                .withColumnRenamed("s", s.s)
+                .withColumnRenamed("o", o.s)
+            )
           }
       }
     }
@@ -280,7 +281,8 @@ object Engine {
       Foldable[ChunkedList].fold(
         quads.mapChunks { chunk =>
           val condition = composedConditionFromChunk(df, chunk)
-          applyChunkToDf(chunk, condition, df)
+          val filtered  = df.filter(condition)
+          applyChunkToDf(chunk, filtered)
         }
       )
     }

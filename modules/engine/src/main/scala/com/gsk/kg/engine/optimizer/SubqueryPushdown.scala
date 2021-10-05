@@ -186,7 +186,7 @@ object SubqueryPushdown {
         case DAG.Sequence(bps) =>
           isFromSubquery => DAG.sequenceR(bps.map(_(isFromSubquery)))
         case DAG.Path(s, p, o, g) =>
-          isFromSubquery => DAG.pathR(s, p, o, g)
+          _ => DAG.pathR(s, p, o, g)
         case DAG.BGP(quads) => _ => DAG.bgpR(quads)
         case DAG.LeftJoin(l, r, filters) =>
           isFromSubquery =>

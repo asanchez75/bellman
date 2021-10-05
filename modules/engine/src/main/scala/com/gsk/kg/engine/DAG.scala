@@ -92,8 +92,9 @@ object DAG {
           f(r).map(bind(variable, expression, _))
         case DAG.Sequence(bps) =>
           bps.map(f).sequence.map(DAG.sequence)
-        case DAG.Path(s, p, o, g) => path[B](s, p, o, g).pure[G]
-        case DAG.BGP(quads)       => bgp[B](quads).pure[G]
+        case DAG.Path(s, p, o, g) =>
+          path[B](s, p, o, g).pure[G]
+        case DAG.BGP(quads) => bgp[B](quads).pure[G]
         case DAG.LeftJoin(l, r, filters) =>
           (
             f(l),

@@ -22,8 +22,10 @@ import simulacrum.typeclass
   * }}}
   */
 @typeclass trait Relational[A] {
+  def emptyWithSchema(schema: StructType)(implicit sc: SQLContext): A
   def empty(implicit sc: SQLContext): A
   def isEmpty(df: A): Boolean
+  def except(left: A, right: A): A
   def crossJoin(left: A, right: A): A
   def innerJoin(left: A, right: A, columns: Seq[String]): A
   def leftJoin(left: A, right: A, columns: Seq[String]): A
@@ -32,6 +34,7 @@ import simulacrum.typeclass
   def leftSemi(left: A, right: A, columns: Seq[String]): A
   def leftAnti(left: A, right: A, columns: Seq[String]): A
   def leftOuter(df: A, right: A, columns: Seq[String]): A
+  def leftOuter(df: A, right: A, joinCondition: Column): A
   def union(left: A, right: A): A
   def unionByName(left: A, right: A): A
   def minus(left: A, right: A): A
@@ -54,7 +57,9 @@ import simulacrum.typeclass
   def map[U: Encoder](df: A, fn: Row => U): A
   def flatMap[U: Encoder](df: A, fn: Row => TraversableOnce[U]): A
   def collect(df: A): Array[Row]
+  def show(df: A, truncate: Boolean): Unit
   def toDataFrame(df: A): DataFrame
+  def as(df: A, alias: String): A
 }
 
 object Relational extends RelationalInstances {
@@ -75,12 +80,25 @@ trait RelationalInstances {
     */
   implicit val untypedDataFrameRelational: Relational[DataFrame @@ Untyped] =
     new Relational[DataFrame @@ Untyped] {
+
+      def emptyWithSchema(schema: StructType)(implicit
+          sc: SQLContext
+      ): DataFrame @@ Untyped = @@(
+        sc.createDataFrame(sc.sparkContext.emptyRDD[Row], schema)
+      )
+
       def empty(implicit sc: SQLContext): DataFrame @@ Untyped = @@(
         sc.emptyDataFrame
       )
 
       def isEmpty(df: DataFrame @@ Untyped): Boolean =
         df.unwrap.isEmpty
+
+      def except(
+          left: DataFrame @@ Untyped,
+          right: DataFrame @@ Untyped
+      ): DataFrame @@ Untyped =
+        @@(left.unwrap.except(right.unwrap))
 
       def crossJoin(
           left: DataFrame @@ Untyped,
@@ -138,6 +156,14 @@ trait RelationalInstances {
           columns: Seq[String]
       ): DataFrame @@ Untyped = @@ {
         left.unwrap.join(right.unwrap, columns, "left_outer")
+      }
+
+      def leftOuter(
+          left: DataFrame @@ Untyped,
+          right: DataFrame @@ Untyped,
+          joinCondition: Column
+      ): DataFrame @@ Untyped = @@ {
+        left.unwrap.join(right.unwrap, joinCondition, "left_outer")
       }
 
       def union(
@@ -255,8 +281,14 @@ trait RelationalInstances {
       def collect(df: DataFrame @@ Untyped): Array[Row] =
         df.unwrap.collect()
 
+      def show(df: DataFrame @@ Untyped, truncate: Boolean): Unit =
+        df.unwrap.show(truncate)
+
       def toDataFrame(df: DataFrame @@ Untyped): DataFrame =
         df.unwrap
+
+      def as(df: DataFrame @@ Untyped, alias: String): DataFrame @@ Untyped =
+        df.unwrap.as(alias).toDF.@@
     }
 }
 
