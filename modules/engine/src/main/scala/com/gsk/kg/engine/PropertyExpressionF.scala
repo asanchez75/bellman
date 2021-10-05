@@ -38,23 +38,46 @@ object PropertyExpressionF {
           case ReverseF(pe) =>
             M.liftF(FuncProperty.reverse(pe))
           case SeqExpressionF(pel, per) =>
-            M.liftF(FuncProperty.seq(pel, per))
+            M.ask[Result, Config, Log, DataFrame @@ Untyped]
+              .flatMapF(config => FuncProperty.seq(pel, per, config))
           case OneOrMoreF(e) =>
-            M.liftF(FuncProperty.betweenNAndM(df, Some(1), None, e, false))
+            M.ask[Result, Config, Log, DataFrame @@ Untyped]
+              .flatMapF(config =>
+                FuncProperty.betweenNAndM(df, Some(1), None, e, false, config)
+              )
           case ZeroOrMoreF(e) =>
-            M.liftF(FuncProperty.betweenNAndM(df, Some(0), None, e, false))
+            M.ask[Result, Config, Log, DataFrame @@ Untyped]
+              .flatMapF(config =>
+                FuncProperty.betweenNAndM(df, Some(0), None, e, false, config)
+              )
           case ZeroOrOneF(e) =>
-            M.liftF(FuncProperty.betweenNAndM(df, Some(0), Some(1), e, false))
+            M.ask[Result, Config, Log, DataFrame @@ Untyped]
+              .flatMapF(config =>
+                FuncProperty
+                  .betweenNAndM(df, Some(0), Some(1), e, false, config)
+              )
           case NotOneOfF(es) =>
             M.liftF(FuncProperty.notOneOf(df, es))
           case BetweenNAndMF(n, m, e) =>
-            M.liftF(FuncProperty.betweenNAndM(df, Some(n), Some(m), e, true))
+            M.ask[Result, Config, Log, DataFrame @@ Untyped]
+              .flatMapF(config =>
+                FuncProperty.betweenNAndM(df, Some(n), Some(m), e, true, config)
+              )
           case ExactlyNF(n, e) =>
-            M.liftF(FuncProperty.betweenNAndM(df, Some(n), Some(n), e, true))
+            M.ask[Result, Config, Log, DataFrame @@ Untyped]
+              .flatMapF(config =>
+                FuncProperty.betweenNAndM(df, Some(n), Some(n), e, true, config)
+              )
           case NOrMoreF(n, e) =>
-            M.liftF(FuncProperty.betweenNAndM(df, Some(n), None, e, true))
+            M.ask[Result, Config, Log, DataFrame @@ Untyped]
+              .flatMapF(config =>
+                FuncProperty.betweenNAndM(df, Some(n), None, e, true, config)
+              )
           case BetweenZeroAndNF(n, e) =>
-            M.liftF(FuncProperty.betweenNAndM(df, None, Some(n), e, true))
+            M.ask[Result, Config, Log, DataFrame @@ Untyped]
+              .flatMapF(config =>
+                FuncProperty.betweenNAndM(df, None, Some(n), e, true, config)
+              )
           case UriF(s) => FuncProperty.uri(df, s).pure[M]
         }
 
