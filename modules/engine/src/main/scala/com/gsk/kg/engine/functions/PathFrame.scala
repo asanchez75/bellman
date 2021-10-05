@@ -8,6 +8,7 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions._
 
+import com.gsk.kg.config.Config
 import com.gsk.kg.engine.functions.Literals.nullLiteral
 import com.gsk.kg.engine.relational.Relational
 import com.gsk.kg.engine.relational.Relational.Untyped
@@ -80,7 +81,8 @@ object PathFrame {
     */
   def constructPathFrame(
       initial: DataFrame @@ Untyped,
-      limit: Option[Int]
+      limit: Option[Int],
+      config: Config
   ): (Int, PathFrame) = {
 
     @tailrec
@@ -99,12 +101,26 @@ object PathFrame {
         .withColumnRenamed(s"$PIdx", s"${stepSlice(PIdx)}")
         .withColumnRenamed(s"$SIdx", s"${stepSlice(SIdx)}")
 
-      val stepAcc = accPaths
-        .leftOuter(
-          stepPath,
-          Seq(s"${stepSlice(SIdx)}", gCol)
-        )
-        .select(stepColNames.map(col) :+ col(gCol))
+      val stepAcc = if (config.isDefaultGraphExclusive) {
+        accPaths
+          .leftOuter(
+            stepPath,
+            Seq(s"${stepSlice(SIdx)}", gCol)
+          )
+          .select(stepColNames.map(col) :+ col(gCol))
+      } else {
+        val leftGCol = "gl"
+
+        accPaths
+          .withColumnRenamed(gCol, leftGCol)
+          .leftOuter(
+            stepPath,
+            Seq(s"${stepSlice(SIdx)}")
+          )
+          .select(stepColNames.map(col) :+ col(leftGCol))
+          .withColumnRenamed(leftGCol, gCol)
+          .withColumn(gCol, lit(""))
+      }
 
       val continueTraversing = !stepAcc
         .filter(stepAcc.getColumn(s"${stepSlice(OIdx)}").isNotNull)
@@ -140,13 +156,22 @@ object PathFrame {
     * @param df
     * @return
     */
-  def getZeroLengthPaths(df: DataFrame @@ Untyped): PathFrame = {
+  def getZeroLengthPaths(
+      df: DataFrame @@ Untyped,
+      config: Config
+  ): PathFrame = {
     val sDf = df.select(Seq(col(sCol), col(gCol)))
     val oDf = df.select(Seq(col(oCol), col(gCol)))
 
-    val vertices = sDf
-      .union(oDf)
-      .distinct
+    val vertices = if (config.isDefaultGraphExclusive) {
+      sDf
+        .union(oDf)
+        .distinct
+    } else {
+      sDf
+        .union(oDf)
+        .withColumn(gCol, lit(""))
+    }
 
     vertices
       .withColumn(pCol, nullLiteral)
@@ -166,10 +191,11 @@ object PathFrame {
   def getNLengthPathTriples(
       df: DataFrame @@ Untyped,
       pathFrame: PathFrame,
-      nPath: Int
+      nPath: Int,
+      config: Config
   ): PathFrame = {
     if (nPath == 0) {
-      getZeroLengthPaths(df)
+      getZeroLengthPaths(df, config)
     } else {
 
       val oSlice = OIdx + (2 * (nPath - 1))

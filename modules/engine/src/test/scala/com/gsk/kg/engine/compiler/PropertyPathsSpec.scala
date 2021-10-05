@@ -327,6 +327,52 @@ class PropertyPathsSpec
             Row("<http://example.org/Charles>", "\"Charles\"")
           )
         }
+
+        "inclusive mode" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s foaf:knows|foaf:name ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(
+            df,
+            query,
+            config.copy(isDefaultGraphExclusive = false)
+          )
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Charles>", "\"Charles\"")
+          )
+        }
       }
 
       "sequence / property path" when {
@@ -1668,33 +1714,118 @@ class PropertyPathsSpec
             Row("<http://example.org/Bob>", "\"Charles\"")
           )
         }
+
+        "inclusive mode" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s foaf:knows/foaf:name ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(
+            df,
+            query,
+            config.copy(isDefaultGraphExclusive = false)
+          )
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("<http://example.org/Bob>", "\"Charles\"")
+          )
+        }
       }
 
-      "reverse ^ property path" in {
+      "reverse ^ property path" when {
 
-        val df = List(
-          (
-            "<http://example.org/alice>",
-            "<http://xmlns.org/foaf/0.1/mbox>",
-            "<mailto:alice@example.org>"
+        "simple query" in {
+
+          val df = List(
+            (
+              "<http://example.org/alice>",
+              "<http://xmlns.org/foaf/0.1/mbox>",
+              "<mailto:alice@example.org>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?o ?s
+              |WHERE {
+              | ?o ^foaf:mbox ?s .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("<mailto:alice@example.org>", "<http://example.org/alice>")
           )
-        ).toDF("s", "p", "o")
+        }
 
-        val query =
-          """
-            |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
-            |
-            |SELECT ?o ?s
-            |WHERE {
-            | ?o ^foaf:mbox ?s .
-            |}
-            |""".stripMargin
+        "inclusive mode" in {
 
-        val result = Compiler.compile(df, query, config)
+          val df = List(
+            (
+              "<http://example.org/alice>",
+              "<http://xmlns.org/foaf/0.1/mbox>",
+              "<mailto:alice@example.org>",
+              "<http://graph.org/graph1>"
+            )
+          ).toDF("s", "p", "o", "g")
 
-        result.right.get.collect.toSeq should contain theSameElementsAs Seq(
-          Row("<mailto:alice@example.org>", "<http://example.org/alice>")
-        )
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?o ?s
+              |WHERE {
+              | ?o ^foaf:mbox ?s .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(
+            df,
+            query,
+            config.copy(isDefaultGraphExclusive = false)
+          )
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("<mailto:alice@example.org>", "<http://example.org/alice>")
+          )
+        }
       }
 
       "arbitrary length + property path" when {
@@ -1857,6 +1988,52 @@ class PropertyPathsSpec
               |""".stripMargin
 
           val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>")
+          )
+        }
+
+        "inclusive mode" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s foaf:knows+ ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(
+            df,
+            query,
+            config.copy(isDefaultGraphExclusive = false)
+          )
 
           result.right.get.collect.toSeq should contain theSameElementsAs Seq(
             Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
@@ -2045,6 +2222,59 @@ class PropertyPathsSpec
             Row("<http://example.org/Alice>", "<http://example.org/Charles>")
           )
         }
+
+        "inclusive mode" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s foaf:knows* ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(
+            df,
+            query,
+            config.copy(isDefaultGraphExclusive = false)
+          )
+
+          val rows = result.right.get.collect.toSeq.sorted
+          val expectedRows = Seq(
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Charles>")
+          ).sorted
+
+          rows should contain theSameElementsAs expectedRows
+        }
       }
 
       "optional ? property path" when {
@@ -2213,6 +2443,55 @@ class PropertyPathsSpec
               |""".stripMargin
 
           val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("\"Charles\"", "\"Charles\""),
+            Row("<http://example.org/Charles>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Alice>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>")
+          )
+        }
+
+        "inclusive mode" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s foaf:knows? ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(
+            df,
+            query,
+            config.copy(isDefaultGraphExclusive = false)
+          )
 
           result.right.get.collect.toSeq should contain theSameElementsAs Seq(
             Row("\"Charles\"", "\"Charles\""),
@@ -2511,6 +2790,65 @@ class PropertyPathsSpec
             )
           )
         }
+
+        "inclusive mode" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph2>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s !foaf:knows ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(
+            df,
+            query,
+            config.copy(isDefaultGraphExclusive = false)
+          )
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row(
+              "<http://example.org/Charles>",
+              "\"Charles\""
+            )
+          )
+        }
       }
 
       "fixed length {n,m} property path" when {
@@ -2743,6 +3081,70 @@ class PropertyPathsSpec
               |""".stripMargin
 
           val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Alice>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Charles>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Bob>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Daniel>"),
+            Row("<http://example.org/Charles>", "<http://example.org/Erick>"),
+            Row("<http://example.org/Daniel>", "<http://example.org/Erick>")
+          )
+        }
+
+        "inclusive mode" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph3>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s foaf:knows{1, 3} ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(
+            df,
+            query,
+            config.copy(isDefaultGraphExclusive = false)
+          )
 
           result.right.get.collect.toSeq should contain theSameElementsAs Seq(
             Row("<http://example.org/Alice>", "<http://example.org/Bob>"),
@@ -3018,6 +3420,85 @@ class PropertyPathsSpec
               |""".stripMargin
 
           val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Erick>"
+            )
+          )
+        }
+
+        "inclusive mode" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph3>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s foaf:knows{2,} ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(
+            df,
+            query,
+            config.copy(isDefaultGraphExclusive = false)
+          )
 
           result.right.get.collect.toSeq should contain theSameElementsAs Seq(
             Row(
@@ -3420,6 +3901,113 @@ class PropertyPathsSpec
             )
           )
         }
+
+        "inclusive mode" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph3>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s foaf:knows{,2} ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(
+            df,
+            query,
+            config.copy(isDefaultGraphExclusive = false)
+          )
+
+          result.right.get.collect.toSeq should contain theSameElementsAs Seq(
+            Row(
+              "\"Charles\"",
+              "\"Charles\""
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Alice>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Bob>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Bob>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Daniel>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Daniel>",
+              "<http://example.org/Erick>"
+            ),
+            Row(
+              "<http://example.org/Erick>",
+              "<http://example.org/Erick>"
+            )
+          )
+        }
       }
 
       "fixed length {n} property path" when {
@@ -3658,6 +4246,73 @@ class PropertyPathsSpec
               |""".stripMargin
 
           val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect().toSeq should contain theSameElementsAs Seq(
+            Row(
+              "<http://example.org/Alice>",
+              "<http://example.org/Charles>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "<http://example.org/Daniel>"
+            ),
+            Row(
+              "<http://example.org/Charles>",
+              "<http://example.org/Erick>"
+            )
+          )
+        }
+
+        "inclusive mode" in {
+
+          val df = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Bob>",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Charles>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/name>",
+              "\"Charles\"",
+              "<http://graph.org/graph1>"
+            ),
+            (
+              "<http://example.org/Charles>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Daniel>",
+              "<http://graph.org/graph2>"
+            ),
+            (
+              "<http://example.org/Daniel>",
+              "<http://xmlns.org/foaf/0.1/knows>",
+              "<http://example.org/Erick>",
+              "<http://graph.org/graph3>"
+            )
+          ).toDF("s", "p", "o", "g")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.org/foaf/0.1/>
+              |
+              |SELECT ?s ?o
+              |WHERE {
+              | ?s foaf:knows{2} ?o .
+              |}
+              |""".stripMargin
+
+          val result = Compiler.compile(
+            df,
+            query,
+            config.copy(isDefaultGraphExclusive = false)
+          )
 
           result.right.get.collect().toSeq should contain theSameElementsAs Seq(
             Row(

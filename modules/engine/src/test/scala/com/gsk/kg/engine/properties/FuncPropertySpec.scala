@@ -11,6 +11,7 @@ import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.engine.relational.Relational.ops._
 import com.gsk.kg.engine.scalacheck.CommonGenerators
 import com.gsk.kg.sparqlparser.Result
+import com.gsk.kg.sparqlparser.TestConfig
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -21,7 +22,8 @@ class FuncPropertySpec
     with Matchers
     with SparkSpec
     with ScalaCheckDrivenPropertyChecks
-    with CommonGenerators {
+    with CommonGenerators
+    with TestConfig {
 
   import sqlContext.implicits._
 
@@ -151,12 +153,14 @@ class FuncPropertySpec
           // (seq <http://xmlns.org/foaf/0.1/knows> <http://xmlns.org/foaf/0.1/knows>)
           innerSeq <- FuncProperty.seq(
             knowsUriFunc,
-            knowsUriFunc
+            knowsUriFunc,
+            config
           )
           // (seq (seq <http://xmlns.org/foaf/0.1/knows> <http://xmlns.org/foaf/0.1/knows>) <http://xmlns.org/foaf/0.1/name>)
           outerSeq <- FuncProperty.seq(
             innerSeq,
-            nameUriFunc
+            nameUriFunc,
+            config
           )
         } yield outerSeq
 
@@ -213,7 +217,14 @@ class FuncPropertySpec
 
           // ?s foaf:knows{1, 3} ?o
           val result =
-            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc, true)
+            FuncProperty.betweenNAndM(
+              df,
+              Some(n),
+              Some(m),
+              knowsUriFunc,
+              true,
+              config
+            )
 
           result.right.get.collect.toSet shouldEqual Set(
             Row(
@@ -316,7 +327,14 @@ class FuncPropertySpec
 
           // ?s foaf:knows{3, 2} ?o
           val result =
-            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc, true)
+            FuncProperty.betweenNAndM(
+              df,
+              Some(n),
+              Some(m),
+              knowsUriFunc,
+              true,
+              config
+            )
 
           result.right.get.collect.toSet shouldEqual Set(
             Row(
@@ -377,7 +395,14 @@ class FuncPropertySpec
 
           // ?s foaf:knows{0, 2} ?o
           val result =
-            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc, true)
+            FuncProperty.betweenNAndM(
+              df,
+              Some(n),
+              Some(m),
+              knowsUriFunc,
+              true,
+              config
+            )
 
           result.right.get.collect.toSet shouldEqual Set(
             Row(
@@ -504,7 +529,14 @@ class FuncPropertySpec
 
           // ?s foaf:knows{-1, -1} ?o
           val result =
-            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc, true)
+            FuncProperty.betweenNAndM(
+              df,
+              Some(n),
+              Some(m),
+              knowsUriFunc,
+              true,
+              config
+            )
 
           result shouldBe a[Left[_, _]]
         }
@@ -549,7 +581,14 @@ class FuncPropertySpec
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           val result =
-            FuncProperty.betweenNAndM(df, Some(1), None, knowsUriFunc, false)
+            FuncProperty.betweenNAndM(
+              df,
+              Some(1),
+              None,
+              knowsUriFunc,
+              false,
+              config
+            )
 
           result.right.get.collect.toSet shouldEqual Set(
             Row(
@@ -655,7 +694,14 @@ class FuncPropertySpec
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           val result =
-            FuncProperty.betweenNAndM(df, Some(0), None, knowsUriFunc, false)
+            FuncProperty.betweenNAndM(
+              df,
+              Some(0),
+              None,
+              knowsUriFunc,
+              false,
+              config
+            )
 
           result.right.get.collect.toSet shouldEqual Set(
             Row(
@@ -797,7 +843,14 @@ class FuncPropertySpec
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           val result =
-            FuncProperty.betweenNAndM(df, Some(0), Some(1), knowsUriFunc, false)
+            FuncProperty.betweenNAndM(
+              df,
+              Some(0),
+              Some(1),
+              knowsUriFunc,
+              false,
+              config
+            )
 
           result.right.get.collect.toSet shouldEqual Set(
             Row(
@@ -906,7 +959,14 @@ class FuncPropertySpec
 
           // ?s foaf:knows{3, 3} ?o
           val result =
-            FuncProperty.betweenNAndM(df, Some(n), Some(m), knowsUriFunc, true)
+            FuncProperty.betweenNAndM(
+              df,
+              Some(n),
+              Some(m),
+              knowsUriFunc,
+              true,
+              config
+            )
 
           result.right.get.collect.toSet shouldEqual Set(
             Row(
@@ -966,7 +1026,14 @@ class FuncPropertySpec
 
           // ?s foaf:knows{2,} ?o
           val result =
-            FuncProperty.betweenNAndM(df, Some(n), None, knowsUriFunc, true)
+            FuncProperty.betweenNAndM(
+              df,
+              Some(n),
+              None,
+              knowsUriFunc,
+              true,
+              config
+            )
 
           result.right.get.collect.toSet shouldEqual Set(
             Row(
@@ -1050,7 +1117,14 @@ class FuncPropertySpec
 
           // ?s foaf:knows{,2} ?o
           val result =
-            FuncProperty.betweenNAndM(df, None, Some(n), knowsUriFunc, true)
+            FuncProperty.betweenNAndM(
+              df,
+              None,
+              Some(n),
+              knowsUriFunc,
+              true,
+              config
+            )
 
           result.right.get.collect.toSet shouldEqual Set(
             Row(
@@ -1173,7 +1247,14 @@ class FuncPropertySpec
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
           val result =
-            FuncProperty.betweenNAndM(df, None, None, knowsUriFunc, true)
+            FuncProperty.betweenNAndM(
+              df,
+              None,
+              None,
+              knowsUriFunc,
+              true,
+              config
+            )
 
           result shouldBe a[Left[_, _]]
         }
