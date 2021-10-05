@@ -10,17 +10,16 @@ import org.scalatest.wordspec.AnyWordSpec
 
 class IfSpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
 
-  import sqlContext.implicits._
-
   "perform query with IF function" when {
 
     "simple IF" in {
 
+      import sqlContext.implicits._
       val df = List(
         (
           "<http://example.org/alice>",
           "<http://xmlns.com/foaf/0.1/name>",
-          "Alice"
+          "\"Alice\""
         ),
         (
           "<http://example.org/alice>",
@@ -30,7 +29,7 @@ class IfSpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
         (
           "<http://example.org/bob>",
           "<http://xmlns.com/foaf/0.1/name>",
-          "Bob"
+          "\"Bob\""
         ),
         (
           "<http://example.org/bob>",

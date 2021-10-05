@@ -8,5 +8,5 @@ final case class Config(
 )
 
 object Config {
-  val default: Config = Config(true, false, false, false)
+  val default: Config = Config(true, false, false, true)
 }

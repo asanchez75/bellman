@@ -29,7 +29,7 @@ class EqualsSpec
         (
           "<http://example.org/b>",
           "<http://xmlns.org/foaf/0.1/name>",
-          "Alice"
+          "\"Alice\""
         ),
         (
           "<http://example.org/c>",

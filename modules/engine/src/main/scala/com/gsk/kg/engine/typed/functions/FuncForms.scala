@@ -10,28 +10,31 @@ import com.gsk.kg.engine.RdfType
 import com.gsk.kg.engine.syntax.TypedColumnOps
 import com.gsk.kg.engine.typed.functions.TypedLiterals._
 
-object TypedFuncForms {
+object FuncForms {
 
   /** Performs logical binary operation '==' over two columns
+    *
     * @param l
     * @param r
     * @return
     */
   def equals(l: Column, r: Column): Column =
-    DateLiteral
-      .applyDateTimeLiteral(l, r)(_ === _)
-      .otherwise(
-        promoteNumericArgsToBooleanResult(l, r)(_ === _)
-          .otherwise(
-            promoteStringArgsToBooleanResult(l, r)(_ === _)
-              .otherwise(
-                promoteBooleanBooleanToBooleanResult(l, r)(_ === _)
-                  .otherwise(RdfType.Boolean(l === r))
-              )
-          )
-      )
+    RdfType.Boolean(l.value === r.value)
+  //    DateLiteral
+  //      .applyDateTimeLiteral(l, r)(_ === _)
+  //      .otherwise(
+  //        promoteNumericArgsToBooleanResult(l, r)(_ === _)
+  //          .otherwise(
+  //            promoteStringArgsToBooleanResult(l, r)(_ === _)
+  //              .otherwise(
+  //                promoteBooleanBooleanToBooleanResult(l, r)(_ === _)
+  //                  .otherwise(RdfType.Boolean(l === r))
+  //              )
+  //          )
+  //      )
 
   /** Peforms logical binary operation '>' over two columns
+    *
     * @param l
     * @param r
     * @return
