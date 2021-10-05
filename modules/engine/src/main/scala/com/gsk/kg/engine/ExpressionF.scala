@@ -15,7 +15,7 @@ import com.gsk.kg.engine.typed.functions.FuncForms
 import com.gsk.kg.engine.typed.functions.FuncHash
 import com.gsk.kg.engine.typed.functions.FuncNumerics
 import com.gsk.kg.engine.typed.functions.FuncStrings
-import com.gsk.kg.engine.functions.FuncTerms
+import com.gsk.kg.engine.typed.functions.FuncTerms
 import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.engine.relational.Relational.ops._
 import com.gsk.kg.sparqlparser._

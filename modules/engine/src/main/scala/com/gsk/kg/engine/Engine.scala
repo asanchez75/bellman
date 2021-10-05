@@ -6,11 +6,9 @@ import cats.implicits.toTraverseOps
 import cats.instances.all._
 import cats.syntax.applicative._
 import cats.syntax.either._
-
 import higherkindness.droste._
 import higherkindness.droste.contrib.NewTypesSyntax.NewTypesOps
 import higherkindness.droste.util.newtypes.@@
-
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.RelationalGroupedDataset
@@ -18,7 +16,7 @@ import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Row => SparkRow}
-
+import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import com.gsk.kg.config.Config
 import com.gsk.kg.engine.SPOEncoder._
 import com.gsk.kg.engine.syntax._
@@ -37,6 +35,7 @@ import com.gsk.kg.sparqlparser.Expression
 import com.gsk.kg.sparqlparser.StringVal
 import com.gsk.kg.sparqlparser.StringVal._
 import com.gsk.kg.sparqlparser._
+import org.apache.spark.sql.catalyst.encoders.RowEncoder
 
 import java.{util => ju}
 
@@ -505,12 +504,35 @@ object Engine {
       sc: SQLContext
   ): Multiset[DataFrame @@ Untyped] = {
 
+    import sc.implicits._
+
     // Extracting the triples to something that can be serialized in
     // Spark jobs
     val templateValues: List[List[(StringVal, Int)]] =
-      bgp.quads
-        .map(quad => List(quad.s -> 1, quad.p -> 2, quad.o -> 3))
-        .toList
+    bgp.quads
+      .map(quad => List(quad.s -> 1, quad.p -> 2, quad.o -> 3))
+      .toList
+
+    val typedField = StructType(
+      Seq(
+        StructField("value", StringType, false),
+        StructField("type", StringType, false),
+        StructField("lang", StringType, true)
+      )
+    )
+    val schema = StructType(
+      Seq(
+        StructField("s", typedField),
+        StructField("p", typedField),
+        StructField("o", typedField)
+      )
+    )
+
+    def parseLiteralStringToTypedGenericRow(str: String): GenericRowWithSchema =
+      if (str.startsWith("<") && str.endsWith(">"))
+        new GenericRowWithSchema(Array(str.stripPrefix("<").stripSuffix(">"), "http://www.w3.org/2001/XMLSchema#anyURI", null), typedField)
+      else
+        new GenericRowWithSchema(Array(), typedField)
 
     val df = r.relational.flatMap { solution =>
       val extractBlanks: List[(StringVal, Int)] => List[StringVal] =
@@ -531,14 +553,14 @@ object Engine {
             case (BLANK(x), pos) =>
               (blankNodes.get(x).get, pos)
             case (x, pos) =>
-              (x.s, pos)
+              (parseLiteralStringToTypedGenericRow(x.s), pos)
           })
           .sortBy(_._2)
           .map(_._1)
 
         SparkRow.fromSeq(fields)
       }
-    }.distinct
+    }(RowEncoder(schema)).distinct
 
     Multiset[DataFrame @@ Untyped](
       Set.empty,
