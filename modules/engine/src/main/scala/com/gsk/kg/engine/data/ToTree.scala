@@ -241,6 +241,8 @@ object ToTree extends LowPriorityToTreeInstances0 {
           case ExpressionF.SECONDS(e)  => Node(s"SECONDS", Stream(e))
           case ExpressionF.TIMEZONE(e) => Node(s"TIMEZONE", Stream(e))
           case ExpressionF.TZ(e)       => Node(s"TZ", Stream(e))
+          case ExpressionF.BNODE(s) =>
+            s.map(si => Node("BNODE", Stream(si))).getOrElse(Leaf("BNODE"))
         }
 
         val t = scheme.cata(alg)
