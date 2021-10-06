@@ -45,7 +45,7 @@ class AskSpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("true")
+          Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
         )
       }
 
@@ -78,7 +78,7 @@ class AskSpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("false")
+          Row("\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
         )
       }
     }

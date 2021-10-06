@@ -203,7 +203,7 @@ object Engine {
         SparkRow(
           isEmpty.toString,
           "http://www.w3.org/2001/XMLSchema#boolean",
-          false
+          null
         )
       )
     )
