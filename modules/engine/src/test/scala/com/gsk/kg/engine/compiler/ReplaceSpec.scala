@@ -23,11 +23,11 @@ class ReplaceSpec
     "execute and obtain expected results without flags" in {
 
       val df: DataFrame = List(
-        ("example", "<http://xmlns.com/foaf/0.1/lit>", "abcd", ""),
-        ("example", "<http://xmlns.com/foaf/0.1/lit>", "abaB", ""),
-        ("example", "<http://xmlns.com/foaf/0.1/lit>", "bbBB", ""),
-        ("example", "<http://xmlns.com/foaf/0.1/lit>", "aaaa", "")
-      ).toDF("s", "p", "o", "g")
+        ("example", "<http://xmlns.com/foaf/0.1/lit>", "abcd"),
+        ("example", "<http://xmlns.com/foaf/0.1/lit>", "abaB"),
+        ("example", "<http://xmlns.com/foaf/0.1/lit>", "bbBB"),
+        ("example", "<http://xmlns.com/foaf/0.1/lit>", "aaaa")
+      ).toDF("s", "p", "o")
 
       val query =
         """
@@ -55,11 +55,11 @@ class ReplaceSpec
     "execute and obtain expected results with flags" in {
 
       val df: DataFrame = List(
-        ("example", "<http://xmlns.com/foaf/0.1/lit>", "abcd", ""),
-        ("example", "<http://xmlns.com/foaf/0.1/lit>", "abaB", ""),
-        ("example", "<http://xmlns.com/foaf/0.1/lit>", "bbBB", ""),
-        ("example", "<http://xmlns.com/foaf/0.1/lit>", "aaaa", "")
-      ).toDF("s", "p", "o", "g")
+        ("example", "<http://xmlns.com/foaf/0.1/lit>", "abcd"),
+        ("example", "<http://xmlns.com/foaf/0.1/lit>", "abaB"),
+        ("example", "<http://xmlns.com/foaf/0.1/lit>", "bbBB"),
+        ("example", "<http://xmlns.com/foaf/0.1/lit>", "aaaa")
+      ).toDF("s", "p", "o")
 
       val query =
         """
