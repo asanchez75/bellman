@@ -51,7 +51,7 @@ class StrstartsSpec
       // strStarts("foobar"^^xsd:string, "foo"^^xsd:string) -> true
       val arg1 = "\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>"
       val arg2 = "\"foo\"^^<http://www.w3.org/2001/XMLSchema#string>"
-      val expected = Row("\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>")
+      val expected = Row("\"foobar\"")
       val actual = act(arg1, arg2)
       actual shouldEqual expected
     }
@@ -60,7 +60,7 @@ class StrstartsSpec
       // strStarts("foobar"^^xsd:string, "foo") -> true
       val arg1 = "\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>"
       val arg2 = "\"foo\""
-      val expected = Row("\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>")
+      val expected = Row("\"foobar\"")
       val actual = act(arg1, arg2)
       actual shouldEqual expected
     }
