@@ -303,7 +303,7 @@ object Engine {
       Foldable[ChunkedList].fold(
         quads.mapChunks { chunk =>
           val condition = composedConditionFromChunk(df, chunk)
-          val filtered  = df.filter(condition)
+          val filtered = df.filter(condition.value.cast(BooleanType))
           applyChunkToDf(chunk, filtered)
         }
       )
