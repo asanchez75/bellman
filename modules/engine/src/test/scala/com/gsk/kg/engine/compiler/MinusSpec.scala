@@ -20,11 +20,11 @@ class MinusSpec
       import sqlContext.implicits._
 
       val df = List(
-        ("a", "b", "c"),
-        ("a", "b", "c"),
-        ("a", "b", "c"),
-        ("a", "b", "c"),
-        ("a", "b", "c")
+        ("\"a\"", "\"b\"", "\"c\""),
+        ("\"a\"", "\"b\"", "\"c\""),
+        ("\"a\"", "\"b\"", "\"c\""),
+        ("\"a\"", "\"b\"", "\"c\""),
+        ("\"a\"", "\"b\"", "\"c\"")
       ).toDF("s", "p", "o")
 
       val query = """
@@ -50,11 +50,11 @@ class MinusSpec
       import sqlContext.implicits._
 
       val df = List(
-        ("<http://example.com/a>", "<http://example.com/b>", "c"),
-        ("<http://example.com/d>", "<http://example.com/e>", "f"),
-        ("<http://example.com/g>", "<http://example.com/h>", "i"),
-        ("<http://example.com/j>", "<http://example.com/k>", "l"),
-        ("<http://example.com/m>", "<http://example.com/n>", "o")
+        ("<http://example.com/a>", "<http://example.com/b>", "\"c\""),
+        ("<http://example.com/d>", "<http://example.com/e>", "\"f\""),
+        ("<http://example.com/g>", "<http://example.com/h>", "\"i\""),
+        ("<http://example.com/j>", "<http://example.com/k>", "\"l\""),
+        ("<http://example.com/m>", "<http://example.com/n>", "\"o\"")
       ).toDF("s", "p", "o")
 
       val query = """

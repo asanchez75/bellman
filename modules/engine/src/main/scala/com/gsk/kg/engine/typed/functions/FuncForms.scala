@@ -116,7 +116,7 @@ object FuncForms {
     * @return
     */
   def or(l: Column, r: Column): Column =
-    RdfType.Boolean(l.value || r.value)
+    RdfType.Boolean(l.value.cast(BooleanType) || r.value.cast(BooleanType))
 
   /** Performs logical binary operation 'and' over two columns
     * @param r
@@ -124,7 +124,7 @@ object FuncForms {
     * @return
     */
   def and(l: Column, r: Column): Column =
-    RdfType.Boolean(l.value && r.value)
+    RdfType.Boolean(l.value.cast(BooleanType) && r.value.cast(BooleanType))
 
   /** Negates all rows of a column
     * @param s

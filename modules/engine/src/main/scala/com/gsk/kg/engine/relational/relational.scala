@@ -3,6 +3,7 @@ package com.gsk.kg.engine.relational
 import higherkindness.droste.contrib.NewTypesSyntax.NewTypesOps
 import higherkindness.droste.util.newtypes.@@
 import org.apache.spark.sql._
+import org.apache.spark.sql.functions.{when, lit}
 import org.apache.spark.sql.types.{BooleanType, StructType}
 import com.gsk.kg.engine.syntax._
 import com.gsk.kg.engine.relational.Relational.Untyped

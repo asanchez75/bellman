@@ -41,12 +41,20 @@ import java.{util => ju}
 
 object Engine {
 
+  val typedField = StructType(
+    Seq(
+      StructField("value", StringType, false),
+      StructField("type", StringType, false),
+      StructField("lang", StringType, true)
+    )
+  )
+
   def evaluateAlgebraM(implicit
-      sc: SQLContext
-  ): AlgebraM[M, DAG, Multiset[DataFrame @@ Untyped]] =
+                       sc: SQLContext
+                      ): AlgebraM[M, DAG, Multiset[DataFrame @@ Untyped]] =
     AlgebraM[M, DAG, Multiset[DataFrame @@ Untyped]] {
       case DAG.Describe(vars, r) => evaluateDescribe(vars, r)
-      case DAG.Ask(r)            => evaluateAsk(r)
+      case DAG.Ask(r) => evaluateAsk(r)
       case DAG.Construct(bgp, r) => evaluateConstruct(bgp, r)
       case DAG.Scan(graph, expr) =>
         evaluateScan(graph, expr)
@@ -182,9 +190,9 @@ object Engine {
       r: Multiset[DataFrame @@ Untyped]
   )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] = {
     val askVariable = VARIABLE("?_askResult")
-    val isEmpty     = !r.relational.isEmpty
-    val schema      = StructType(Seq(StructField(askVariable.s, BooleanType, false)))
-    val rows        = Seq(SparkRow(isEmpty))
+    val isEmpty = !r.relational.isEmpty
+    val schema = StructType(Seq(StructField(askVariable.s, typedField, false)))
+    val rows = Seq(SparkRow(SparkRow(isEmpty.toString, "http://www.w3.org/2001/XMLSchema#boolean", false)))
     val askDf = @@[DataFrame, Untyped](
       sc.sparkSession.createDataFrame(sc.sparkContext.parallelize(rows), schema)
     )
@@ -513,13 +521,6 @@ object Engine {
       .map(quad => List(quad.s -> 1, quad.p -> 2, quad.o -> 3))
       .toList
 
-    val typedField = StructType(
-      Seq(
-        StructField("value", StringType, false),
-        StructField("type", StringType, false),
-        StructField("lang", StringType, true)
-      )
-    )
     val schema = StructType(
       Seq(
         StructField("s", typedField),

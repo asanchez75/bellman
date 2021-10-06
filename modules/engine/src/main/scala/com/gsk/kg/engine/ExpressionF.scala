@@ -453,7 +453,7 @@ object ExpressionF {
           M.inspect[Result, Config, Log, DataFrame @@ Untyped, Column](
             _.getColumn(s)
           )
-        case URIVAL(s) => RdfType.Uri(lit(s)).pure[M]
+        case URIVAL(s) => DataFrameTyper.parse(lit(s)).pure[M]
         case BLANK(s) => RdfType.Blank(lit(s)).pure[M]
         case BOOL(s) => RdfType.Boolean(lit(s)).pure[M]
         case ASC(e) => unknownFunction("ASC")

@@ -32,7 +32,7 @@ class AbsSpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
           |}
           |""".stripMargin
 
-      val expected = List("1.65", "1.71", "1.4").map(Row(_))
+      val expected = List("\"1.65\"^^<http://www.w3.org/2001/XMLSchema#decimal>", "\"1.71\"^^<http://www.w3.org/2001/XMLSchema#decimal>", "\"1.4\"^^<http://www.w3.org/2001/XMLSchema#decimal>").map(Row(_))
 
       Evaluation.eval(
         df,
@@ -61,7 +61,7 @@ class AbsSpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
           |}
           |""".stripMargin
 
-      val expected = List(Row("10.4"))
+      val expected = List(Row("\"10.4\"^^<http://www.w3.org/2001/XMLSchema#decimal>"))
 
       Evaluation.eval(
         df,

@@ -102,9 +102,10 @@ object FuncStrings {
       when(substring_index(c, s, 1) === c, lit(""))
         .otherwise(substring_index(c, s, 1))
 
+    val value = getLeftOrEmpty(col.value, str)
     DataFrameTyper.createRecord(
-      getLeftOrEmpty(col.value, str),
-      col.`type`,
+      value,
+      when(value.isNull, RdfType.Null.repr).otherwise(col.`type`),
       col.lang
     )
   }

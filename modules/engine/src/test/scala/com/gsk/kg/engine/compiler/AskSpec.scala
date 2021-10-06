@@ -20,13 +20,13 @@ class AskSpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
       "simple query should return true" in {
 
         val df: DataFrame = List(
-          ("_:a", "<http://xmlns.com/foaf/0.1/name>", "Alice"),
+          ("_:a", "<http://xmlns.com/foaf/0.1/name>", "\"Alice\""),
           (
             "_:a",
             "<http://xmlns.com/foaf/0.1/homepage>",
             "<http://work.example.org/alice/>"
           ),
-          ("_:b", "<http://xmlns.com/foaf/0.1/name>", "Bob"),
+          ("_:b", "<http://xmlns.com/foaf/0.1/name>", "\"Bob\""),
           (
             "_:b",
             "<http://xmlns.com/foaf/0.1/mbox>",
