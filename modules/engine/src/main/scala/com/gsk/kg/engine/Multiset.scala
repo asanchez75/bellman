@@ -378,7 +378,8 @@ final case class Multiset[A: Relational](
       if (graphs.forall(_ == graphs.head)) {
         Row.fromSeq(r.toSeq.dropRight(1) :+ graphs.head)
       } else {
-        Row.fromSeq(r.toSeq.dropRight(1) :+ "")
+        val stringSchema = "http://www.w3.org/2001/XMLSchema#string"
+        Row.fromSeq(r.toSeq.dropRight(1) :+ Row("", stringSchema, null))
       }
     }(RowEncoder(resultSchema))
 
