@@ -203,7 +203,7 @@ trait RelationalInstances {
           df: DataFrame @@ Untyped,
           condition: Column
       ): DataFrame @@ Untyped = @@ {
-        df.unwrap.filter(condition.value.cast(BooleanType))
+        df.unwrap.filter(condition)
       }
 
       def distinct(df: DataFrame @@ Untyped): DataFrame @@ Untyped = @@ {

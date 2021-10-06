@@ -1,18 +1,18 @@
 package com.gsk.kg.engine.functions
 
 import cats.kernel.Monoid
-
 import higherkindness.droste.util.newtypes.@@
-
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions._
-
 import com.gsk.kg.config.Config
+import com.gsk.kg.engine.RdfType
 import com.gsk.kg.engine.functions.Literals.nullLiteral
 import com.gsk.kg.engine.relational.Relational
 import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.engine.relational.Relational.ops._
+import com.gsk.kg.engine.syntax.TypedColumnOps
+import org.apache.spark.sql.types.BooleanType
 
 import scala.annotation.tailrec
 import scala.util.Try
@@ -204,7 +204,7 @@ object PathFrame {
 
       val nPaths = pathFrame
         .filter(cols.foldLeft(lit(true)) { case (acc, elem) =>
-          acc && pathFrame.getColumn(elem).isNotNull
+          acc && pathFrame.getColumn(elem).value.isNotNull
         })
 
       val selection = (SIdx to oSlice).map(_.toString) :+ gCol

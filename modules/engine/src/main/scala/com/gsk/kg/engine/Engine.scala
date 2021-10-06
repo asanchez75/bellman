@@ -272,7 +272,7 @@ object Engine {
 
     def genGraphCnd(df: DataFrame @@ Untyped, g: List[StringVal]): Column =
       g.foldLeft(lit(false)) { case (acc, elem) =>
-        acc || df.getColumn("g") === DataFrameTyper.parse(lit(elem.s))
+        acc || df.getColumn("g").value === lit(elem.s)
       }
 
     M.get[Result, Config, Log, DataFrame @@ Untyped].flatMap { df =>
