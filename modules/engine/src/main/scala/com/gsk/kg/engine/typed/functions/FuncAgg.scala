@@ -18,7 +18,7 @@ object FuncAgg {
     * @return
     */
   def sample(col: Column): Column =
-    DataFrameTyper.createRecord(first(col, true), col.`type`, col.lang)
+    first(col, true)
 
   /** This functions count the number of elements in a group
     *

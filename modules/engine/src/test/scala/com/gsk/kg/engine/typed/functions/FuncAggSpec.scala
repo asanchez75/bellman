@@ -58,9 +58,9 @@ class FuncAggSpec
         "\"non numeric type\"^^<http://www.w3.org/2001/XMLSchema#string>"
       ).toTypedDF("v")
 
-      val result = df.select(FuncAgg.countAgg(df("v"))).collect()
+      val result = df.select(FuncAgg.countAgg(df("v")).as("result")).untype.collect()
 
-      result.toSet shouldEqual Set(Row(10))
+      result.toSet shouldEqual Set(Row("\"10\"^^<http://www.w3.org/2001/XMLSchema#integer>"))
     }
   }
 
