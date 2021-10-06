@@ -36,7 +36,11 @@ class FloorSpec
           |}
           |""".stripMargin
 
-      val expected = List("1", "1", "1").map(Row(_))
+      val expected = List(
+        "\"1\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+        "\"1\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+        "\"1\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+      ).map(Row(_))
 
       Evaluation.eval(df, None, query, expected)
     }
@@ -60,7 +64,7 @@ class FloorSpec
           |}
           |""".stripMargin
 
-      val expected = List(Row("10"))
+      val expected = List(Row("\"10\"^^<http://www.w3.org/2001/XMLSchema#integer>"))
 
       Evaluation.eval(df, None, query, expected)
     }
