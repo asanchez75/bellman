@@ -51,7 +51,7 @@ class HavingSpec
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("_:a", "4")
+          Row("_:a", "\"4\"^^<http://www.w3.org/2001/XMLSchema#integer>")
         )
       }
 

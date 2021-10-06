@@ -58,10 +58,10 @@ object Engine {
       case DAG.Construct(bgp, r) => evaluateConstruct(bgp, r)
       case DAG.Scan(graph, expr) =>
         evaluateScan(graph, expr)
-      case DAG.Project(variables, r) => r.select(variables: _*).pure[M]
+      case DAG.Project(variables, r) => evaluateProject(variables, r)
       case DAG.Bind(variable, expression, r) =>
         evaluateBind(variable, expression, r)
-      case DAG.Sequence(bps)           => evaluateSequence(bps)
+      case DAG.Sequence(bps) => evaluateSequence(bps)
       case DAG.Path(s, p, o, g)        => evaluatePath(s, p, o, g)
       case DAG.BGP(quads)              => evaluateBGP(quads)
       case DAG.LeftJoin(l, r, filters) => evaluateLeftJoin(l, r, filters)
@@ -70,23 +70,29 @@ object Engine {
       case DAG.Filter(funcs, expr)     => evaluateFilter(funcs, expr)
       case DAG.Join(l, r)              => evaluateJoin(l, r)
       case DAG.Offset(offset, r)       => evaluateOffset(offset, r)
-      case DAG.Limit(limit, r)         => evaluateLimit(limit, r)
-      case DAG.Distinct(r)             => evaluateDistinct(r)
-      case DAG.Reduced(r)              => evaluateReduced(r)
-      case DAG.Group(vars, func, r)    => evaluateGroup(vars, func, r)
-      case DAG.Order(conds, r)         => evaluateOrder(conds, r)
-      case DAG.Table(vars, rows)       => evaluateTable(vars, rows)
-      case DAG.Exists(not, p, r)       => evaluateExists(not, p, r)
-      case DAG.Noop(str)               => evaluateNoop(str)
+      case DAG.Limit(limit, r) => evaluateLimit(limit, r)
+      case DAG.Distinct(r) => evaluateDistinct(r)
+      case DAG.Reduced(r) => evaluateReduced(r)
+      case DAG.Group(vars, func, r) => evaluateGroup(vars, func, r)
+      case DAG.Order(conds, r) => evaluateOrder(conds, r)
+      case DAG.Table(vars, rows) => evaluateTable(vars, rows)
+      case DAG.Exists(not, p, r) => evaluateExists(not, p, r)
+      case DAG.Noop(str) => evaluateNoop(str)
     }
 
+  private def evaluateProject(
+                               variables: List[VARIABLE],
+                               r: Multiset[DataFrame @@ Untyped]
+                             ): M[Multiset[DataFrame @@ Untyped]] =
+    r.select(variables: _*).pure[M]
+
   def evaluate[T: Basis[DAG, *]](
-      dataframe: DataFrame,
-      dag: T,
-      config: Config
-  )(implicit
-      sc: SQLContext
-  ): Result[DataFrame] = {
+                                  dataframe: DataFrame,
+                                  dag: T,
+                                  config: Config
+                                )(implicit
+                                  sc: SQLContext
+                                ): Result[DataFrame] = {
     val eval =
       scheme.cataM[M, DAG, T, Multiset[DataFrame @@ Untyped]](evaluateAlgebraM)
 
@@ -192,7 +198,15 @@ object Engine {
     val askVariable = VARIABLE("?_askResult")
     val isEmpty = !r.relational.isEmpty
     val schema = StructType(Seq(StructField(askVariable.s, typedField, false)))
-    val rows = Seq(SparkRow(SparkRow(isEmpty.toString, "http://www.w3.org/2001/XMLSchema#boolean", false)))
+    val rows = Seq(
+      SparkRow(
+        SparkRow(
+          isEmpty.toString,
+          "http://www.w3.org/2001/XMLSchema#boolean",
+          false
+        )
+      )
+    )
     val askDf = @@[DataFrame, Untyped](
       sc.sparkSession.createDataFrame(sc.sparkContext.parallelize(rows), schema)
     )
@@ -323,18 +337,19 @@ object Engine {
                 if (pred.s == "" && position == "g") {
                   FuncForms
                     .equals(col, DataFrameTyper.parse(lit(pred.s)))
-                    .value.cast(BooleanType)
-              } else {
-                FuncForms
-                  .equals(col, DataFrameTyper.parse(lit(pred.s)))
-                  .value
-                  .cast(BooleanType)
-              }
-            }.foldLeft(lit(false))(_ || _)
-          }
-          .foldLeft(lit(true))(_ && _)
-      }
-      .foldLeft(lit(true))(_ && _)
+                    .value
+                    .cast(BooleanType)
+                } else {
+                  FuncForms
+                    .equals(col, DataFrameTyper.parse(lit(pred.s)))
+                    .value
+                    .cast(BooleanType)
+                }
+              }.foldLeft(lit(false))(_ || _)
+            }
+            .foldLeft(lit(true))(_ && _)
+        }
+        .foldLeft(lit(true))(_ && _)
     )
   }
 
@@ -381,15 +396,15 @@ object Engine {
       func: (VARIABLE, Expression)
   ): M[Column] = func match {
     case (VARIABLE(name), Aggregate.COUNT(VARIABLE(v))) =>
-      FuncAgg.countAgg(col(v)).cast("string").as(name).pure[M]
+      FuncAgg.countAgg(col(v)).as(name).pure[M]
     case (VARIABLE(name), Aggregate.SUM(VARIABLE(v))) =>
-      FuncAgg.sumAgg(col(v)).cast("string").as(name).pure[M]
+      FuncAgg.sumAgg(col(v)).as(name).pure[M]
     case (VARIABLE(name), Aggregate.MIN(VARIABLE(v))) =>
-      FuncAgg.minAgg(col(v)).cast("string").as(name).pure[M]
+      FuncAgg.minAgg(col(v)).as(name).pure[M]
     case (VARIABLE(name), Aggregate.MAX(VARIABLE(v))) =>
-      FuncAgg.maxAgg(col(v)).cast("string").as(name).pure[M]
+      FuncAgg.maxAgg(col(v)).as(name).pure[M]
     case (VARIABLE(name), Aggregate.AVG(VARIABLE(v))) =>
-      FuncAgg.avgAgg(col(v)).cast("string").as(name).pure[M]
+      FuncAgg.avgAgg(col(v)).as(name).pure[M]
     case (VARIABLE(name), Aggregate.SAMPLE(VARIABLE(v))) =>
       FuncAgg.sample(col(v)).as(name).pure[M]
     case (VARIABLE(name), Aggregate.GROUP_CONCAT(VARIABLE(v), separator)) =>
@@ -531,7 +546,14 @@ object Engine {
 
     def parseLiteralStringToTypedGenericRow(str: String): GenericRowWithSchema =
       if (str.startsWith("<") && str.endsWith(">"))
-        new GenericRowWithSchema(Array(str.stripPrefix("<").stripSuffix(">"), "http://www.w3.org/2001/XMLSchema#anyURI", null), typedField)
+        new GenericRowWithSchema(
+          Array(
+            str.stripPrefix("<").stripSuffix(">"),
+            "http://www.w3.org/2001/XMLSchema#anyURI",
+            null
+          ),
+          typedField
+        )
       else
         new GenericRowWithSchema(Array(), typedField)
 

@@ -18,7 +18,7 @@ object FuncAgg {
     * @return
     */
   def sample(col: Column): Column =
-    first(col, true)
+    DataFrameTyper.createRecord(first(col, true), col.`type`, col.lang)
 
   /** This functions count the number of elements in a group
     *
@@ -26,7 +26,7 @@ object FuncAgg {
     * @return
     */
   def countAgg(col: Column): Column =
-    count(col)
+    RdfType.Int(count(col))
 
   /** This function calculates the average on a numeric type group
     *
