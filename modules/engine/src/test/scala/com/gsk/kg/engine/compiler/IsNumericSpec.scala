@@ -29,9 +29,9 @@ class IsNumericSpec
 
     "term is a simple int numeric" in {
       // isNumeric(12) -> true
-      val term     = "12"
-      val expected = Row("12")
-      val actual   = actTrue(term)
+      val term = "12"
+      val expected = Row("\"12\"^^<http://www.w3.org/2001/XMLSchema#integer>")
+      val actual = actTrue(term)
       actual shouldEqual expected
     }
 

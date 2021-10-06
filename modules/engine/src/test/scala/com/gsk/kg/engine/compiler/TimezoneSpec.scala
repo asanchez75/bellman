@@ -19,37 +19,37 @@ class TimezoneSpec
 
   /*
   https://www.w3.org/TR/sparql11-query/#func-timezone
-  MINUTES("2011-01-10T14:45:13.815-05:00"^^xsd:dateTime) -> "-PT5H"^^xsd:dayTimeDuration
+  MINUTES("2011-01-10T14:45:13.815-05:00"^^xsd:datetime) -> "-PT5H"^^xsd:dayTimeDuration
    */
 
   lazy val df: DataFrame = List(
     (
       "_:a",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2011-01-10T14:45:13.815+05:00\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
+      "\"2011-01-10T14:45:13.815+05:00\"^^<http://www.w3.org/2001/XMLSchema#datetime>"
     ),
     (
       "_:b",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2012-04-14T14:38:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
+      "\"2012-04-14T14:38:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#datetime>"
     ),
     (
       "_:c",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2013-12-09T14:09:13.815-05:11\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
+      "\"2013-12-09T14:09:13.815-05:11\"^^<http://www.w3.org/2001/XMLSchema#datetime>"
     )
   ).toDF("s", "p", "o")
 
   val expected: List[Row] = List(
-    "\"PT5H\"^^<http://www.w3.org/2001/XMLSchema#dateTime>",
-    "\"-PT5H\"^^<http://www.w3.org/2001/XMLSchema#dateTime>",
-    "\"-PT5H11M\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
+    "\"PT5H\"^^<http://www.w3.org/2001/XMLSchema#datetime>",
+    "\"-PT5H\"^^<http://www.w3.org/2001/XMLSchema#datetime>",
+    "\"-PT5H11M\"^^<http://www.w3.org/2001/XMLSchema#datetime>"
   ).map(Row(_))
 
   val projection: Option[Column] = None
 
   "perform timezone function correctly" when {
-    "select timezone response with a timezone of dateTime value" in {
+    "select timezone response with a timezone of datetime value" in {
 
       val query =
         """

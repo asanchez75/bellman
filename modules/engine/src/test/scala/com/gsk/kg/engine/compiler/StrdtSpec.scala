@@ -39,7 +39,7 @@ class StrdtSpec
 
       result.right.get.collect.length shouldEqual 1
       result.right.get.collect.toSet shouldEqual Set(
-        Row("21", "\"123\"^^<http://www.w3.org/2001/XMLSchema#integer>")
+        Row("\"21\"^^<http://www.w3.org/2001/XMLSchema#integer>", "\"123\"^^<http://www.w3.org/2001/XMLSchema#integer>")
       )
     }
 

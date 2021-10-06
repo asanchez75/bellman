@@ -379,7 +379,7 @@ class StrafterSpec
 
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>")
+          Row("abc")
         )
       }
 

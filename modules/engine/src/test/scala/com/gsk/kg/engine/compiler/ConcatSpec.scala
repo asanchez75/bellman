@@ -50,7 +50,7 @@ class ConcatSpec
           |WHERE {
           |  ?country foaf:latitude ?lat .
           |  ?country foaf:longitude ?long .
-          |  BIND(CONCAT("<http://geo.org/coords?country=", ?country, "&long=", str(?long), "&lat=", str(?lat), ">") as ?coords)
+          |  BIND(URI(CONCAT("http://geo.org/coords?country=", ?country, "&long=", str(?long), "&lat=", str(?lat), "")) as ?coords)
           |}
           |""".stripMargin
 

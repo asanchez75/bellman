@@ -19,24 +19,24 @@ class MonthSpec
 
   /*
   https://www.w3.org/TR/sparql11-query/#func-month
-  YEAR("2011-01-10T14:45:13.815-05:00"^^xsd:dateTime) -> 1
+  YEAR("2011-01-10T14:45:13.815-05:00"^^xsd:datetime) -> 1
    */
 
   lazy val df: DataFrame = List(
     (
       "_:a",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2011-01-10T14:45:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
+      "\"2011-01-10T14:45:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#datetime>"
     ),
     (
       "_:b",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2012-04-10T14:45:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
+      "\"2012-04-10T14:45:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#datetime>"
     ),
     (
       "_:c",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2013-12-10T14:45:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
+      "\"2013-12-10T14:45:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#datetime>"
     )
   ).toDF("s", "p", "o")
 
@@ -45,7 +45,7 @@ class MonthSpec
   val projection: Option[Column] = None
 
   "perform month function correctly" when {
-    "select month response with a month of dateTime value" in {
+    "select month response with a month of datetime value" in {
 
       val query =
         """

@@ -84,7 +84,7 @@ class HavingSpec
 
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 1
-        result.right.get.collect.toSet shouldEqual Set(Row("11.75"))
+        result.right.get.collect.toSet shouldEqual Set(Row("\"11.75\"^^<http://www.w3.org/2001/XMLSchema#double>"))
       }
     }
   }
