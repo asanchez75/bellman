@@ -119,7 +119,7 @@ object PathFrame {
           )
           .select(stepColNames.map(col) :+ col(leftGCol))
           .withColumnRenamed(leftGCol, gCol)
-          .withColumn(gCol, lit(""))
+          .withColumn(gCol, RdfType.String(lit("")))
       }
 
       val continueTraversing = !stepAcc
@@ -170,7 +170,7 @@ object PathFrame {
     } else {
       sDf
         .union(oDf)
-        .withColumn(gCol, lit(""))
+        .withColumn(gCol, RdfType.String(lit("")))
     }
 
     vertices

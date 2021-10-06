@@ -62,14 +62,14 @@ object Engine {
       case DAG.Bind(variable, expression, r) =>
         evaluateBind(variable, expression, r)
       case DAG.Sequence(bps) => evaluateSequence(bps)
-      case DAG.Path(s, p, o, g)        => evaluatePath(s, p, o, g)
-      case DAG.BGP(quads)              => evaluateBGP(quads)
+      case DAG.Path(s, p, o, g) => evaluatePath(s, p, o, g)
+      case DAG.BGP(quads) => evaluateBGP(quads)
       case DAG.LeftJoin(l, r, filters) => evaluateLeftJoin(l, r, filters)
-      case DAG.Union(l, r)             => evaluateUnion(l, r)
-      case DAG.Minus(l, r)             => evaluateMinus(l, r)
-      case DAG.Filter(funcs, expr)     => evaluateFilter(funcs, expr)
-      case DAG.Join(l, r)              => evaluateJoin(l, r)
-      case DAG.Offset(offset, r)       => evaluateOffset(offset, r)
+      case DAG.Union(l, r) => evaluateUnion(l, r)
+      case DAG.Minus(l, r) => evaluateMinus(l, r)
+      case DAG.Filter(funcs, expr) => evaluateFilter(funcs, expr)
+      case DAG.Join(l, r) => evaluateJoin(l, r)
+      case DAG.Offset(offset, r) => evaluateOffset(offset, r)
       case DAG.Limit(limit, r) => evaluateLimit(limit, r)
       case DAG.Distinct(r) => evaluateDistinct(r)
       case DAG.Reduced(r) => evaluateReduced(r)
@@ -270,9 +270,19 @@ object Engine {
       g: List[StringVal]
   )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] = {
 
-    def genGraphCnd(df: DataFrame @@ Untyped, g: List[StringVal]): Column =
-      g.foldLeft(lit(false)) { case (acc, elem) =>
-        acc || df.getColumn("g").value === lit(elem.s.stripPrefix("<").stripSuffix(">"))
+    def genGraphCnd(
+                     config: Config,
+                     df: DataFrame @@ Untyped,
+                     g: List[StringVal]
+                   ): Column =
+      if (config.isDefaultGraphExclusive) {
+        g.foldLeft(lit(false)) { case (acc, elem) =>
+          acc || df.getColumn("g").value === lit(
+            elem.s.stripPrefix("<").stripSuffix(">")
+          )
+        }
+      } else {
+        lit(true)
       }
 
     M.get[Result, Config, Log, DataFrame @@ Untyped].flatMap { df =>
@@ -281,8 +291,8 @@ object Engine {
           .compile[PropertyExpression](p, config)
           .apply(df)
           .map { accDf =>
-            val chunk    = Chunk(Quad(s, STRING(""), o, g))
-            val graphCnd = genGraphCnd(accDf, g)
+            val chunk = Chunk(Quad(s, STRING(""), o, g))
+            val graphCnd = genGraphCnd(config, accDf, g)
 
             val filtered = accDf.filter(graphCnd)
             val result   = applyChunkToDf(chunk, filtered)
