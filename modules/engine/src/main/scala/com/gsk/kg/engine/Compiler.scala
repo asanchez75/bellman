@@ -129,9 +129,7 @@ object Compiler {
     Kleisli[M, (T, DataFrame), DataFrame] { case (query, df) =>
       Log.info("Engine", "Running the engine") *>
         M.ask[Result, Config, Log, DataFrame @@ Untyped].flatMapF { config =>
-          val x = Engine.evaluate(df, query, config)
-
-          x
+          Engine.evaluate(df, query, config)
         }
     }
 

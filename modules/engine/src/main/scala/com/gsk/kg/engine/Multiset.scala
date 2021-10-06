@@ -270,7 +270,7 @@ final case class Multiset[A: Relational](
     } else {
       m.copy(
         bindings = m.bindings + VARIABLE(GRAPH_VARIABLE.s),
-        relational = m.relational.withColumn(GRAPH_VARIABLE.s, DataFrameTyper.parse(lit("<http://defaultgraph>")))
+        relational = m.relational.withColumn(GRAPH_VARIABLE.s, DataFrameTyper.parse(lit("")))
       )
     }
   }

@@ -110,7 +110,7 @@ object Engine {
       )
       dataFrame =
         if (df.columns.length == 3) {
-          df.withColumn("g", DataFrameTyper.parse(lit("<http://defaultgraph>")))
+          df.withColumn("g", DataFrameTyper.parse(lit("")))
         } else {
           df
         }
@@ -322,7 +322,7 @@ object Engine {
                 val col = relational.getColumn(position)
                 if (pred.s == "" && position == "g") {
                   FuncForms
-                    .equals(col, DataFrameTyper.parse(lit("<http://defaultgraph>")))
+                    .equals(col, DataFrameTyper.parse(lit(pred.s)))
                     .value.cast(BooleanType)
               } else {
                 FuncForms
