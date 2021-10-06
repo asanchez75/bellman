@@ -119,12 +119,12 @@ class StrSpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
       }
 
       result.collect.toSet shouldEqual Set(
-        Row("true"),
-        Row("true"),
-        Row("true"),
-        Row("false"),
-        Row("false"),
-        Row("false")
+        Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"),
+        Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"),
+        Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"),
+        Row("\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>"),
+        Row("\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>"),
+        Row("\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
       )
     }
   }

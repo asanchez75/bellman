@@ -2,12 +2,12 @@ package com.gsk.kg.engine.typed.functions
 
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.{concat => _, _}
-
 import com.gsk.kg.engine.DataFrameTyper
 import com.gsk.kg.engine.RdfType
 import com.gsk.kg.engine.functions.Literals.nullLiteral
 import com.gsk.kg.engine.syntax._
 import com.gsk.kg.engine.typed.functions.TypedLiterals.isNumericLiteral
+import org.apache.spark.sql.types.BooleanType
 
 object FuncTerms {
 
@@ -142,15 +142,12 @@ object FuncTerms {
     */
   def isLiteral(col: Column): Column =
     when(
-      col.startsWith("\"") && col.contains("\"@"),
-      lit(true)
+      col.hasType(RdfType.String),
+      RdfType.Boolean.True
     ).when(
-      col.startsWith("\"") && col.contains("\"^^"),
-      lit(true)
-    ).when(
-      col.startsWith("\"") && col.endsWith("\""),
-      lit(true)
-    ).otherwise(lit(false))
+      !isNumeric(col).value.cast(BooleanType),
+      RdfType.Boolean.True
+    ).otherwise(RdfType.Boolean.False)
 
   /** Returns UUID
     *
