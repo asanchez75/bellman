@@ -284,10 +284,10 @@ object FuncForms {
   def coalesce(cols: List[Column]): Column = {
     cols.foldLeft(DataFrameTyper.NullLiteral) { case (acc, elem) =>
       when(
-        elem.hasType(RdfType.Null),
+        elem.hasType(RdfType.Null) || elem.value.isNull,
         acc
       ).when(
-        acc.hasType(RdfType.Null),
+        acc.hasType(RdfType.Null) || acc.value.isNull,
         elem
       ).otherwise(acc)
     }
