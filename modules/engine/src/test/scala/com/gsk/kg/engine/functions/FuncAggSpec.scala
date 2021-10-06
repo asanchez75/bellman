@@ -134,7 +134,7 @@ class FuncAggSpec
 
       val result = df.select(FuncAgg.minAgg(df("v"))).collect()
 
-      result.toSet shouldEqual Set(Row("alice"))
+      result.toSet shouldEqual Set(Row("\"alice\""))
     }
 
     "operate correctly mixing types" in {
@@ -183,7 +183,7 @@ class FuncAggSpec
 
       val result = df.select(FuncAgg.maxAgg(df("v"))).collect()
 
-      result.toSet shouldEqual Set(Row("bob"))
+      result.toSet shouldEqual Set(Row("\"bob\""))
     }
 
     "operate correctly mixing types" in {
@@ -197,7 +197,7 @@ class FuncAggSpec
 
       val result = df.select(FuncAgg.maxAgg(df("v"))).collect()
 
-      result.toSet shouldEqual Set(Row("bob"))
+      result.toSet shouldEqual Set(Row("\"bob\""))
     }
   }
 

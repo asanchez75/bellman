@@ -379,7 +379,7 @@ class StrafterSpec
 
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("abc")
+          Row("\"abc\"")
         )
       }
 

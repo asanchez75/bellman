@@ -103,7 +103,7 @@ class FuncStringsSpec
 
         df.select(FuncStrings.ucase(df("text")).as("result"))
           .collect shouldEqual Array(
-          Row("HELLO"),
+          Row("\"HELLO\""),
           Row("\"HELLO\"@en"),
           Row("\"HELLO\"^^xsd:string")
         )
@@ -122,7 +122,7 @@ class FuncStringsSpec
 
         df.select(FuncStrings.lcase(df("text")).as("result"))
           .collect shouldEqual Array(
-          Row("hello"),
+          Row("\"hello\""),
           Row("\"hello\"@en"),
           Row("\"hello\"^^xsd:string")
         )
@@ -202,8 +202,8 @@ class FuncStringsSpec
 
         df.select(FuncStrings.strbefore(df("text"), " ").as("result"))
           .collect shouldEqual Array(
-          Row("hello"),
-          Row("goodbye")
+          Row("\"hello\""),
+          Row("\"goodbye\"")
         )
       }
 
@@ -233,8 +233,8 @@ class FuncStringsSpec
 
         df.select(FuncStrings.strafter(df("text"), "#").as("result"))
           .collect shouldEqual Array(
-          Row("potato"),
-          Row("tomato")
+          Row("\"potato\""),
+          Row("\"tomato\"")
         )
       }
 
@@ -541,10 +541,10 @@ class FuncStringsSpec
           df.select(FuncStrings.replace(df("text"), "b", "Z", "")).collect
 
         result shouldEqual Array(
-          Row("aZcd"),
-          Row("aZaB"),
-          Row("ZZBB"),
-          Row("aaaa")
+          Row("\"aZcd\""),
+          Row("\"aZaB\""),
+          Row("\"ZZBB\""),
+          Row("\"aaaa\"")
         )
       }
 
@@ -592,7 +592,7 @@ class FuncStringsSpec
           df.select(FuncStrings.replace(df("text"), "a", "", "")).collect
 
         result shouldEqual Array(
-          Row("brcdbr")
+          Row("\"brcdbr\"")
         )
       }
 
@@ -605,7 +605,7 @@ class FuncStringsSpec
             .collect
 
         result shouldEqual Array(
-          Row("abbraccaddabbra")
+          Row("\"abbraccaddabbra\"")
         )
       }
 
@@ -630,7 +630,7 @@ class FuncStringsSpec
           df.select(FuncStrings.replace(df("text"), "A+", "b", "")).collect
 
         result shouldEqual Array(
-          Row("b")
+          Row("\"b\"")
         )
       }
 
@@ -644,7 +644,7 @@ class FuncStringsSpec
           df.select(FuncStrings.replace(df("text"), "A+?", "b", "")).collect
 
         result shouldEqual Array(
-          Row("bbbb")
+          Row("\"bbbb\"")
         )
       }
 
@@ -660,7 +660,7 @@ class FuncStringsSpec
           ).collect
 
         result shouldEqual Array(
-          Row("carted")
+          Row("\"carted\"")
         )
       }
 
@@ -677,10 +677,10 @@ class FuncStringsSpec
           df.select(FuncStrings.replace(df("text"), "b", "Z", "i")).collect
 
         result shouldEqual Array(
-          Row("aZcd"),
-          Row("aZaZ"),
-          Row("ZZZZ"),
-          Row("aaaa")
+          Row("\"aZcd\""),
+          Row("\"aZaZ\""),
+          Row("\"ZZZZ\""),
+          Row("\"aaaa\"")
         )
       }
     }

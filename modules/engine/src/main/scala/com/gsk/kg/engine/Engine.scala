@@ -493,7 +493,7 @@ object Engine {
             filterCol <- f(acc.relational)
             result <-
               expr
-                .filter(filterCol)
+                .filter(filterCol.value.cast(BooleanType))
                 .map(r =>
                   expr.copy(relational = r.relational intersect acc.relational)
                 )
