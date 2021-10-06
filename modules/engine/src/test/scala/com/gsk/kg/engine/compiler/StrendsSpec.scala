@@ -51,7 +51,7 @@ class StrendsSpec
       // strEnds("foobar"^^xsd:string, "bar"^^xsd:string) -> true
       val arg1 = "\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>"
       val arg2 = "\"bar\"^^<http://www.w3.org/2001/XMLSchema#string>"
-      val expected = Row("\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>")
+      val expected = Row("\"foobar\"")
       val actual = act(arg1, arg2)
       actual shouldEqual expected
     }
@@ -60,7 +60,7 @@ class StrendsSpec
       // strEnds("foobar"^^xsd:string, "bar") -> true
       val arg1 = "\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>"
       val arg2 = "\"bar\""
-      val expected = Row("\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>")
+      val expected = Row("\"foobar\"")
       val actual = act(arg1, arg2)
       actual shouldEqual expected
     }
