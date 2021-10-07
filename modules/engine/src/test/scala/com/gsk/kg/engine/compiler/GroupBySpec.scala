@@ -374,8 +374,8 @@ class GroupBySpec
         val result = Compiler.compile(df, query, config)
 
         result.right.get.collect.toSet shouldEqual Set(
-          Row("<http://uri.com/subject/a1>", "\"19\"^^<http://www.w3.org/2001/XMLSchema#decimal>"),
-          Row("<http://uri.com/subject/a2>", "\"31.5\"^^<http://www.w3.org/2001/XMLSchema#integer>"),
+          Row("<http://uri.com/subject/a1>", "\"19\"^^<http://www.w3.org/2001/XMLSchema#integer>"),
+          Row("<http://uri.com/subject/a2>", "\"31.5\"^^<http://www.w3.org/2001/XMLSchema#decimal>"),
           Row("<http://uri.com/subject/a3>", "\"50\"^^<http://www.w3.org/2001/XMLSchema#integer>")
         )
       }

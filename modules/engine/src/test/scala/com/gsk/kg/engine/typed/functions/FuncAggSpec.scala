@@ -191,7 +191,7 @@ class FuncAggSpec
         df.select(FuncAgg.maxAgg(df("v")).as("result")).untype.collect()
 
       result.toSet shouldEqual Set(
-        Row("\"4.5\"^^<http://www.w3.org/2001/XMLSchema#integer>")
+        Row("\"4.5\"^^<http://www.w3.org/2001/XMLSchema#decimal>")
       )
     }
 
@@ -222,10 +222,8 @@ class FuncAggSpec
       val result =
         df.select(FuncAgg.maxAgg(df("v")).as("result")).untype.collect()
 
-      // TODO: we need to see how to calculate these types later on.  For now this won't be a problem since we're not
-      //       mixing types in our own queries.
       result.toSet shouldEqual Set(
-        Row("\"bob\"^^<http://www.w3.org/2001/XMLSchema#decimal>")
+        Row("\"bob\"")
       )
     }
   }
