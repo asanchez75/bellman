@@ -554,18 +554,21 @@ object Engine {
       )
     )
 
-    def parseLiteralStringToTypedGenericRow(str: String): GenericRowWithSchema =
-      if (str.startsWith("<") && str.endsWith(">"))
-        new GenericRowWithSchema(
-          Array(
-            str.stripPrefix("<").stripSuffix(">"),
-            "http://www.w3.org/2001/XMLSchema#anyURI",
-            null
-          ),
-          typedField
-        )
+    def parseLiteralStringToTypedGenericRow(str: String): GenericRowWithSchema = {
+      val value = if (str.startsWith("<") && str.endsWith(">"))
+        str.stripPrefix("<").stripSuffix(">")
       else
-        new GenericRowWithSchema(Array(), typedField)
+        str
+
+      new GenericRowWithSchema(
+        Array(
+          value,
+          "http://www.w3.org/2001/XMLSchema#anyURI",
+          null
+        ),
+        typedField
+      )
+    }
 
     val df = r.relational.flatMap { solution =>
       val extractBlanks: List[(StringVal, Int)] => List[StringVal] =
@@ -584,7 +587,7 @@ object Engine {
             case (VARIABLE(s), pos) =>
               (solution.get(solution.fieldIndex(s)), pos)
             case (BLANK(x), pos) =>
-              (blankNodes.get(x).get, pos)
+              (parseLiteralStringToTypedGenericRow(blankNodes.get(x).get), pos)
             case (x, pos) =>
               (parseLiteralStringToTypedGenericRow(x.s), pos)
           })

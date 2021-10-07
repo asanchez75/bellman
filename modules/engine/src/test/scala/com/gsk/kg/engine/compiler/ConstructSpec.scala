@@ -600,22 +600,22 @@ class ConstructSpec
       Row(
         "<http://example.org/bob>",
         "<http://xmlns.com/foaf/0.1/knowsN>",
-        "1"
+        "\"1\"^^<http://www.w3.org/2001/XMLSchema#integer>"
       ),
       Row(
         "<http://example.org/bob>",
         "<http://xmlns.com/foaf/0.1/minAge>",
-        "30"
+        "\"30\"^^<http://www.w3.org/2001/XMLSchema#integer>"
       ),
       Row(
         "<http://example.org/alice>",
         "<http://xmlns.com/foaf/0.1/knowsN>",
-        "2"
+        "\"2\"^^<http://www.w3.org/2001/XMLSchema#integer>"
       ),
       Row(
         "<http://example.org/alice>",
         "<http://xmlns.com/foaf/0.1/minAge>",
-        "21"
+        "\"21\"^^<http://www.w3.org/2001/XMLSchema#integer>"
       )
     )
   }
