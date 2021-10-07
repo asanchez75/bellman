@@ -19,19 +19,18 @@ object FuncForms {
     * @return
     */
   def equals(l: Column, r: Column): Column =
-    RdfType.Boolean(l.value === r.value)
-  //    DateLiteral
-  //      .applyDateTimeLiteral(l, r)(_ === _)
-  //      .otherwise(
-  //        promoteNumericArgsToBooleanResult(l, r)(_ === _)
-  //          .otherwise(
-  //            promoteStringArgsToBooleanResult(l, r)(_ === _)
-  //              .otherwise(
-  //                promoteBooleanBooleanToBooleanResult(l, r)(_ === _)
-  //                  .otherwise(RdfType.Boolean(l === r))
-  //              )
-  //          )
-  //      )
+    DateLiteral
+      .applyDateTimeLiteral(l, r)(_ === _)
+      .otherwise(
+        promoteNumericArgsToBooleanResult(l, r)(_ === _)
+          .otherwise(
+            promoteStringArgsToBooleanResult(l, r)(_ === _)
+              .otherwise(
+                promoteBooleanBooleanToBooleanResult(l, r)(_ === _)
+                  .otherwise(RdfType.Boolean(l === r))
+              )
+          )
+      )
 
   /** Peforms logical binary operation '>' over two columns
     *
