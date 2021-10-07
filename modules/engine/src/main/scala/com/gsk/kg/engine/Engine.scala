@@ -80,12 +80,6 @@ object Engine {
       case DAG.Noop(str) => evaluateNoop(str)
     }
 
-  private def evaluateProject(
-                               variables: List[VARIABLE],
-                               r: Multiset[DataFrame @@ Untyped]
-                             ): M[Multiset[DataFrame @@ Untyped]] =
-    r.select(variables: _*).pure[M]
-
   def evaluate[T: Basis[DAG, *]](
                                   dataframe: DataFrame,
                                   dag: T,
@@ -123,9 +117,15 @@ object Engine {
     } yield dataFrame
   }
 
+  private def evaluateProject(
+                               variables: List[VARIABLE],
+                               r: Multiset[DataFrame @@ Untyped]
+                             ): M[Multiset[DataFrame @@ Untyped]] =
+    r.select(variables: _*).pure[M]
+
   private def evaluateNoop(
-      str: String
-  )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] =
+                            str: String
+                          )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] =
     for {
       _ <- Log.info("Engine", str)
     } yield Multiset.empty
@@ -554,22 +554,6 @@ object Engine {
       )
     )
 
-    def parseLiteralStringToTypedGenericRow(str: String): GenericRowWithSchema = {
-      val value = if (str.startsWith("<") && str.endsWith(">"))
-        str.stripPrefix("<").stripSuffix(">")
-      else
-        str
-
-      new GenericRowWithSchema(
-        Array(
-          value,
-          "http://www.w3.org/2001/XMLSchema#anyURI",
-          null
-        ),
-        typedField
-      )
-    }
-
     val df = r.relational.flatMap { solution =>
       val extractBlanks: List[(StringVal, Int)] => List[StringVal] =
         triple => triple.filter(x => x._1.isBlank).map(_._1)
@@ -631,20 +615,20 @@ object Engine {
   )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] = {
 
     def parseRow(totalVars: Seq[VARIABLE], row: Row): SparkRow = {
-      SparkRow.fromSeq(totalVars.foldLeft(Seq.empty[String]) { case (acc, v) =>
+      SparkRow.fromSeq(totalVars.foldLeft(Seq.empty[GenericRowWithSchema]) { case (acc, v) =>
         val parsed = row.tuples
           .groupBy(_._1.s)
-          .mapValues(_.map(_._2.s))
+          .mapValues(_.map(x => parseLiteralStringToTypedGenericRow(x._2.s)))
           .getOrElse(v.s, Seq(null)) // scalastyle:ignore
         acc ++ parsed
-      } :+ "")
+      } :+ parseLiteralStringToTypedGenericRow(""))
     }
 
     val sparkRows = rows.map(r => parseRow(vars, r))
     val schema = StructType(
       vars
-        .map(name => StructField(name.s, StringType, true)) :+
-        StructField(GRAPH_VARIABLE.s, StringType, false)
+        .map(name => StructField(name.s, typedField, true)) :+
+        StructField(GRAPH_VARIABLE.s, typedField, false)
     )
 
     val df = @@[DataFrame, Untyped](
@@ -681,5 +665,21 @@ object Engine {
     r.copy(
       relational = resultDf
     ).pure[M]
+  }
+
+  def parseLiteralStringToTypedGenericRow(str: String): GenericRowWithSchema = {
+    val (value, tpe) = if (str.startsWith("<") && str.endsWith(">"))
+      (str.stripPrefix("<").stripSuffix(">"), "http://www.w3.org/2001/XMLSchema#anyURI")
+    else
+      (str, "http://www.w3.org/2001/XMLSchema#string")
+
+    new GenericRowWithSchema(
+      Array(
+        value,
+        tpe,
+        null
+      ),
+      typedField
+    )
   }
 }
