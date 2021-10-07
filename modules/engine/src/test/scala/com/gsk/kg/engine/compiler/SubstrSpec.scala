@@ -50,7 +50,7 @@ class SubstrSpec
       // substr("foobar"^^xsd:string, 4) -> "bar"^^xsd:string
       val str = "\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>"
       val pos = 4
-      val expected = Row("\"bar\"^^<http://www.w3.org/2001/XMLSchema#string>")
+      val expected = Row("\"bar\"")
       val actual = actWithPos(str, pos)
       actual shouldEqual expected
     }
@@ -80,7 +80,7 @@ class SubstrSpec
       val str = "\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>"
       val pos = 4
       val len = 1
-      val expected = Row("\"b\"^^<http://www.w3.org/2001/XMLSchema#string>")
+      val expected = Row("\"b\"")
       val actual = actWithPosLen(str, pos, len)
       actual shouldEqual expected
     }
