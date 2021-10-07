@@ -84,7 +84,7 @@ class CompilerSpec
       result.right.get.collect().toSet shouldEqual Set(
         Row("\"5.88\"^^<http://www.w3.org/2001/XMLSchema#float>"),
         Row("\"0.22\"^^<http://www.w3.org/2001/XMLSchema#float>"),
-        Row("\"foo\"^^<http://www.w3.org/2001/XMLSchema#string>"),
+        Row("\"foo\""),
         Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
       )
     }
@@ -213,7 +213,7 @@ class CompilerSpec
         result.right.get.collect().toSet shouldEqual Set(
           Row("\"5.88\"^^<http://www.w3.org/2001/XMLSchema#float>"),
           Row("\"0.22\"^^<http://www.w3.org/2001/XMLSchema#float>"),
-          Row("\"foo\"^^<http://www.w3.org/2001/XMLSchema#string>"),
+          Row("\"foo\""),
           Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
         )
 
