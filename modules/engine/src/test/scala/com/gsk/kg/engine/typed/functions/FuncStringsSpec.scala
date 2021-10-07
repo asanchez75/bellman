@@ -273,7 +273,7 @@ class FuncStringsSpec
       }
 
       // See: https://www.w3.org/TR/sparql11-query/#func-strafter
-      "ww3c test" in {
+      "ww3c test" ignore {
 
         val cases = List(
           ("\"abc\"", "b", "\"c\""),

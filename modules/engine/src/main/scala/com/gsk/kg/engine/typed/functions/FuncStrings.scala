@@ -144,7 +144,7 @@ object FuncStrings {
       val value = getLeftOrEmpty(col.value, str)
 
       DataFrameTyper.createRecord(
-        getLeftOrEmpty(value, str),
+        value,
         when(value.isNull, RdfType.Null.repr).otherwise(col.`type`)
       )
     }
