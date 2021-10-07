@@ -39,7 +39,7 @@ class PropertyPathsSpec
     }
   }
 
-  "Property Paths" ignore {
+  "Property Paths" in {
 
     "perform on simple queries" when {
 
