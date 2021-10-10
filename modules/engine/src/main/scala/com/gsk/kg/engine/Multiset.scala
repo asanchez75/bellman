@@ -2,11 +2,14 @@ package com.gsk.kg.engine
 
 import cats.kernel.Monoid
 import cats.syntax.all._
+
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
+import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions._
+
 import com.gsk.kg.engine.functions.Literals.nullLiteral
 import com.gsk.kg.engine.relational.Relational
 import com.gsk.kg.engine.relational.Relational.ops._
@@ -14,7 +17,6 @@ import com.gsk.kg.sparqlparser.EngineError
 import com.gsk.kg.sparqlparser.Result
 import com.gsk.kg.sparqlparser.StringVal.GRAPH_VARIABLE
 import com.gsk.kg.sparqlparser.StringVal.VARIABLE
-import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 
 import scala.util.Try
 
@@ -270,7 +272,8 @@ final case class Multiset[A: Relational](
     } else {
       m.copy(
         bindings = m.bindings + VARIABLE(GRAPH_VARIABLE.s),
-        relational = m.relational.withColumn(GRAPH_VARIABLE.s, DataFrameTyper.parse(lit("")))
+        relational = m.relational
+          .withColumn(GRAPH_VARIABLE.s, DataFrameTyper.parse(lit("")))
       )
     }
   }
@@ -373,7 +376,7 @@ final case class Multiset[A: Relational](
     // For each element on the array of *g column if all the graphs are the same we assign the graph
     // if not we assign default graph
     val result = innerWithMergedGraphColumns.map { r =>
-      val index = r.fieldIndex(GRAPH_VARIABLE.s)
+      val index  = r.fieldIndex(GRAPH_VARIABLE.s)
       val graphs = r.getSeq[GenericRowWithSchema](index)
       if (graphs.forall(_ == graphs.head)) {
         Row.fromSeq(r.toSeq.dropRight(1) :+ graphs.head)

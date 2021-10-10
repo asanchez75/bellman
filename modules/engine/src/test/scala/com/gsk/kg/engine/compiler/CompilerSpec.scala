@@ -186,8 +186,16 @@ class CompilerSpec
             "<http://xmlns.com/foaf/0.1/lit>",
             "\"5.88\"^^<http://www.w3.org/2001/XMLSchema#float>"
           ),
-          ("example", "<http://xmlns.com/foaf/0.1/lit>", "\"0.22\"^^<http://www.w3.org/2001/XMLSchema#float>"),
-          ("example", "<http://xmlns.com/foaf/0.1/lit>", "\"foo\"^^<http://www.w3.org/2001/XMLSchema#string>"),
+          (
+            "example",
+            "<http://xmlns.com/foaf/0.1/lit>",
+            "\"0.22\"^^<http://www.w3.org/2001/XMLSchema#float>"
+          ),
+          (
+            "example",
+            "<http://xmlns.com/foaf/0.1/lit>",
+            "\"foo\"^^<http://www.w3.org/2001/XMLSchema#string>"
+          ),
           (
             "example",
             "<http://xmlns.com/foaf/0.1/lit>",

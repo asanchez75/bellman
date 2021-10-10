@@ -40,7 +40,11 @@ class MinutesSpec
     )
   ).toDF("s", "p", "o")
 
-  val expected: List[Row] = List("\"45\"^^<http://www.w3.org/2001/XMLSchema#integer>", "\"38\"^^<http://www.w3.org/2001/XMLSchema#integer>", "\"09\"^^<http://www.w3.org/2001/XMLSchema#integer>").map(Row(_))
+  val expected: List[Row] = List(
+    "\"45\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+    "\"38\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+    "\"09\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+  ).map(Row(_))
 
   val projection: Option[Column] = None
 

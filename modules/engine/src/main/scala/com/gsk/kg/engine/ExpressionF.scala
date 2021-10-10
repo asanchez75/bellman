@@ -2,22 +2,25 @@ package com.gsk.kg.engine
 
 import cats.data.NonEmptyList
 import cats.implicits._
+
 import higherkindness.droste._
 import higherkindness.droste.macros.deriveTraverse
 import higherkindness.droste.util.newtypes.@@
+
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
+
 import com.gsk.kg.config.Config
 import com.gsk.kg.engine.functions.FuncArithmetics
+import com.gsk.kg.engine.relational.Relational.Untyped
+import com.gsk.kg.engine.relational.Relational.ops._
 import com.gsk.kg.engine.typed.functions.FuncDates
 import com.gsk.kg.engine.typed.functions.FuncForms
 import com.gsk.kg.engine.typed.functions.FuncHash
 import com.gsk.kg.engine.typed.functions.FuncNumerics
 import com.gsk.kg.engine.typed.functions.FuncStrings
 import com.gsk.kg.engine.typed.functions.FuncTerms
-import com.gsk.kg.engine.relational.Relational.Untyped
-import com.gsk.kg.engine.relational.Relational.ops._
 import com.gsk.kg.sparqlparser._
 
 /** [[ExpressionF]] is a pattern functor for the recursive
@@ -431,41 +434,45 @@ object ExpressionF {
         case DATATYPE(s)                => FuncTerms.datatype(s).pure[M]
         case ISLITERAL(s)               => FuncTerms.isLiteral(s).pure[M]
         case ISBLANK(s)                 => FuncTerms.isBlank(s).pure[M]
-        case ISNUMERIC(s) => FuncTerms.isNumeric(s).pure[M]
-        case UUID() => FuncTerms.uuid.pure[M]
-        case MD5(s) => FuncHash.md5(s).pure[M]
+        case ISNUMERIC(s)               => FuncTerms.isNumeric(s).pure[M]
+        case UUID()                     => FuncTerms.uuid.pure[M]
+        case MD5(s)                     => FuncHash.md5(s).pure[M]
         case SHA1(s)                    => FuncHash.sha1(s).pure[M]
-        case SHA256(s) => FuncHash.sha256(s).pure[M]
-        case SHA384(s) => FuncHash.sha384(s).pure[M]
-        case SHA512(s) => FuncHash.sha512(s).pure[M]
-        case COUNT(e) => unknownFunction("COUNT")
-        case SUM(e) => unknownFunction("SUM")
-        case MIN(e) => unknownFunction("MIN")
-        case MAX(e) => unknownFunction("MAX")
-        case AVG(e) => unknownFunction("AVG")
-        case SAMPLE(e) => unknownFunction("SAMPLE")
+        case SHA256(s)                  => FuncHash.sha256(s).pure[M]
+        case SHA384(s)                  => FuncHash.sha384(s).pure[M]
+        case SHA512(s)                  => FuncHash.sha512(s).pure[M]
+        case COUNT(e)                   => unknownFunction("COUNT")
+        case SUM(e)                     => unknownFunction("SUM")
+        case MIN(e)                     => unknownFunction("MIN")
+        case MAX(e)                     => unknownFunction("MAX")
+        case AVG(e)                     => unknownFunction("AVG")
+        case SAMPLE(e)                  => unknownFunction("SAMPLE")
         case GROUP_CONCAT(e, separator) => unknownFunction("GROUP_CONCAT")
-        case STRING(s) => RdfType.String(lit(s)).pure[M]
-        case DT_STRING(s, tag) => DataFrameTyper.createRecord(lit(s), lit(tag)).pure[M]
-        case LANG_STRING(s, tag) => DataFrameTyper.createRecord(lit(s), RdfType.String.repr, lit(tag)).pure[M]
+        case STRING(s)                  => RdfType.String(lit(s)).pure[M]
+        case DT_STRING(s, tag) =>
+          DataFrameTyper.createRecord(lit(s), lit(tag)).pure[M]
+        case LANG_STRING(s, tag) =>
+          DataFrameTyper
+            .createRecord(lit(s), RdfType.String.repr, lit(tag))
+            .pure[M]
         case NUM(s) => DataFrameTyper.parse(lit(s)).pure[M]
         case VARIABLE(s) =>
           M.inspect[Result, Config, Log, DataFrame @@ Untyped, Column](
             _.getColumn(s)
           )
-        case URIVAL(s) => DataFrameTyper.parse(lit(s)).pure[M]
-        case BLANK(s) => RdfType.Blank(lit(s)).pure[M]
-        case BOOL(s) => RdfType.Boolean(lit(s)).pure[M]
-        case ASC(e) => unknownFunction("ASC")
-        case DESC(e) => unknownFunction("DESC")
-        case CEIL(s) => FuncNumerics.ceil(s).pure[M]
-        case ROUND(s) => FuncNumerics.round(s).pure[M]
-        case RAND() => FuncNumerics.rand.pure[M]
-        case ABS(s) => FuncNumerics.abs(s).pure[M]
-        case FLOOR(s) => FuncNumerics.floor(s).pure[M]
-        case STRUUID() => FuncTerms.strUuid.pure[M]
-        case NOW() => FuncDates.now.pure[M]
-        case YEAR(s) => FuncDates.year(s).pure[M]
+        case URIVAL(s)   => DataFrameTyper.parse(lit(s)).pure[M]
+        case BLANK(s)    => RdfType.Blank(lit(s)).pure[M]
+        case BOOL(s)     => RdfType.Boolean(lit(s)).pure[M]
+        case ASC(e)      => unknownFunction("ASC")
+        case DESC(e)     => unknownFunction("DESC")
+        case CEIL(s)     => FuncNumerics.ceil(s).pure[M]
+        case ROUND(s)    => FuncNumerics.round(s).pure[M]
+        case RAND()      => FuncNumerics.rand.pure[M]
+        case ABS(s)      => FuncNumerics.abs(s).pure[M]
+        case FLOOR(s)    => FuncNumerics.floor(s).pure[M]
+        case STRUUID()   => FuncTerms.strUuid.pure[M]
+        case NOW()       => FuncDates.now.pure[M]
+        case YEAR(s)     => FuncDates.year(s).pure[M]
         case MONTH(s)    => FuncDates.month(s).pure[M]
         case DAY(s)      => FuncDates.day(s).pure[M]
         case HOUR(s)     => FuncDates.hours(s).pure[M]

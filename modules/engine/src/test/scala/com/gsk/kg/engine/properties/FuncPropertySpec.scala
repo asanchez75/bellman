@@ -6,11 +6,10 @@ import higherkindness.droste.util.newtypes.@@
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.Row
 
-import com.gsk.kg.engine.syntax._
 import com.gsk.kg.engine.compiler.SparkSpec
 import com.gsk.kg.engine.relational.Relational.Untyped
-import com.gsk.kg.engine.relational.Relational.ops._
 import com.gsk.kg.engine.scalacheck.CommonGenerators
+import com.gsk.kg.engine.syntax._
 import com.gsk.kg.sparqlparser.Result
 import com.gsk.kg.sparqlparser.TestConfig
 
@@ -166,7 +165,12 @@ class FuncPropertySpec
         } yield outerSeq
 
         result.right.get.unwrap.untype.collect.toSet shouldEqual Set(
-          Row("<http://example.org/Alice>", "\"seq:pl/pr\"", "\"Charles\"", "\"\"")
+          Row(
+            "<http://example.org/Alice>",
+            "\"seq:pl/pr\"",
+            "\"Charles\"",
+            "\"\""
+          )
         )
       }
     }

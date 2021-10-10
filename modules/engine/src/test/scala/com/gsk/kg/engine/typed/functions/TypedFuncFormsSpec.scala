@@ -65,7 +65,7 @@ class TypedFuncFormsSpec
           "expected"
         )
 
-        val result = df.select(FuncForms.equals(df("arg1"), df("arg2")))
+        val result   = df.select(FuncForms.equals(df("arg1"), df("arg2")))
         val expected = df.select(col("expected"))
 
         result.collect() shouldEqual expected.collect()
@@ -124,7 +124,7 @@ class TypedFuncFormsSpec
             "expected"
           )
 
-          val result = df.select(FuncForms.equals(df("arg1"), df("arg2")))
+          val result   = df.select(FuncForms.equals(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -216,7 +216,7 @@ class TypedFuncFormsSpec
             "expected"
           )
 
-          val result = df.select(FuncForms.equals(df("arg1"), df("arg2")))
+          val result   = df.select(FuncForms.equals(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -308,7 +308,7 @@ class TypedFuncFormsSpec
             "expected"
           )
 
-          val result = df.select(FuncForms.equals(df("arg1"), df("arg2")))
+          val result   = df.select(FuncForms.equals(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -770,7 +770,7 @@ class TypedFuncFormsSpec
             "expected"
           )
 
-          val result = df.select(FuncForms.gt(df("arg1"), df("arg2")))
+          val result   = df.select(FuncForms.gt(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -862,7 +862,7 @@ class TypedFuncFormsSpec
             "expected"
           )
 
-          val result = df.select(FuncForms.gt(df("arg1"), df("arg2")))
+          val result   = df.select(FuncForms.gt(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -954,7 +954,7 @@ class TypedFuncFormsSpec
             "expected"
           )
 
-          val result = df.select(FuncForms.gt(df("arg1"), df("arg2")))
+          val result   = df.select(FuncForms.gt(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -1427,7 +1427,7 @@ class TypedFuncFormsSpec
             "expected"
           )
 
-          val result = df.select(FuncForms.lt(df("arg1"), df("arg2")))
+          val result   = df.select(FuncForms.lt(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -1519,7 +1519,7 @@ class TypedFuncFormsSpec
             "expected"
           )
 
-          val result = df.select(FuncForms.lt(df("arg1"), df("arg2")))
+          val result   = df.select(FuncForms.lt(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -1611,7 +1611,7 @@ class TypedFuncFormsSpec
             "expected"
           )
 
-          val result = df.select(FuncForms.lt(df("arg1"), df("arg2")))
+          val result   = df.select(FuncForms.lt(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -2084,7 +2084,7 @@ class TypedFuncFormsSpec
             "expected"
           )
 
-          val result = df.select(FuncForms.gte(df("arg1"), df("arg2")))
+          val result   = df.select(FuncForms.gte(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -2176,7 +2176,7 @@ class TypedFuncFormsSpec
             "expected"
           )
 
-          val result = df.select(FuncForms.gte(df("arg1"), df("arg2")))
+          val result   = df.select(FuncForms.gte(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -2268,7 +2268,7 @@ class TypedFuncFormsSpec
             "expected"
           )
 
-          val result = df.select(FuncForms.gte(df("arg1"), df("arg2")))
+          val result   = df.select(FuncForms.gte(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -2742,7 +2742,7 @@ class TypedFuncFormsSpec
             "expected"
           )
 
-          val result = df.select(FuncForms.lte(df("arg1"), df("arg2")))
+          val result   = df.select(FuncForms.lte(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -2834,7 +2834,7 @@ class TypedFuncFormsSpec
             "expected"
           )
 
-          val result = df.select(FuncForms.lte(df("arg1"), df("arg2")))
+          val result   = df.select(FuncForms.lte(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -2926,7 +2926,7 @@ class TypedFuncFormsSpec
             "expected"
           )
 
-          val result = df.select(FuncForms.lte(df("arg1"), df("arg2")))
+          val result   = df.select(FuncForms.lte(df("arg1"), df("arg2")))
           val expected = df.select(col("expected"))
 
           result.collect() shouldEqual expected.collect()
@@ -3650,7 +3650,7 @@ class TypedFuncFormsSpec
 
           val cols = List(df("?x"), DataFrameTyper.NullLiteral)
 
-          val result = df.select(FuncForms.coalesce(cols)).collect()
+          val result   = df.select(FuncForms.coalesce(cols)).collect()
           val expected = df.select(df("expected")).collect()
 
           result shouldEqual expected
@@ -3663,7 +3663,7 @@ class TypedFuncFormsSpec
 
           val cols = List(DataFrameTyper.NullLiteral, df("?x"))
 
-          val result = df.select(FuncForms.coalesce(cols)).collect()
+          val result   = df.select(FuncForms.coalesce(cols)).collect()
           val expected = df.select(df("expected")).collect()
 
           result shouldEqual expected
@@ -3676,7 +3676,7 @@ class TypedFuncFormsSpec
 
           val cols = List(RdfType.Int(lit(5)), df("?x"))
 
-          val result = df.select(FuncForms.coalesce(cols)).collect()
+          val result   = df.select(FuncForms.coalesce(cols)).collect()
           val expected = df.select(df("expected")).collect()
 
           result shouldEqual expected
@@ -3689,7 +3689,7 @@ class TypedFuncFormsSpec
 
           val cols = List(df("?y"), RdfType.Int(lit("3")))
 
-          val result = df.select(FuncForms.coalesce(cols)).collect()
+          val result   = df.select(FuncForms.coalesce(cols)).collect()
           val expected = df.select(df("expected")).collect()
 
           result shouldEqual expected
@@ -3702,7 +3702,7 @@ class TypedFuncFormsSpec
 
           val cols = List(df("?y"))
 
-          val result = df.select(FuncForms.coalesce(cols)).collect()
+          val result   = df.select(FuncForms.coalesce(cols)).collect()
           val expected = df.select(df("expected")).collect()
 
           result shouldEqual expected

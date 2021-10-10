@@ -34,7 +34,11 @@ class NowSpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
   val projection: Option[Column] = Some(
     to_timestamp(
       substring(
-        substring_index(col(Evaluation.renamedColumn), "\"^^<http://www.w3.org/2001/XMLSchema#datetime>", 1),
+        substring_index(
+          col(Evaluation.renamedColumn),
+          "\"^^<http://www.w3.org/2001/XMLSchema#datetime>",
+          1
+        ),
         startPos,
         Int.MaxValue
       )

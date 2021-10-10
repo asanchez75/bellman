@@ -49,26 +49,26 @@ class StrendsSpec
 
     "arg1 is typed string and arg2 is typed string" in {
       // strEnds("foobar"^^xsd:string, "bar"^^xsd:string) -> true
-      val arg1 = "\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>"
-      val arg2 = "\"bar\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      val arg1     = "\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      val arg2     = "\"bar\"^^<http://www.w3.org/2001/XMLSchema#string>"
       val expected = Row("\"foobar\"")
-      val actual = act(arg1, arg2)
+      val actual   = act(arg1, arg2)
       actual shouldEqual expected
     }
 
     "arg1 is typed string and arg2 is simple string" in {
       // strEnds("foobar"^^xsd:string, "bar") -> true
-      val arg1 = "\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>"
-      val arg2 = "\"bar\""
+      val arg1     = "\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      val arg2     = "\"bar\""
       val expected = Row("\"foobar\"")
-      val actual = act(arg1, arg2)
+      val actual   = act(arg1, arg2)
       actual shouldEqual expected
     }
 
     "arg1 is simple string and arg2 is typed string" in {
       // strEnds("foobar", "bar"^^xsd:string) -> true
-      val arg1 = "foobar"
-      val arg2 = "\"bar\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      val arg1     = "foobar"
+      val arg2     = "\"bar\"^^<http://www.w3.org/2001/XMLSchema#string>"
       val expected = Row("\"foobar\"")
       val actual   = act(arg1, arg2)
       actual shouldEqual expected
@@ -85,8 +85,8 @@ class StrendsSpec
 
     "arg1 is plain literal with language tag and arg2 is typed string" in {
       // strEnds("foobar"@en, "bar"^^xsd:string) -> true
-      val arg1 = "\"foobar\"@en"
-      val arg2 = "\"bar\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      val arg1     = "\"foobar\"@en"
+      val arg2     = "\"bar\"^^<http://www.w3.org/2001/XMLSchema#string>"
       val expected = Row("\"foobar\"@en")
       val actual   = act(arg1, arg2)
       actual shouldEqual expected

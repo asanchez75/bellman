@@ -33,8 +33,8 @@ class StrbeforeSpec
 
     "arg1 is simple literal and arg2 is simple literal" in {
       // strbefore("abc", "b") -> "a"
-      val arg1 = "\"abc\""
-      val arg2 = "\"b\""
+      val arg1     = "\"abc\""
+      val arg2     = "\"b\""
       val expected = Row("\"a\"")
       val actual   = act(arg1, arg2)
       actual shouldEqual expected
@@ -60,17 +60,17 @@ class StrbeforeSpec
 
     "arg1 is xsd:string and arg two is empty string simple literal" in {
       // strbefore("abc"^^xsd:string, "") -> ""^^xsd:string
-      val arg1 = "\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>"
-      val arg2 = "\"\""
+      val arg1     = "\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      val arg2     = "\"\""
       val expected = Row("\"\"")
-      val actual = act(arg1, arg2)
+      val actual   = act(arg1, arg2)
       actual shouldEqual expected
     }
 
     "arg1 is simple literal and arg two is simple literal" in {
       // strbefore("abc","xyz") -> ""
-      val arg1 = "\"abc\""
-      val arg2 = "\"xyz\""
+      val arg1     = "\"abc\""
+      val arg2     = "\"xyz\""
       val expected = Row("\"\"")
       val actual   = act(arg1, arg2)
       actual shouldEqual expected

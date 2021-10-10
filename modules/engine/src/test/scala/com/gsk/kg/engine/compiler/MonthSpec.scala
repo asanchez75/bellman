@@ -40,7 +40,11 @@ class MonthSpec
     )
   ).toDF("s", "p", "o")
 
-  val expected: List[Row] = List("\"1\"^^<http://www.w3.org/2001/XMLSchema#integer>", "\"4\"^^<http://www.w3.org/2001/XMLSchema#integer>", "\"12\"^^<http://www.w3.org/2001/XMLSchema#integer>").map(Row(_))
+  val expected: List[Row] = List(
+    "\"1\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+    "\"4\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+    "\"12\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+  ).map(Row(_))
 
   val projection: Option[Column] = None
 

@@ -108,9 +108,18 @@ class GroupBySpec
       val result = Compiler.compile(df, query, config)
 
       result.right.get.collect.toSet shouldEqual Set(
-        Row("<http://uri.com/subject/a1>", "\"2\"^^<http://www.w3.org/2001/XMLSchema#integer>"),
-        Row("<http://uri.com/subject/a2>", "\"2\"^^<http://www.w3.org/2001/XMLSchema#integer>"),
-        Row("<http://uri.com/subject/a3>", "\"1\"^^<http://www.w3.org/2001/XMLSchema#integer>")
+        Row(
+          "<http://uri.com/subject/a1>",
+          "\"2\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+        ),
+        Row(
+          "<http://uri.com/subject/a2>",
+          "\"2\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+        ),
+        Row(
+          "<http://uri.com/subject/a3>",
+          "\"1\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+        )
       )
     }
 
@@ -155,9 +164,18 @@ class GroupBySpec
       val result = Compiler.compile(df, query, config)
 
       result.right.get.collect.toSet shouldEqual Set(
-        Row("<http://uri.com/subject/a1>", "\"1.5\"^^<http://www.w3.org/2001/XMLSchema#double>"),
-        Row("<http://uri.com/subject/a2>", "\"3.5\"^^<http://www.w3.org/2001/XMLSchema#double>"),
-        Row("<http://uri.com/subject/a3>", "\"5.0\"^^<http://www.w3.org/2001/XMLSchema#double>")
+        Row(
+          "<http://uri.com/subject/a1>",
+          "\"1.5\"^^<http://www.w3.org/2001/XMLSchema#double>"
+        ),
+        Row(
+          "<http://uri.com/subject/a2>",
+          "\"3.5\"^^<http://www.w3.org/2001/XMLSchema#double>"
+        ),
+        Row(
+          "<http://uri.com/subject/a3>",
+          "\"5.0\"^^<http://www.w3.org/2001/XMLSchema#double>"
+        )
       )
     }
 
@@ -264,9 +282,18 @@ class GroupBySpec
         val result = Compiler.compile(df, query, config)
 
         result.right.get.collect.toSet shouldEqual Set(
-          Row("<http://uri.com/subject/a1>", "\"18.1\"^^<http://www.w3.org/2001/XMLSchema#decimal>"),
-          Row("<http://uri.com/subject/a2>", "\"30\"^^<http://www.w3.org/2001/XMLSchema#integer>"),
-          Row("<http://uri.com/subject/a3>", "\"45\"^^<http://www.w3.org/2001/XMLSchema#integer>")
+          Row(
+            "<http://uri.com/subject/a1>",
+            "\"18.1\"^^<http://www.w3.org/2001/XMLSchema#decimal>"
+          ),
+          Row(
+            "<http://uri.com/subject/a2>",
+            "\"30\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+          ),
+          Row(
+            "<http://uri.com/subject/a3>",
+            "\"45\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+          )
         )
       }
     }
@@ -374,9 +401,18 @@ class GroupBySpec
         val result = Compiler.compile(df, query, config)
 
         result.right.get.collect.toSet shouldEqual Set(
-          Row("<http://uri.com/subject/a1>", "\"19\"^^<http://www.w3.org/2001/XMLSchema#integer>"),
-          Row("<http://uri.com/subject/a2>", "\"31.5\"^^<http://www.w3.org/2001/XMLSchema#decimal>"),
-          Row("<http://uri.com/subject/a3>", "\"50\"^^<http://www.w3.org/2001/XMLSchema#integer>")
+          Row(
+            "<http://uri.com/subject/a1>",
+            "\"19\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+          ),
+          Row(
+            "<http://uri.com/subject/a2>",
+            "\"31.5\"^^<http://www.w3.org/2001/XMLSchema#decimal>"
+          ),
+          Row(
+            "<http://uri.com/subject/a3>",
+            "\"50\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+          )
         )
       }
     }
@@ -442,9 +478,18 @@ class GroupBySpec
       val result = Compiler.compile(df, query, config)
 
       result.right.get.collect.toSet shouldEqual Set(
-        Row("<http://uri.com/subject/a1>", "\"3.0\"^^<http://www.w3.org/2001/XMLSchema#double>"),
-        Row("<http://uri.com/subject/a2>", "\"3.0\"^^<http://www.w3.org/2001/XMLSchema#double>"),
-        Row("<http://uri.com/subject/a3>", "\"1.0\"^^<http://www.w3.org/2001/XMLSchema#double>")
+        Row(
+          "<http://uri.com/subject/a1>",
+          "\"3.0\"^^<http://www.w3.org/2001/XMLSchema#double>"
+        ),
+        Row(
+          "<http://uri.com/subject/a2>",
+          "\"3.0\"^^<http://www.w3.org/2001/XMLSchema#double>"
+        ),
+        Row(
+          "<http://uri.com/subject/a3>",
+          "\"1.0\"^^<http://www.w3.org/2001/XMLSchema#double>"
+        )
       )
     }
 
@@ -489,9 +534,18 @@ class GroupBySpec
       val result = Compiler.compile(df, query, config)
 
       result.right.get.collect.toSet shouldEqual Set(
-        Row("<http://uri.com/subject/a1>", "\"1.5\"^^<http://www.w3.org/2001/XMLSchema#double>"),
-        Row("<http://uri.com/subject/a2>", "\"1.5\"^^<http://www.w3.org/2001/XMLSchema#double>"),
-        Row("<http://uri.com/subject/a3>", "\"1.5\"^^<http://www.w3.org/2001/XMLSchema#double>")
+        Row(
+          "<http://uri.com/subject/a1>",
+          "\"1.5\"^^<http://www.w3.org/2001/XMLSchema#double>"
+        ),
+        Row(
+          "<http://uri.com/subject/a2>",
+          "\"1.5\"^^<http://www.w3.org/2001/XMLSchema#double>"
+        ),
+        Row(
+          "<http://uri.com/subject/a3>",
+          "\"1.5\"^^<http://www.w3.org/2001/XMLSchema#double>"
+        )
       )
     }
 
@@ -627,7 +681,10 @@ class GroupBySpec
       }
 
       result.collect shouldEqual Array(
-        Row("\"5\"^^<http://www.w3.org/2001/XMLSchema#integer>", "\"3.0\"^^<http://www.w3.org/2001/XMLSchema#double>")
+        Row(
+          "\"5\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+          "\"3.0\"^^<http://www.w3.org/2001/XMLSchema#double>"
+        )
       )
     }
   }

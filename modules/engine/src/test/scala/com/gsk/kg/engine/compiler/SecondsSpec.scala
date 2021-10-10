@@ -40,7 +40,11 @@ class SecondsSpec
     )
   ).toDF("s", "p", "o")
 
-  val expected: List[Row] = List("\"13.815\"^^<http://www.w3.org/2001/XMLSchema#double>", "\"13\"^^<http://www.w3.org/2001/XMLSchema#double>", "\"00\"^^<http://www.w3.org/2001/XMLSchema#double>").map(Row(_))
+  val expected: List[Row] = List(
+    "\"13.815\"^^<http://www.w3.org/2001/XMLSchema#double>",
+    "\"13\"^^<http://www.w3.org/2001/XMLSchema#double>",
+    "\"00\"^^<http://www.w3.org/2001/XMLSchema#double>"
+  ).map(Row(_))
 
   val projection: Option[Column] = None
 

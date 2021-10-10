@@ -4,10 +4,13 @@ import cats.Foldable
 import cats.implicits.catsStdInstancesForList
 import cats.implicits.catsSyntaxEitherId
 import cats.syntax.either._
+
 import higherkindness.droste.util.newtypes.@@
+
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions._
+
 import com.gsk.kg.config.Config
 import com.gsk.kg.engine.RdfType
 import com.gsk.kg.engine.functions.PathFrame._
@@ -64,7 +67,10 @@ object FuncProperty {
         .withColumnRenamed(sLeft, sCol)
         .withColumnRenamed(oRight, oCol)
         .withColumnRenamed(gLeft, gCol)
-        .withColumn(pCol, RdfType.String(lit(s"seq:${col(pLeft)}/${col(pRight)}")))
+        .withColumn(
+          pCol,
+          RdfType.String(lit(s"seq:${col(pLeft)}/${col(pRight)}"))
+        )
         .select(Seq(sCol, pCol, oCol, gCol).map(col))
     }
   }

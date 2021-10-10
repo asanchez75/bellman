@@ -43,7 +43,7 @@ object FuncStrings {
     DataFrameTyper.createRecord(
       len match {
         case Some(l) => col.value.substr(pos, l)
-        case None => col.value.substr(lit(pos), length(col.value) - pos + 1)
+        case None    => col.value.substr(lit(pos), length(col.value) - pos + 1)
       },
       RdfType.String.repr,
       col.lang

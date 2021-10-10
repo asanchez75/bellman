@@ -5,10 +5,10 @@ import higherkindness.droste.util.newtypes.@@
 
 import org.apache.spark.sql.DataFrame
 
-import com.gsk.kg.engine.syntax._
 import com.gsk.kg.engine.compiler.SparkSpec
 import com.gsk.kg.engine.relational.Relational
 import com.gsk.kg.engine.relational.Relational.Untyped
+import com.gsk.kg.engine.syntax._
 import com.gsk.kg.engine.utils.MultisetMatchers
 import com.gsk.kg.sparqlparser.EngineError
 import com.gsk.kg.sparqlparser.StringVal.GRAPH_VARIABLE

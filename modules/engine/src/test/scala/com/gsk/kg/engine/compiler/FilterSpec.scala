@@ -216,7 +216,12 @@ class FilterSpec
             ""
           ),
           ("_:c", "<http://xmlns.com/foaf/0.1/name>", "Eve"),
-          ("_:c", "<http://example.org/stats#hits>", "\"181\"^^<http://www.w3.org/2001/XMLSchema#integer>", "")
+          (
+            "_:c",
+            "<http://example.org/stats#hits>",
+            "\"181\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+            ""
+          )
         ).toDF("s", "p", "o", "g")
 
         val query =
@@ -251,7 +256,12 @@ class FilterSpec
         result.right.get.collect.length shouldEqual 2
         result.right.get.collect.toSet shouldEqual Set(
           Row("_:a", "foaf:name", "\"Bob\"", ""),
-          Row("_:b", "site:hits", "\"2349\"^^<http://www.w3.org/2001/XMLSchema#integer>", "")
+          Row(
+            "_:b",
+            "site:hits",
+            "\"2349\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+            ""
+          )
         )
       }
     }
@@ -478,7 +488,10 @@ class FilterSpec
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("_:Martha", "\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
+          Row(
+            "_:Martha",
+            "\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"
+          )
         )
       }
 
@@ -654,7 +667,10 @@ class FilterSpec
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("_:Henry", "\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
+          Row(
+            "_:Henry",
+            "\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>"
+          )
         )
       }
 
@@ -1004,7 +1020,10 @@ class FilterSpec
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("_:Henry", "\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
+          Row(
+            "_:Henry",
+            "\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>"
+          )
         )
       }
 
@@ -1192,7 +1211,10 @@ class FilterSpec
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("_:Martha", "\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
+          Row(
+            "_:Martha",
+            "\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"
+          )
         )
       }
 
@@ -1380,8 +1402,14 @@ class FilterSpec
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 2
         result.right.get.collect.toSet shouldEqual Set(
-          Row("_:Martha", "\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"),
-          Row("_:Henry", "\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
+          Row(
+            "_:Martha",
+            "\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"
+          ),
+          Row(
+            "_:Henry",
+            "\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>"
+          )
         )
       }
 

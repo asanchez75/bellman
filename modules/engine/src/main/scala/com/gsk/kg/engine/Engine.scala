@@ -6,27 +6,30 @@ import cats.implicits.toTraverseOps
 import cats.instances.all._
 import cats.syntax.applicative._
 import cats.syntax.either._
+
 import higherkindness.droste._
 import higherkindness.droste.contrib.NewTypesSyntax.NewTypesOps
 import higherkindness.droste.util.newtypes.@@
+
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.RelationalGroupedDataset
 import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.catalyst.encoders.RowEncoder
+import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Row => SparkRow}
-import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
+
 import com.gsk.kg.config.Config
-import com.gsk.kg.engine.SPOEncoder._
-import com.gsk.kg.engine.syntax._
 import com.gsk.kg.engine.data.ChunkedList
 import com.gsk.kg.engine.data.ChunkedList.Chunk
-import com.gsk.kg.engine.typed.functions.FuncAgg
-import com.gsk.kg.engine.typed.functions.FuncForms
 import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.engine.relational.Relational.ops._
 import com.gsk.kg.engine.relational.RelationalGrouped
+import com.gsk.kg.engine.syntax._
+import com.gsk.kg.engine.typed.functions.FuncAgg
+import com.gsk.kg.engine.typed.functions.FuncForms
 import com.gsk.kg.sparqlparser.ConditionOrder.ASC
 import com.gsk.kg.sparqlparser.ConditionOrder.DESC
 import com.gsk.kg.sparqlparser.Expr.Quad
@@ -35,7 +38,6 @@ import com.gsk.kg.sparqlparser.Expression
 import com.gsk.kg.sparqlparser.StringVal
 import com.gsk.kg.sparqlparser.StringVal._
 import com.gsk.kg.sparqlparser._
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
 
 import java.{util => ju}
 
@@ -50,43 +52,43 @@ object Engine {
   )
 
   def evaluateAlgebraM(implicit
-                       sc: SQLContext
-                      ): AlgebraM[M, DAG, Multiset[DataFrame @@ Untyped]] =
+      sc: SQLContext
+  ): AlgebraM[M, DAG, Multiset[DataFrame @@ Untyped]] =
     AlgebraM[M, DAG, Multiset[DataFrame @@ Untyped]] {
       case DAG.Describe(vars, r) => evaluateDescribe(vars, r)
-      case DAG.Ask(r) => evaluateAsk(r)
+      case DAG.Ask(r)            => evaluateAsk(r)
       case DAG.Construct(bgp, r) => evaluateConstruct(bgp, r)
       case DAG.Scan(graph, expr) =>
         evaluateScan(graph, expr)
       case DAG.Project(variables, r) => evaluateProject(variables, r)
       case DAG.Bind(variable, expression, r) =>
         evaluateBind(variable, expression, r)
-      case DAG.Sequence(bps) => evaluateSequence(bps)
-      case DAG.Path(s, p, o, g) => evaluatePath(s, p, o, g)
-      case DAG.BGP(quads) => evaluateBGP(quads)
+      case DAG.Sequence(bps)           => evaluateSequence(bps)
+      case DAG.Path(s, p, o, g)        => evaluatePath(s, p, o, g)
+      case DAG.BGP(quads)              => evaluateBGP(quads)
       case DAG.LeftJoin(l, r, filters) => evaluateLeftJoin(l, r, filters)
-      case DAG.Union(l, r) => evaluateUnion(l, r)
-      case DAG.Minus(l, r) => evaluateMinus(l, r)
-      case DAG.Filter(funcs, expr) => evaluateFilter(funcs, expr)
-      case DAG.Join(l, r) => evaluateJoin(l, r)
-      case DAG.Offset(offset, r) => evaluateOffset(offset, r)
-      case DAG.Limit(limit, r) => evaluateLimit(limit, r)
-      case DAG.Distinct(r) => evaluateDistinct(r)
-      case DAG.Reduced(r) => evaluateReduced(r)
-      case DAG.Group(vars, func, r) => evaluateGroup(vars, func, r)
-      case DAG.Order(conds, r) => evaluateOrder(conds, r)
-      case DAG.Table(vars, rows) => evaluateTable(vars, rows)
-      case DAG.Exists(not, p, r) => evaluateExists(not, p, r)
-      case DAG.Noop(str) => evaluateNoop(str)
+      case DAG.Union(l, r)             => evaluateUnion(l, r)
+      case DAG.Minus(l, r)             => evaluateMinus(l, r)
+      case DAG.Filter(funcs, expr)     => evaluateFilter(funcs, expr)
+      case DAG.Join(l, r)              => evaluateJoin(l, r)
+      case DAG.Offset(offset, r)       => evaluateOffset(offset, r)
+      case DAG.Limit(limit, r)         => evaluateLimit(limit, r)
+      case DAG.Distinct(r)             => evaluateDistinct(r)
+      case DAG.Reduced(r)              => evaluateReduced(r)
+      case DAG.Group(vars, func, r)    => evaluateGroup(vars, func, r)
+      case DAG.Order(conds, r)         => evaluateOrder(conds, r)
+      case DAG.Table(vars, rows)       => evaluateTable(vars, rows)
+      case DAG.Exists(not, p, r)       => evaluateExists(not, p, r)
+      case DAG.Noop(str)               => evaluateNoop(str)
     }
 
   def evaluate[T: Basis[DAG, *]](
-                                  dataframe: DataFrame,
-                                  dag: T,
-                                  config: Config
-                                )(implicit
-                                  sc: SQLContext
-                                ): Result[DataFrame] = {
+      dataframe: DataFrame,
+      dag: T,
+      config: Config
+  )(implicit
+      sc: SQLContext
+  ): Result[DataFrame] = {
     val eval =
       scheme.cataM[M, DAG, T, Multiset[DataFrame @@ Untyped]](evaluateAlgebraM)
 
@@ -118,14 +120,14 @@ object Engine {
   }
 
   private def evaluateProject(
-                               variables: List[VARIABLE],
-                               r: Multiset[DataFrame @@ Untyped]
-                             ): M[Multiset[DataFrame @@ Untyped]] =
+      variables: List[VARIABLE],
+      r: Multiset[DataFrame @@ Untyped]
+  ): M[Multiset[DataFrame @@ Untyped]] =
     r.select(variables: _*).pure[M]
 
   private def evaluateNoop(
-                            str: String
-                          )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] =
+      str: String
+  )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] =
     for {
       _ <- Log.info("Engine", str)
     } yield Multiset.empty
@@ -152,7 +154,7 @@ object Engine {
         quads
           .mapChunks { chunk =>
             val condition = composedConditionFromChunk(df, chunk)
-            val filtered = df.filter(condition.value.cast(BooleanType))
+            val filtered  = df.filter(condition.value.cast(BooleanType))
             applyChunkToDf(chunk, filtered)
           }
           .foldLeft(Multiset.empty)(
@@ -196,8 +198,8 @@ object Engine {
       r: Multiset[DataFrame @@ Untyped]
   )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] = {
     val askVariable = VARIABLE("?_askResult")
-    val isEmpty = !r.relational.isEmpty
-    val schema = StructType(Seq(StructField(askVariable.s, typedField, false)))
+    val isEmpty     = !r.relational.isEmpty
+    val schema      = StructType(Seq(StructField(askVariable.s, typedField, false)))
     val rows = Seq(
       SparkRow(
         SparkRow(
@@ -271,10 +273,10 @@ object Engine {
   )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] = {
 
     def genGraphCnd(
-                     config: Config,
-                     df: DataFrame @@ Untyped,
-                     g: List[StringVal]
-                   ): Column =
+        config: Config,
+        df: DataFrame @@ Untyped,
+        g: List[StringVal]
+    ): Column =
       if (config.isDefaultGraphExclusive) {
         g.foldLeft(lit(false)) { case (acc, elem) =>
           acc || df.getColumn("g").value === lit(
@@ -291,7 +293,7 @@ object Engine {
           .compile[PropertyExpression](p, config)
           .apply(df)
           .map { accDf =>
-            val chunk = Chunk(Quad(s, STRING(""), o, g))
+            val chunk    = Chunk(Quad(s, STRING(""), o, g))
             val graphCnd = genGraphCnd(config, accDf, g)
 
             val filtered = accDf.filter(graphCnd)
@@ -313,7 +315,7 @@ object Engine {
       Foldable[ChunkedList].fold(
         quads.mapChunks { chunk =>
           val condition = composedConditionFromChunk(df, chunk)
-          val filtered = df.filter(condition.value.cast(BooleanType))
+          val filtered  = df.filter(condition.value.cast(BooleanType))
           applyChunkToDf(chunk, filtered)
         }
       )
@@ -537,14 +539,12 @@ object Engine {
       sc: SQLContext
   ): Multiset[DataFrame @@ Untyped] = {
 
-    import sc.implicits._
-
     // Extracting the triples to something that can be serialized in
     // Spark jobs
     val templateValues: List[List[(StringVal, Int)]] =
-    bgp.quads
-      .map(quad => List(quad.s -> 1, quad.p -> 2, quad.o -> 3))
-      .toList
+      bgp.quads
+        .map(quad => List(quad.s -> 1, quad.p -> 2, quad.o -> 3))
+        .toList
 
     val schema = StructType(
       Seq(
@@ -615,12 +615,13 @@ object Engine {
   )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] = {
 
     def parseRow(totalVars: Seq[VARIABLE], row: Row): SparkRow = {
-      SparkRow.fromSeq(totalVars.foldLeft(Seq.empty[GenericRowWithSchema]) { case (acc, v) =>
-        val parsed = row.tuples
-          .groupBy(_._1.s)
-          .mapValues(_.map(x => parseLiteralStringToTypedGenericRow(x._2.s)))
-          .getOrElse(v.s, Seq(null)) // scalastyle:ignore
-        acc ++ parsed
+      SparkRow.fromSeq(totalVars.foldLeft(Seq.empty[GenericRowWithSchema]) {
+        case (acc, v) =>
+          val parsed = row.tuples
+            .groupBy(_._1.s)
+            .mapValues(_.map(x => parseLiteralStringToTypedGenericRow(x._2.s)))
+            .getOrElse(v.s, Seq(null)) // scalastyle:ignore
+          acc ++ parsed
       } :+ parseLiteralStringToTypedGenericRow(""))
     }
 
@@ -668,10 +669,14 @@ object Engine {
   }
 
   def parseLiteralStringToTypedGenericRow(str: String): GenericRowWithSchema = {
-    val (value, tpe) = if (str.startsWith("<") && str.endsWith(">"))
-      (str.stripPrefix("<").stripSuffix(">"), "http://www.w3.org/2001/XMLSchema#anyURI")
-    else
-      (str, "http://www.w3.org/2001/XMLSchema#string")
+    val (value, tpe) =
+      if (str.startsWith("<") && str.endsWith(">"))
+        (
+          str.stripPrefix("<").stripSuffix(">"),
+          "http://www.w3.org/2001/XMLSchema#anyURI"
+        )
+      else
+        (str, "http://www.w3.org/2001/XMLSchema#string")
 
     new GenericRowWithSchema(
       Array(

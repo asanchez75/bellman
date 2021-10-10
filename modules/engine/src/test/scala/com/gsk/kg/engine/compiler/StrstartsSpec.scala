@@ -49,26 +49,26 @@ class StrstartsSpec
 
     "arg1 is typed string and arg2 is typed string" in {
       // strStarts("foobar"^^xsd:string, "foo"^^xsd:string) -> true
-      val arg1 = "\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>"
-      val arg2 = "\"foo\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      val arg1     = "\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      val arg2     = "\"foo\"^^<http://www.w3.org/2001/XMLSchema#string>"
       val expected = Row("\"foobar\"")
-      val actual = act(arg1, arg2)
+      val actual   = act(arg1, arg2)
       actual shouldEqual expected
     }
 
     "arg1 is typed string and arg2 is simple string" in {
       // strStarts("foobar"^^xsd:string, "foo") -> true
-      val arg1 = "\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>"
-      val arg2 = "\"foo\""
+      val arg1     = "\"foobar\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      val arg2     = "\"foo\""
       val expected = Row("\"foobar\"")
-      val actual = act(arg1, arg2)
+      val actual   = act(arg1, arg2)
       actual shouldEqual expected
     }
 
     "arg1 is simple string and arg2 is typed string" in {
       // strStarts("foobar", "foo"^^xsd:string) -> true
-      val arg1 = "foobar"
-      val arg2 = "\"foo\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      val arg1     = "foobar"
+      val arg2     = "\"foo\"^^<http://www.w3.org/2001/XMLSchema#string>"
       val expected = Row("\"foobar\"")
       val actual   = act(arg1, arg2)
       actual shouldEqual expected
@@ -85,8 +85,8 @@ class StrstartsSpec
 
     "arg1 is plain literal with language tag and arg2 is typed string" in {
       // strStarts("foobar"@en, "foo"^^xsd:string) -> true
-      val arg1 = "\"foobar\"@en"
-      val arg2 = "\"foo\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      val arg1     = "\"foobar\"@en"
+      val arg2     = "\"foo\"^^<http://www.w3.org/2001/XMLSchema#string>"
       val expected = Row("\"foobar\"@en")
       val actual   = act(arg1, arg2)
       actual shouldEqual expected

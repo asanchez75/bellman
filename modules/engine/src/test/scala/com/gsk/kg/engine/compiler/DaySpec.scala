@@ -36,7 +36,11 @@ class DaySpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
     )
   ).toDF("s", "p", "o")
 
-  val expected: List[Row] = List("\"10\"^^<http://www.w3.org/2001/XMLSchema#integer>", "\"14\"^^<http://www.w3.org/2001/XMLSchema#integer>", "\"9\"^^<http://www.w3.org/2001/XMLSchema#integer>").map(Row(_))
+  val expected: List[Row] = List(
+    "\"10\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+    "\"14\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+    "\"9\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+  ).map(Row(_))
 
   val projection: Option[Column] = None
 
