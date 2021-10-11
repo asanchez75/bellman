@@ -28,7 +28,6 @@ object FuncForms {
           )
       )
 
-
   /** Peforms logical binary operation '>' over two columns
     *
     * @param l

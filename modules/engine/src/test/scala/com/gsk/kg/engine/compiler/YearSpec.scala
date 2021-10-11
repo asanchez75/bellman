@@ -40,7 +40,11 @@ class YearSpec
     )
   ).toDF("s", "p", "o")
 
-  val expected: List[Row] = List("\"2011\"^^<http://www.w3.org/2001/XMLSchema#integer>", "\"2012\"^^<http://www.w3.org/2001/XMLSchema#integer>", "\"2013\"^^<http://www.w3.org/2001/XMLSchema#integer>").map(Row(_))
+  val expected: List[Row] = List(
+    "\"2011\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+    "\"2012\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+    "\"2013\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+  ).map(Row(_))
 
   val projection: Option[Column] = None
 

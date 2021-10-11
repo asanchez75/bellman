@@ -22,7 +22,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class FuncFormsSpec
-  extends AnyWordSpec
+    extends AnyWordSpec
     with Matchers
     with SparkSpec
     with ScalaCheckDrivenPropertyChecks

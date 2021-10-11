@@ -146,7 +146,10 @@ class ArithmeticSpec
         result.collect.length shouldEqual 2
         result.collect.toSet shouldEqual Set(
           Row("_:a", "\"0.6\"^^<http://www.w3.org/2001/XMLSchema#decimal>"),
-          Row("_:b", "\"0.7777777777777778\"^^<http://www.w3.org/2001/XMLSchema#decimal>")
+          Row(
+            "_:b",
+            "\"0.7777777777777778\"^^<http://www.w3.org/2001/XMLSchema#decimal>"
+          )
         )
       }
     }
