@@ -21,8 +21,8 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
-class TypedFuncFormsSpec
-    extends AnyWordSpec
+class FuncFormsSpec
+  extends AnyWordSpec
     with Matchers
     with SparkSpec
     with ScalaCheckDrivenPropertyChecks
