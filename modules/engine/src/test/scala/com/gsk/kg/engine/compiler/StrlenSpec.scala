@@ -24,11 +24,6 @@ class StrlenSpec
         (
           "_:alice",
           "<http://xmlns.com/foaf/0.1/name>",
-          "Alice"
-        ),
-        (
-          "_:alice",
-          "<http://xmlns.com/foaf/0.1/name>",
           "\"Alice\"^^<http://www.w3.org/2001/XMLSchema#string>"
         ),
         (
@@ -66,10 +61,9 @@ class StrlenSpec
 
       val result = Compiler.compile(df, query, config)
 
-      result.right.get.collect.length shouldEqual 3
+      result.right.get.collect.length shouldEqual 2
       result.right.get.collect.toSet shouldEqual Set(
         Row("\"Alice\""),
-        Row("\"Alice\"^^<http://www.w3.org/2001/XMLSchema#string>"),
         Row("\"Alice\"@en")
       )
     }
