@@ -346,17 +346,10 @@ object Engine {
             .map { case (_, vs) =>
               vs.map { case (pred, position) =>
                 val col = relational.getColumn(position)
-                if (pred.s == "" && position == "g") {
-                  FuncForms
-                    .equals(col, DataFrameTyper.parse(lit(pred.s)))
-                    .value
-                    .cast(BooleanType)
-                } else {
-                  FuncForms
-                    .equals(col, DataFrameTyper.parse(lit(pred.s)))
-                    .value
-                    .cast(BooleanType)
-                }
+                FuncForms
+                  .equals(col, DataFrameTyper.parse(lit(pred.s)))
+                  .value
+                  .cast(BooleanType)
               }.foldLeft(lit(false))(_ || _)
             }
             .foldLeft(lit(true))(_ && _)
