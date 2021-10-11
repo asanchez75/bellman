@@ -1,12 +1,16 @@
 package com.gsk.kg.engine.typed.functions
 
 import org.apache.spark.sql.Row
-import org.apache.spark.sql.functions.{col, collect_set, count}
+import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.functions.collect_set
+import org.apache.spark.sql.functions.count
+
 import com.gsk.kg.engine.RdfType
 import com.gsk.kg.engine.compiler.SparkSpec
 import com.gsk.kg.engine.scalacheck.CommonGenerators
 import com.gsk.kg.engine.syntax._
-import org.apache.spark.sql.expressions.Window
+
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
@@ -334,8 +338,8 @@ class FuncTermsSpec
 
         dfResult
           .select(
-            col(bnodeRegexColName)
-              .value.rlike(uuidRegex)
+            col(bnodeRegexColName).value
+              .rlike(uuidRegex)
               .as(bnodeRegexColName)
           )
           .collect() shouldEqual Array(Row(true), Row(true), Row(true))
@@ -413,7 +417,8 @@ class FuncTermsSpec
         val anotherBnodeRegexColName = "bnodeR2"
         val wind                     = Window.partitionBy(bnodeRegexColName)
         val df =
-          List(("a1", "a2"), ("a3", "a4"), ("a5", "a6")).toTypedDF("pepe", "tomy")
+          List(("a1", "a2"), ("a3", "a4"), ("a5", "a6"))
+            .toTypedDF("pepe", "tomy")
 
         val projection = Seq(
           FuncTerms.bNode(Some(col("pepe"))).as(bnodeRegexColName),
@@ -455,7 +460,8 @@ class FuncTermsSpec
         val anotherBnodeRegexColName = "bnodeR2"
         val wind                     = Window.partitionBy(bnodeRegexColName)
         val df =
-          List(("a1", "a2"), ("a3", "a4"), ("a5", "a6")).toTypedDF("pepe", "tomy")
+          List(("a1", "a2"), ("a3", "a4"), ("a5", "a6"))
+            .toTypedDF("pepe", "tomy")
 
         val projection = Seq(
           FuncTerms.bNode(Some(col("tomy"))).as(bnodeRegexColName),

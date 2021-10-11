@@ -205,7 +205,7 @@ object Engine {
         SparkRow(
           isEmpty.toString,
           "http://www.w3.org/2001/XMLSchema#boolean",
-          null
+          null // scalastyle:off
         )
       )
     )
@@ -670,19 +670,20 @@ object Engine {
 
   def parseLiteralStringToTypedGenericRow(str: String): GenericRowWithSchema = {
     val (value, tpe) =
-      if (str.startsWith("<") && str.endsWith(">"))
+      if (str.startsWith("<") && str.endsWith(">")) {
         (
           str.stripPrefix("<").stripSuffix(">"),
           "http://www.w3.org/2001/XMLSchema#anyURI"
         )
-      else
+      } else {
         (str, "http://www.w3.org/2001/XMLSchema#string")
+      }
 
     new GenericRowWithSchema(
       Array(
         value,
         tpe,
-        null
+        null // scalastyle:off
       ),
       typedField
     )
