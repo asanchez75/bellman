@@ -46,8 +46,8 @@ class ArithmeticSpec
 
         result.collect.length shouldEqual 2
         result.collect.toSet shouldEqual Set(
-          Row("_:a", "4.0"),
-          Row("_:b", "8.0")
+          Row("_:a", "\"4.0\"^^<http://www.w3.org/2001/XMLSchema#decimal>"),
+          Row("_:b", "\"8.0\"^^<http://www.w3.org/2001/XMLSchema#decimal>")
         )
       }
     }
@@ -79,8 +79,8 @@ class ArithmeticSpec
 
         result.collect.length shouldEqual 2
         result.collect.toSet shouldEqual Set(
-          Row("_:a", "-1.0"),
-          Row("_:b", "-1.0")
+          Row("_:a", "\"-1.0\"^^<http://www.w3.org/2001/XMLSchema#decimal>"),
+          Row("_:b", "\"-1.0\"^^<http://www.w3.org/2001/XMLSchema#decimal>")
         )
       }
     }
@@ -112,8 +112,8 @@ class ArithmeticSpec
 
         result.collect.length shouldEqual 2
         result.collect.toSet shouldEqual Set(
-          Row("_:a", "3.75"),
-          Row("_:b", "15.75")
+          Row("_:a", "\"3.75\"^^<http://www.w3.org/2001/XMLSchema#decimal>"),
+          Row("_:b", "\"15.75\"^^<http://www.w3.org/2001/XMLSchema#decimal>")
         )
       }
     }
@@ -145,8 +145,8 @@ class ArithmeticSpec
 
         result.collect.length shouldEqual 2
         result.collect.toSet shouldEqual Set(
-          Row("_:a", "0.6"),
-          Row("_:b", "0.7777777777777778")
+          Row("_:a", "\"0.6\"^^<http://www.w3.org/2001/XMLSchema#decimal>"),
+          Row("_:b", "\"0.7777777777777778\"^^<http://www.w3.org/2001/XMLSchema#decimal>")
         )
       }
     }

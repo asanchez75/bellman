@@ -105,9 +105,11 @@ object FuncStrings {
         .otherwise(substring_index(c, s, 1))
 
     val value = getLeftOrEmpty(col.value, str)
+
     DataFrameTyper.createRecord(
       value,
-      when(value.isNull, RdfType.Null.repr).otherwise(col.`type`)
+      when(value.isNull, RdfType.Null.repr).otherwise(col.`type`),
+      col.lang
     )
   }
 
