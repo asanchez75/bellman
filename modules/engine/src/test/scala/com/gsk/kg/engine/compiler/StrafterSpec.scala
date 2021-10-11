@@ -158,7 +158,7 @@ class StrafterSpec
 
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("\"\"") // Jena outputs empty string
+          Row("\"\"@en") // Jena outputs empty string
         )
       }
 
@@ -186,7 +186,7 @@ class StrafterSpec
 
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("\"\"")
+          Row("\"\"@en")
         )
       }
 
@@ -407,7 +407,7 @@ class StrafterSpec
 
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("\"\"")
+          Row("\"\"@en")
         )
       }
 
@@ -435,7 +435,7 @@ class StrafterSpec
 
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("\"\"") // Jena outputs empty string
+          Row("\"\"@en") // Jena outputs empty string
         )
       }
 
