@@ -12,9 +12,9 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 
 import com.gsk.kg.config.Config
-import com.gsk.kg.engine.functions.FuncArithmetics
 import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.engine.relational.Relational.ops._
+import com.gsk.kg.engine.typed.functions.FuncArithmetics
 import com.gsk.kg.engine.typed.functions.FuncDates
 import com.gsk.kg.engine.typed.functions.FuncForms
 import com.gsk.kg.engine.typed.functions.FuncHash
