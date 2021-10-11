@@ -35,7 +35,7 @@ class IsNumericSpec
       actual shouldEqual expected
     }
 
-    "term is typed nonNegativeInteger" in {
+    "term is typed nonNegativeInteger" ignore {
       // isNumeric("12"^^xsd:nonNegativeInteger) -> true
       val term = "\"12\"^^<http://www.w3.org/2001/XMLSchema#nonNegativeInteger>"
       val expected =
