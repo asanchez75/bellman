@@ -145,7 +145,8 @@ object FuncStrings {
 
       DataFrameTyper.createRecord(
         value,
-        when(value.isNull, RdfType.Null.repr).otherwise(col.`type`)
+        when(value.isNull, RdfType.Null.repr).otherwise(col.`type`),
+        col.lang
       )
     }
   }

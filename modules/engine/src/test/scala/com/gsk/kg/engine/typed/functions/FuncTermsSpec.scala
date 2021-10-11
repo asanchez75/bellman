@@ -258,7 +258,7 @@ class FuncTermsSpec
         dfResult
           .select(
             RdfType
-              .Boolean(col(uuidColName).value.value.rlike(uuidRegex))
+              .Boolean(col(uuidColName).value.rlike(uuidRegex))
               .as(uuidRegexColName)
           )
           .untype
@@ -291,7 +291,7 @@ class FuncTermsSpec
         dfResult
           .select(
             RdfType
-              .Boolean(col(uuidColName).value.value.rlike(uuidRegex))
+              .Boolean(col(uuidColName).value.rlike(uuidRegex))
               .as(uuidRegexColName)
           )
           .untype
