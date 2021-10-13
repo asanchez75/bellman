@@ -10063,7 +10063,7 @@ class PropertyPathsSpec
         }
       }
 
-      "mix {n,}" when {
+      "mix {n,}" ignore {
 
         "with |" in {
 
@@ -10594,7 +10594,7 @@ class PropertyPathsSpec
         }
       }
 
-      "mix {,n}" when {
+      "mix {,n}" ignore {
 
         "with |" in {
 
