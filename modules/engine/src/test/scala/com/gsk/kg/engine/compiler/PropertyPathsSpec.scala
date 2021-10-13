@@ -9453,7 +9453,7 @@ class PropertyPathsSpec
         }
       }
 
-      "mix {n,m}" when {
+      "mix {n,m}" ignore {
 
         "with |" in {
 
