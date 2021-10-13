@@ -40,8 +40,6 @@ jobs:
           path: ~/.sbt
           key: ${{ runner.os }}-sbt-${{ hashFiles('build.sbt') }}-${{ hashFiles('project/*.scala') }}
           restore-keys: ${{ runner.os }}-sbt-
-      - name: Lint code
-        run: sbt ";scalafixAll --check ;scalafmtCheckAll ;scalastyle"
       - name: Run tests
         run: sbt ";clean ;coverage ;+test"
       - name: Build microsite

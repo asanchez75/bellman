@@ -1,0 +1,32 @@
+name: Lint Scala code
+
+on:
+  push:
+    branches: master
+  pull_request:
+
+jobs:
+  test:
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Setup Scala
+        uses: olafurpg/setup-scala@v12
+      - name: Cache dependencies
+        uses: actions/cache@v2.1.6
+        with:
+          path: ~/.cache/coursier/v1
+          key: ${{ runner.os }}-coursier-${{ hashFiles('build.sbt') }}-${{ hashFiles('project/*.scala') }}
+          restore-keys: ${{ runner.os }}-coursier-
+      - name: Cache .sbt
+        uses: actions/cache@v2.1.6
+        with:
+          path: ~/.sbt
+          key: ${{ runner.os }}-sbt-${{ hashFiles('build.sbt') }}-${{ hashFiles('project/*.scala') }}
+          restore-keys: ${{ runner.os }}-sbt-
+      - name: Lint code
+        run: sbt ";scalafixAll --check ;scalafmtCheckAll ;scalastyle"
