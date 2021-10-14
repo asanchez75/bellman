@@ -15,33 +15,37 @@ class DaySpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
 
   /*
   https://www.w3.org/TR/sparql11-query/#func-day
-  DAY("2011-01-10T14:45:13.815-05:00"^^xsd:dateTime) -> 10
+  DAY("2011-01-10T14:45:13.815-05:00"^^xsd:datetime) -> 10
    */
 
   lazy val df: DataFrame = List(
     (
       "_:a",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2011-01-10T14:45:13.815-05:00\"^^xsd:dateTime"
+      "\"2011-01-10T14:45:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#datetime>"
     ),
     (
       "_:b",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2012-04-14T14:45:13.815-05:00\"^^xsd:dateTime"
+      "\"2012-04-14T14:45:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#datetime>"
     ),
     (
       "_:c",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2013-12-09T14:45:13.815-05:00\"^^xsd:dateTime"
+      "\"2013-12-09T14:45:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#datetime>"
     )
   ).toDF("s", "p", "o")
 
-  val expected: List[Row] = List("10", "14", "9").map(Row(_))
+  val expected: List[Row] = List(
+    "\"10\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+    "\"14\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+    "\"9\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+  ).map(Row(_))
 
   val projection: Option[Column] = None
 
   "perform day function correctly" when {
-    "select day response with a day of dateTime value" in {
+    "select day response with a day of datetime value" in {
 
       val query =
         """

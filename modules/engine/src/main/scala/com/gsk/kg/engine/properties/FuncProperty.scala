@@ -12,9 +12,11 @@ import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions._
 
 import com.gsk.kg.config.Config
+import com.gsk.kg.engine.RdfType
 import com.gsk.kg.engine.functions.PathFrame._
 import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.engine.relational.Relational.ops._
+import com.gsk.kg.engine.syntax.TypedColumnOps
 import com.gsk.kg.sparqlparser.EngineError
 import com.gsk.kg.sparqlparser.Result
 
@@ -65,7 +67,10 @@ object FuncProperty {
         .withColumnRenamed(sLeft, sCol)
         .withColumnRenamed(oRight, oCol)
         .withColumnRenamed(gLeft, gCol)
-        .withColumn(pCol, lit(s"seq:${col(pLeft)}/${col(pRight)}"))
+        .withColumn(
+          pCol,
+          RdfType.String(lit(s"seq:${col(pLeft)}/${col(pRight)}"))
+        )
         .select(Seq(sCol, pCol, oCol, gCol).map(col))
     }
   }
@@ -153,7 +158,7 @@ object FuncProperty {
   }
 
   def uri(df: DataFrame @@ Untyped, s: String): DataFrame @@ Untyped =
-    df.filter(col(pCol) <=> lit(s))
+    df.filter(col(pCol).value <=> lit(s.stripPrefix("<").stripSuffix(">")))
 
   def reverse(pe: DataFrame @@ Untyped): Result[DataFrame @@ Untyped] = {
 

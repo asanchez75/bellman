@@ -170,6 +170,11 @@ object DataFrameTyper {
         ltrim(col, Tokens.blankNode),
         RdfType.Blank.repr
       )
+    ).otherwise(
+      createRecord(
+        value = col,
+        tpe = RdfType.String.repr
+      )
     )
   }
 

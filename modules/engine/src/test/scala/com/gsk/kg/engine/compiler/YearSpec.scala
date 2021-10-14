@@ -26,26 +26,30 @@ class YearSpec
     (
       "_:a",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2011-01-10T14:45:13.815-05:00\"^^xsd:dateTime"
+      "\"2011-01-10T14:45:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#datetime>"
     ),
     (
       "_:b",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2012-01-10T14:45:13.815-05:00\"^^xsd:dateTime"
+      "\"2012-01-10T14:45:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#datetime>"
     ),
     (
       "_:c",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2013-01-10T14:45:13.815-05:00\"^^xsd:dateTime"
+      "\"2013-01-10T14:45:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#datetime>"
     )
   ).toDF("s", "p", "o")
 
-  val expected: List[Row] = List("2011", "2012", "2013").map(Row(_))
+  val expected: List[Row] = List(
+    "\"2011\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+    "\"2012\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+    "\"2013\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+  ).map(Row(_))
 
   val projection: Option[Column] = None
 
   "perform year function correctly" when {
-    "select year response with a year of dateTime value" in {
+    "select year response with a year of datetime value" in {
 
       val query =
         """

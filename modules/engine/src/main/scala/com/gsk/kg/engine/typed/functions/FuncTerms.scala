@@ -2,9 +2,11 @@ package com.gsk.kg.engine.typed.functions
 
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.{concat => _, _}
+import org.apache.spark.sql.types.BooleanType
 
 import com.gsk.kg.engine.DataFrameTyper
 import com.gsk.kg.engine.RdfType
+import com.gsk.kg.engine.functions.Literals.extractStringLiteral
 import com.gsk.kg.engine.functions.Literals.nullLiteral
 import com.gsk.kg.engine.syntax._
 import com.gsk.kg.engine.typed.functions.TypedLiterals.isNumericLiteral
@@ -142,15 +144,12 @@ object FuncTerms {
     */
   def isLiteral(col: Column): Column =
     when(
-      col.startsWith("\"") && col.contains("\"@"),
-      lit(true)
+      col.hasType(RdfType.String),
+      RdfType.Boolean.True
     ).when(
-      col.startsWith("\"") && col.contains("\"^^"),
-      lit(true)
-    ).when(
-      col.startsWith("\"") && col.endsWith("\""),
-      lit(true)
-    ).otherwise(lit(false))
+      !isNumeric(col).value.cast(BooleanType),
+      RdfType.Boolean.True
+    ).otherwise(RdfType.Boolean.False)
 
   /** Returns UUID
     *
@@ -172,5 +171,39 @@ object FuncTerms {
     val startPos = lit("urn:uuid:".length + 1)
     val endPos   = length(u.value)
     RdfType.String(u.value.substr(startPos, endPos))
+  }
+
+  /** Return a sparql Blank Node. The name of the new blank node allways will be "_:" + UUID
+    * You can create two Blank Node with the sames names by linking with the same input parameter.
+    * In any case the real name continue are "_:" + UUID
+    *
+    * @param col input name. If you don't specific two Blanck Node with the same name or you specific a empty input
+    *            parameter, the Blank Node names will always be differents
+    * @return sparkQL Column with a Blanck Node
+    */
+  def bNode(maybeCol: Option[Column]): Column = {
+    val prefix = "_:"
+
+    // Necesary var to generate diferents UUIDS between rows names when you specific the label name
+    var rowID = 0
+
+    val randomUUIDBNodeName: () => String = () =>
+      prefix + java.util.UUID.randomUUID().toString
+
+    val specificUUIDBNodeName: String => String = (str: String) => {
+      val strToArrayOfBits =
+        (extractStringLiteral(str) + rowID.toString).toArray.map(_.toByte)
+      rowID = rowID + 1
+      prefix + java.util.UUID.nameUUIDFromBytes(strToArrayOfBits).toString
+    }
+
+    val udfRandomUUIDBNodeName   = udf(randomUUIDBNodeName)
+    val udfSpecificUUIDBNodeName = udf(specificUUIDBNodeName)
+
+    maybeCol match {
+      case None => RdfType.Blank(udfRandomUUIDBNodeName())
+      case Some(col: Column) =>
+        RdfType.Blank(udfSpecificUUIDBNodeName(col.value))
+    }
   }
 }

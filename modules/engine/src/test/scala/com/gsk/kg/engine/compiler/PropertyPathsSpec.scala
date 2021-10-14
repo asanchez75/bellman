@@ -39,7 +39,7 @@ class PropertyPathsSpec
     }
   }
 
-  "Property Paths" should {
+  "Property Paths" when {
 
     "perform on simple queries" when {
 
@@ -9453,7 +9453,7 @@ class PropertyPathsSpec
         }
       }
 
-      "mix {n,m}" when {
+      "mix {n,m}" ignore {
 
         "with |" in {
 
@@ -10063,7 +10063,7 @@ class PropertyPathsSpec
         }
       }
 
-      "mix {n,}" when {
+      "mix {n,}" ignore {
 
         "with |" in {
 
@@ -10594,7 +10594,7 @@ class PropertyPathsSpec
         }
       }
 
-      "mix {,n}" when {
+      "mix {,n}" ignore {
 
         "with |" in {
 

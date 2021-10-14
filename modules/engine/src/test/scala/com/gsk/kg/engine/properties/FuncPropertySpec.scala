@@ -8,8 +8,8 @@ import org.apache.spark.sql.Row
 
 import com.gsk.kg.engine.compiler.SparkSpec
 import com.gsk.kg.engine.relational.Relational.Untyped
-import com.gsk.kg.engine.relational.Relational.ops._
 import com.gsk.kg.engine.scalacheck.CommonGenerators
+import com.gsk.kg.engine.syntax._
 import com.gsk.kg.sparqlparser.Result
 import com.gsk.kg.sparqlparser.TestConfig
 
@@ -53,11 +53,11 @@ class FuncPropertySpec
             "<http://xmlns.org/foaf/0.1/name>",
             "\"Charles\""
           )
-        ).toDF("s", "p", "o").@@[Untyped]
+        ).toTypedDF("s", "p", "o").@@[Untyped]
 
         val uriFunc = FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
 
-        uriFunc.collect.toSet shouldEqual Set(
+        uriFunc.unwrap.untype.collect.toSet shouldEqual Set(
           Row(
             "<http://example.org/Alice>",
             "<http://xmlns.org/foaf/0.1/knows>",
@@ -92,7 +92,7 @@ class FuncPropertySpec
             "<http://www.w3.org/2000/01/rdf-schema#label2>",
             "Another title"
           )
-        ).toDF("s", "p", "o").@@[Untyped]
+        ).toTypedDF("s", "p", "o").@@[Untyped]
 
         lazy val titleUriFunc =
           FuncProperty.uri(df, "<http://purl.org/dc/elements/1.1/title>")
@@ -101,17 +101,17 @@ class FuncPropertySpec
         val alternativeFunc =
           FuncProperty.alternative(titleUriFunc, labelUriFunc)
 
-        val result = alternativeFunc.right.get.collect
+        val result = alternativeFunc.right.get.unwrap.untype.collect
         result.toSet shouldEqual Set(
           Row(
             "<http://example.org/book1>",
             "<http://purl.org/dc/elements/1.1/title>",
-            "SPARQL Tutorial"
+            "\"SPARQL Tutorial\""
           ),
           Row(
             "<http://example.org/book2>",
             "<http://www.w3.org/2000/01/rdf-schema#label>",
-            "From Earth To The Moon"
+            "\"From Earth To The Moon\""
           )
         )
       }
@@ -140,7 +140,7 @@ class FuncPropertySpec
             "\"Charles\"",
             ""
           )
-        ).toDF("s", "p", "o", "g").@@[Untyped]
+        ).toTypedDF("s", "p", "o", "g").@@[Untyped]
 
         lazy val knowsUriFunc =
           FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
@@ -164,8 +164,13 @@ class FuncPropertySpec
           )
         } yield outerSeq
 
-        result.right.get.collect.toSet shouldEqual Set(
-          Row("<http://example.org/Alice>", "seq:pl/pr", "\"Charles\"", "")
+        result.right.get.unwrap.untype.collect.toSet shouldEqual Set(
+          Row(
+            "<http://example.org/Alice>",
+            "\"seq:pl/pr\"",
+            "\"Charles\"",
+            "\"\""
+          )
         )
       }
     }
@@ -181,33 +186,33 @@ class FuncPropertySpec
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
               "\"Charles\"",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
-          ).toDF("s", "p", "o", "g").@@[Untyped]
+          ).toTypedDF("s", "p", "o", "g").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
@@ -226,60 +231,60 @@ class FuncPropertySpec
               config
             )
 
-          result.right.get.collect.toSet shouldEqual Set(
+          result.right.get.unwrap.untype.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
           )
         }
@@ -291,33 +296,33 @@ class FuncPropertySpec
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
               "\"Charles\"",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
-          ).toDF("s", "p", "o", "g").@@[Untyped]
+          ).toTypedDF("s", "p", "o", "g").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
@@ -336,18 +341,18 @@ class FuncPropertySpec
               config
             )
 
-          result.right.get.collect.toSet shouldEqual Set(
+          result.right.get.unwrap.untype.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
           )
         }
@@ -359,33 +364,33 @@ class FuncPropertySpec
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
               "\"Charles\"",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
-          ).toDF("s", "p", "o", "g").@@[Untyped]
+          ).toTypedDF("s", "p", "o", "g").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
@@ -404,84 +409,84 @@ class FuncPropertySpec
               config
             )
 
-          result.right.get.collect.toSet shouldEqual Set(
+          result.right.get.unwrap.untype.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               null,
               "<http://example.org/Alice>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               null,
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Charles>",
               null,
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Daniel>",
               null,
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Erick>",
               null,
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             ),
             Row(
               "\"Charles\"",
               null,
               "\"Charles\"",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
           )
         }
@@ -493,33 +498,33 @@ class FuncPropertySpec
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
               "\"Charles\"",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
-          ).toDF("s", "p", "o", "g").@@[Untyped]
+          ).toTypedDF("s", "p", "o", "g").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
@@ -548,33 +553,33 @@ class FuncPropertySpec
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
               "\"Charles\"",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
-          ).toDF("s", "p", "o", "g").@@[Untyped]
+          ).toTypedDF("s", "p", "o", "g").@@[Untyped]
 
           // ?s foaf:knows+ ?o
           lazy val knowsUriFunc =
@@ -590,66 +595,66 @@ class FuncPropertySpec
               config
             )
 
-          result.right.get.collect.toSet shouldEqual Set(
+          result.right.get.unwrap.untype.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
           )
         }
@@ -661,33 +666,33 @@ class FuncPropertySpec
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
               "\"Charles\"",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
-          ).toDF("s", "p", "o", "g").@@[Untyped]
+          ).toTypedDF("s", "p", "o", "g").@@[Untyped]
 
           // ?s foaf:knows* ?o
           lazy val knowsUriFunc =
@@ -703,102 +708,102 @@ class FuncPropertySpec
               config
             )
 
-          result.right.get.collect.toSet shouldEqual Set(
+          result.right.get.unwrap.untype.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               null,
               "<http://example.org/Alice>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               null,
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Charles>",
               null,
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             Row(
               "\"Charles\"",
               null,
               "\"Charles\"",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Daniel>",
               null,
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Erick>",
               null,
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
           )
         }
@@ -810,33 +815,33 @@ class FuncPropertySpec
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
               "\"Charles\"",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
-          ).toDF("s", "p", "o", "g").@@[Untyped]
+          ).toTypedDF("s", "p", "o", "g").@@[Untyped]
 
           // ?s foaf:knows? ?o
           lazy val knowsUriFunc =
@@ -852,66 +857,66 @@ class FuncPropertySpec
               config
             )
 
-          result.right.get.collect.toSet shouldEqual Set(
+          result.right.get.unwrap.untype.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               null,
               "<http://example.org/Alice>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               null,
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Charles>",
               null,
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             Row(
               "\"Charles\"",
               null,
               "\"Charles\"",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Daniel>",
               null,
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Erick>",
               null,
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
           )
         }
@@ -923,33 +928,33 @@ class FuncPropertySpec
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
               "\"Charles\"",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
-          ).toDF("s", "p", "o", "g").@@[Untyped]
+          ).toTypedDF("s", "p", "o", "g").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
@@ -968,18 +973,18 @@ class FuncPropertySpec
               config
             )
 
-          result.right.get.collect.toSet shouldEqual Set(
+          result.right.get.unwrap.untype.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
           )
         }
@@ -991,33 +996,33 @@ class FuncPropertySpec
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
               "\"Charles\"",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
-          ).toDF("s", "p", "o", "g").@@[Untyped]
+          ).toTypedDF("s", "p", "o", "g").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
@@ -1035,42 +1040,42 @@ class FuncPropertySpec
               config
             )
 
-          result.right.get.collect.toSet shouldEqual Set(
+          result.right.get.unwrap.untype.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
           )
         }
@@ -1082,33 +1087,33 @@ class FuncPropertySpec
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
               "\"Charles\"",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
-          ).toDF("s", "p", "o", "g").@@[Untyped]
+          ).toTypedDF("s", "p", "o", "g").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
@@ -1126,84 +1131,84 @@ class FuncPropertySpec
               config
             )
 
-          result.right.get.collect.toSet shouldEqual Set(
+          result.right.get.unwrap.untype.collect.toSet shouldEqual Set(
             Row(
               "\"Charles\"",
               null,
               "\"Charles\"",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Alice>",
               null,
               "<http://example.org/Alice>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               null,
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Charles>",
               null,
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Daniel>",
               null,
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             ),
             Row(
               "<http://example.org/Erick>",
               null,
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
           )
         }
@@ -1215,33 +1220,33 @@ class FuncPropertySpec
               "<http://example.org/Alice>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Bob>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Bob>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Charles>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
               "\"Charles\"",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Daniel>",
-              ""
+              "\"\""
             ),
             (
               "<http://example.org/Daniel>",
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>",
-              ""
+              "\"\""
             )
-          ).toDF("s", "p", "o", "g").@@[Untyped]
+          ).toTypedDF("s", "p", "o", "g").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
@@ -1293,7 +1298,7 @@ class FuncPropertySpec
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>"
             )
-          ).toDF("s", "p", "o").@@[Untyped]
+          ).toTypedDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
@@ -1302,7 +1307,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.notOneOf(df, List(knowsUriFunc))
 
-          result.right.get.collect.toSet shouldEqual Set(
+          result.right.get.unwrap.untype.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",
@@ -1339,7 +1344,7 @@ class FuncPropertySpec
               "<http://xmlns.org/foaf/0.1/knows>",
               "<http://example.org/Erick>"
             )
-          ).toDF("s", "p", "o").@@[Untyped]
+          ).toTypedDF("s", "p", "o").@@[Untyped]
 
           lazy val knowsUriFunc =
             FuncProperty.uri(df, "<http://xmlns.org/foaf/0.1/knows>")
@@ -1350,7 +1355,7 @@ class FuncPropertySpec
           val result =
             FuncProperty.notOneOf(df, List(knowsUriFunc, fooUriFunc))
 
-          result.right.get.collect.toSet shouldEqual Set(
+          result.right.get.unwrap.untype.collect.toSet shouldEqual Set(
             Row(
               "<http://example.org/Charles>",
               "<http://xmlns.org/foaf/0.1/name>",

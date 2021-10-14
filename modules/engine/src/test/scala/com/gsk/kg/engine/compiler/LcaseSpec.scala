@@ -43,8 +43,8 @@ class LcaseSpec
 
     "str is xsd:string" in {
       // lcase("BAR"^^xsd:string) -> "bar"^^xsd:string
-      val str      = "\"BAR\"^^xsd:string"
-      val expected = Row("\"bar\"^^xsd:string")
+      val str      = "\"BAR\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      val expected = Row("\"bar\"")
       val actual   = act(str)
       actual shouldEqual expected
     }

@@ -47,16 +47,16 @@ class SyntaxSpec
       """
     )
 
-    result.collect.toSet shouldEqual Set(
+    result.untype.collect.toSet shouldEqual Set(
       Row(
-        "test",
+        "\"test\"",
         "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
         "<http://id.gsk.com/dm/1.0/Document>"
       ),
       Row(
-        "test",
+        "\"test\"",
         "<http://id.gsk.com/dm/1.0/docSource>",
-        "source"
+        "\"source\""
       )
     )
 

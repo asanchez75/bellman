@@ -43,8 +43,8 @@ class UcaseSpec
 
     "str is xsd:string" in {
       // ucase("foo"^^xsd:string) -> "FOO"^^xsd:string
-      val str      = "\"foo\"^^xsd:string"
-      val expected = Row("\"FOO\"^^xsd:string")
+      val str      = "\"foo\"^^<http://www.w3.org/2001/XMLSchema#string>"
+      val expected = Row("\"FOO\"")
       val actual   = act(str)
       actual shouldEqual expected
     }

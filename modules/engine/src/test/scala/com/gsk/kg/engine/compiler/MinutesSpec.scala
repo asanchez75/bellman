@@ -26,21 +26,25 @@ class MinutesSpec
     (
       "_:a",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2011-01-10T14:45:13.815-05:00\"^^xsd:dateTime"
+      "\"2011-01-10T14:45:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
     ),
     (
       "_:b",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2012-04-14T14:38:13.815-05:00\"^^xsd:dateTime"
+      "\"2012-04-14T14:38:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
     ),
     (
       "_:c",
       "<http://xmlns.com/foaf/0.1/date>",
-      "\"2013-12-09T14:09:13.815-05:00\"^^xsd:dateTime"
+      "\"2013-12-09T14:09:13.815-05:00\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
     )
   ).toDF("s", "p", "o")
 
-  val expected: List[Row] = List("45", "38", "9").map(Row(_))
+  val expected: List[Row] = List(
+    "\"45\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+    "\"38\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+    "\"09\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+  ).map(Row(_))
 
   val projection: Option[Column] = None
 

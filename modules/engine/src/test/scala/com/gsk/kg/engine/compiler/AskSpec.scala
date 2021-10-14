@@ -20,13 +20,13 @@ class AskSpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
       "simple query should return true" in {
 
         val df: DataFrame = List(
-          ("_:a", "<http://xmlns.com/foaf/0.1/name>", "Alice"),
+          ("_:a", "<http://xmlns.com/foaf/0.1/name>", "\"Alice\""),
           (
             "_:a",
             "<http://xmlns.com/foaf/0.1/homepage>",
             "<http://work.example.org/alice/>"
           ),
-          ("_:b", "<http://xmlns.com/foaf/0.1/name>", "Bob"),
+          ("_:b", "<http://xmlns.com/foaf/0.1/name>", "\"Bob\""),
           (
             "_:b",
             "<http://xmlns.com/foaf/0.1/mbox>",
@@ -45,7 +45,7 @@ class AskSpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("true")
+          Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
         )
       }
 
@@ -78,7 +78,7 @@ class AskSpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("false")
+          Row("\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
         )
       }
     }

@@ -13,7 +13,7 @@ trait TestConfig {
       | is-default-graph-exclusive = true,
       | strip-question-marks-on-output = false,
       | format-rdf-output = true
-      | type-dataframe = false
+      | type-dataframe = true
       |}
       |""".stripMargin
 

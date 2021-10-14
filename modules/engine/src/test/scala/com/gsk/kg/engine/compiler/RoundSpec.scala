@@ -36,7 +36,11 @@ class RoundSpec
           |}
           |""".stripMargin
 
-      val expected = List("2.0", "2.0", "1.0").map(Row(_))
+      val expected = List(
+        "\"2\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+        "\"2\"^^<http://www.w3.org/2001/XMLSchema#integer>",
+        "\"1\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+      ).map(Row(_))
 
       Evaluation.eval(df, None, query, expected)
     }
@@ -60,7 +64,8 @@ class RoundSpec
           |}
           |""".stripMargin
 
-      val expected = List(Row("10.0"))
+      val expected =
+        List(Row("\"10\"^^<http://www.w3.org/2001/XMLSchema#integer>"))
 
       Evaluation.eval(df, None, query, expected)
     }

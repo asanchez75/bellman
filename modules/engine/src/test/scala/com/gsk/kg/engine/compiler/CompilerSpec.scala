@@ -49,19 +49,19 @@ class CompilerSpec
         (
           "example",
           "<http://xmlns.com/foaf/0.1/lit>",
-          "\"0.22\"^^xsd:float",
+          "\"0.22\"^^<http://www.w3.org/2001/XMLSchema#float>",
           ""
         ),
         (
           "example",
           "<http://xmlns.com/foaf/0.1/lit>",
-          "\"foo\"^^xsd:string",
+          "\"foo\"^^<http://www.w3.org/2001/XMLSchema#string>",
           ""
         ),
         (
           "example",
           "<http://xmlns.com/foaf/0.1/lit>",
-          "\"true\"^^xsd:boolean",
+          "\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>",
           ""
         )
       ).toDF("s", "p", "o", "g")
@@ -83,9 +83,9 @@ class CompilerSpec
       result.right.get.collect().length shouldEqual 4
       result.right.get.collect().toSet shouldEqual Set(
         Row("\"5.88\"^^<http://www.w3.org/2001/XMLSchema#float>"),
-        Row("\"0.22\"^^xsd:float"),
-        Row("\"foo\"^^xsd:string"),
-        Row("\"true\"^^xsd:boolean")
+        Row("\"0.22\"^^<http://www.w3.org/2001/XMLSchema#float>"),
+        Row("\"foo\""),
+        Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
       )
     }
 
@@ -186,12 +186,20 @@ class CompilerSpec
             "<http://xmlns.com/foaf/0.1/lit>",
             "\"5.88\"^^<http://www.w3.org/2001/XMLSchema#float>"
           ),
-          ("example", "<http://xmlns.com/foaf/0.1/lit>", "\"0.22\"^^xsd:float"),
-          ("example", "<http://xmlns.com/foaf/0.1/lit>", "\"foo\"^^xsd:string"),
           (
             "example",
             "<http://xmlns.com/foaf/0.1/lit>",
-            "\"true\"^^xsd:boolean"
+            "\"0.22\"^^<http://www.w3.org/2001/XMLSchema#float>"
+          ),
+          (
+            "example",
+            "<http://xmlns.com/foaf/0.1/lit>",
+            "\"foo\"^^<http://www.w3.org/2001/XMLSchema#string>"
+          ),
+          (
+            "example",
+            "<http://xmlns.com/foaf/0.1/lit>",
+            "\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"
           )
         ).toDF("s", "p", "o")
 
@@ -212,9 +220,9 @@ class CompilerSpec
         result.right.get.collect().length shouldEqual 4
         result.right.get.collect().toSet shouldEqual Set(
           Row("\"5.88\"^^<http://www.w3.org/2001/XMLSchema#float>"),
-          Row("\"0.22\"^^xsd:float"),
-          Row("\"foo\"^^xsd:string"),
-          Row("\"true\"^^xsd:boolean")
+          Row("\"0.22\"^^<http://www.w3.org/2001/XMLSchema#float>"),
+          Row("\"foo\""),
+          Row("\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>")
         )
 
       }

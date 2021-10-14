@@ -9,10 +9,12 @@ import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions._
 
 import com.gsk.kg.config.Config
+import com.gsk.kg.engine.RdfType
 import com.gsk.kg.engine.functions.Literals.nullLiteral
 import com.gsk.kg.engine.relational.Relational
 import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.engine.relational.Relational.ops._
+import com.gsk.kg.engine.syntax.TypedColumnOps
 
 import scala.annotation.tailrec
 import scala.util.Try
@@ -119,7 +121,7 @@ object PathFrame {
           )
           .select(stepColNames.map(col) :+ col(leftGCol))
           .withColumnRenamed(leftGCol, gCol)
-          .withColumn(gCol, lit(""))
+          .withColumn(gCol, RdfType.String(lit("")))
       }
 
       val continueTraversing = !stepAcc
@@ -170,7 +172,7 @@ object PathFrame {
     } else {
       sDf
         .union(oDf)
-        .withColumn(gCol, lit(""))
+        .withColumn(gCol, RdfType.String(lit("")))
     }
 
     vertices
@@ -204,7 +206,7 @@ object PathFrame {
 
       val nPaths = pathFrame
         .filter(cols.foldLeft(lit(true)) { case (acc, elem) =>
-          acc && pathFrame.getColumn(elem).isNotNull
+          acc && pathFrame.getColumn(elem).value.isNotNull
         })
 
       val selection = (SIdx to oSlice).map(_.toString) :+ gCol

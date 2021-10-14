@@ -28,7 +28,7 @@ class Md5Spec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
     }
 
     "str is xsd:string" in {
-      val str      = "\"abc\"^^xsd:string"
+      val str      = "\"abc\"^^<http://www.w3.org/2001/XMLSchema#string>"
       val expected = Row("\"900150983cd24fb0d6963f7d28e17f72\"")
       val actual   = act(str)
       actual shouldEqual expected

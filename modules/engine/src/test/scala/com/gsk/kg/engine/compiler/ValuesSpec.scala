@@ -115,7 +115,11 @@ class ValuesSpec
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("<http://example.org/book/book1>", "\"SPARQL Tutorial\"", "42")
+          Row(
+            "<http://example.org/book/book1>",
+            "\"SPARQL Tutorial\"",
+            "\"42\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+          )
         )
       }
 
@@ -166,8 +170,16 @@ class ValuesSpec
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 2
         result.right.get.collect.toSet shouldEqual Set(
-          Row("<http://example.org/book/book1>", "\"SPARQL Tutorial\"", "42"),
-          Row("<http://example.org/book/book2>", "\"The Semantic Web\"", "23")
+          Row(
+            "<http://example.org/book/book1>",
+            "\"SPARQL Tutorial\"",
+            "\"42\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+          ),
+          Row(
+            "<http://example.org/book/book2>",
+            "\"The Semantic Web\"",
+            "\"23\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+          )
         )
       }
 
@@ -272,8 +284,16 @@ class ValuesSpec
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 2
         result.right.get.collect.toSet shouldEqual Set(
-          Row("<http://example.org/book/book1>", "\"SPARQL Tutorial\"", "42"),
-          Row("<http://example.org/book/book2>", "\"The Semantic Web\"", "23")
+          Row(
+            "<http://example.org/book/book1>",
+            "\"SPARQL Tutorial\"",
+            "\"42\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+          ),
+          Row(
+            "<http://example.org/book/book2>",
+            "\"The Semantic Web\"",
+            "\"23\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+          )
         )
       }
     }

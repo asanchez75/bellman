@@ -29,17 +29,17 @@ class EqualsSpec
         (
           "<http://example.org/b>",
           "<http://xmlns.org/foaf/0.1/name>",
-          "Alice"
+          "\"Alice\""
         ),
         (
           "<http://example.org/c>",
           "<http://xmlns.org/foaf/0.1/name>",
-          "\"Alice\"^^xsd:string"
+          "\"Alice\"^^<http://www.w3.org/2001/XMLSchema#string>"
         ),
         (
           "<http://example.org/d>",
           "<http://xmlns.org/foaf/0.1/name>",
-          "\"\"Alice\"^^xsd:string\""
+          "\"Alice\""
         )
       ).toDF("s", "p", "o")
 
@@ -57,8 +57,8 @@ class EqualsSpec
       result.right.get.collect.toSet shouldEqual Set(
         Row("<http://example.org/a>", "\"Alice\""),
         Row("<http://example.org/b>", "\"Alice\""),
-        Row("<http://example.org/c>", "\"Alice\"^^xsd:string"),
-        Row("<http://example.org/d>", "\"\"Alice\"^^xsd:string\"")
+        Row("<http://example.org/c>", "\"Alice\""),
+        Row("<http://example.org/d>", "\"Alice\"")
       )
     }
 
@@ -73,17 +73,17 @@ class EqualsSpec
         (
           "<http://example.org/b>",
           "<http://xmlns.org/foaf/0.1/name>",
-          "Alice"
+          "\"Alice\""
         ),
         (
           "<http://example.org/c>",
           "<http://xmlns.org/foaf/0.1/name>",
-          "\"Alice\"^^xsd:string"
+          "\"Alice\"^^<http://www.w3.org/2001/XMLSchema#string>"
         ),
         (
           "<http://example.org/d>",
           "<http://xmlns.org/foaf/0.1/name>",
-          "\"\"Alice\"^^xsd:string\""
+          "\"Alice\""
         )
       ).toDF("s", "p", "o")
 
@@ -103,8 +103,8 @@ class EqualsSpec
       result.right.get.collect.toSet shouldEqual Set(
         Row("<http://example.org/a>", "\"Alice\""),
         Row("<http://example.org/b>", "\"Alice\""),
-        Row("<http://example.org/c>", "\"Alice\"^^xsd:string"),
-        Row("<http://example.org/d>", "\"\"Alice\"^^xsd:string\"")
+        Row("<http://example.org/c>", "\"Alice\""),
+        Row("<http://example.org/d>", "\"Alice\"")
       )
     }
   }

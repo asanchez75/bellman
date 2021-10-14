@@ -12,15 +12,15 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 
 import com.gsk.kg.config.Config
-import com.gsk.kg.engine.functions.FuncArithmetics
-import com.gsk.kg.engine.functions.FuncDates
-import com.gsk.kg.engine.functions.FuncForms
-import com.gsk.kg.engine.functions.FuncHash
-import com.gsk.kg.engine.functions.FuncNumerics
-import com.gsk.kg.engine.functions.FuncStrings
-import com.gsk.kg.engine.functions.FuncTerms
 import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.engine.relational.Relational.ops._
+import com.gsk.kg.engine.typed.functions.FuncArithmetics
+import com.gsk.kg.engine.typed.functions.FuncDates
+import com.gsk.kg.engine.typed.functions.FuncForms
+import com.gsk.kg.engine.typed.functions.FuncHash
+import com.gsk.kg.engine.typed.functions.FuncNumerics
+import com.gsk.kg.engine.typed.functions.FuncStrings
+import com.gsk.kg.engine.typed.functions.FuncTerms
 import com.gsk.kg.sparqlparser._
 
 /** [[ExpressionF]] is a pattern functor for the recursive
@@ -435,7 +435,7 @@ object ExpressionF {
         case ISLITERAL(s)               => FuncTerms.isLiteral(s).pure[M]
         case ISBLANK(s)                 => FuncTerms.isBlank(s).pure[M]
         case ISNUMERIC(s)               => FuncTerms.isNumeric(s).pure[M]
-        case UUID()                     => FuncTerms.uuid().pure[M]
+        case UUID()                     => FuncTerms.uuid.pure[M]
         case MD5(s)                     => FuncHash.md5(s).pure[M]
         case SHA1(s)                    => FuncHash.sha1(s).pure[M]
         case SHA256(s)                  => FuncHash.sha256(s).pure[M]
@@ -448,17 +448,21 @@ object ExpressionF {
         case AVG(e)                     => unknownFunction("AVG")
         case SAMPLE(e)                  => unknownFunction("SAMPLE")
         case GROUP_CONCAT(e, separator) => unknownFunction("GROUP_CONCAT")
-        case STRING(s)                  => lit(s).pure[M]
-        case DT_STRING(s, tag)          => lit(s""""$s"^^$tag""").pure[M]
-        case LANG_STRING(s, tag)        => lit(s""""$s"@$tag""").pure[M]
-        case NUM(s)                     => lit(s).pure[M]
+        case STRING(s)                  => RdfType.String(lit(s)).pure[M]
+        case DT_STRING(s, tag) =>
+          DataFrameTyper.createRecord(lit(s), lit(tag)).pure[M]
+        case LANG_STRING(s, tag) =>
+          DataFrameTyper
+            .createRecord(lit(s), RdfType.String.repr, lit(tag))
+            .pure[M]
+        case NUM(s) => DataFrameTyper.parse(lit(s)).pure[M]
         case VARIABLE(s) =>
           M.inspect[Result, Config, Log, DataFrame @@ Untyped, Column](
             _.getColumn(s)
           )
-        case URIVAL(s)   => lit(s).pure[M]
-        case BLANK(s)    => lit(s).pure[M]
-        case BOOL(s)     => lit(s).pure[M]
+        case URIVAL(s)   => DataFrameTyper.parse(lit(s)).pure[M]
+        case BLANK(s)    => RdfType.Blank(lit(s)).pure[M]
+        case BOOL(s)     => RdfType.Boolean(lit(s)).pure[M]
         case ASC(e)      => unknownFunction("ASC")
         case DESC(e)     => unknownFunction("DESC")
         case CEIL(s)     => FuncNumerics.ceil(s).pure[M]

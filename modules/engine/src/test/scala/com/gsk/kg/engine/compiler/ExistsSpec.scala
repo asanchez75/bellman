@@ -68,7 +68,7 @@ class ExistsSpec
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("\"Bob\"", "35")
+          Row("\"Bob\"", "\"35\"^^<http://www.w3.org/2001/XMLSchema#integer>")
         )
       }
 
@@ -167,7 +167,7 @@ class ExistsSpec
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 1
         result.right.get.collect.toSet shouldEqual Set(
-          Row("\"Alice\"", "23")
+          Row("\"Alice\"", "\"23\"^^<http://www.w3.org/2001/XMLSchema#integer>")
         )
       }
 

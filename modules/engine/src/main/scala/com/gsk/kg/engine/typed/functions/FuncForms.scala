@@ -10,28 +10,26 @@ import com.gsk.kg.engine.RdfType
 import com.gsk.kg.engine.syntax.TypedColumnOps
 import com.gsk.kg.engine.typed.functions.TypedLiterals._
 
-object TypedFuncForms {
+object FuncForms {
 
   /** Performs logical binary operation '==' over two columns
+    *
     * @param l
     * @param r
     * @return
     */
   def equals(l: Column, r: Column): Column =
-    DateLiteral
-      .applyDateTimeLiteral(l, r)(_ === _)
+    promoteNumericArgsToBooleanResult(l, r)(_ === _)
       .otherwise(
-        promoteNumericArgsToBooleanResult(l, r)(_ === _)
+        promoteStringArgsToBooleanResult(l, r)(_ === _)
           .otherwise(
-            promoteStringArgsToBooleanResult(l, r)(_ === _)
-              .otherwise(
-                promoteBooleanBooleanToBooleanResult(l, r)(_ === _)
-                  .otherwise(RdfType.Boolean(l === r))
-              )
+            promoteBooleanBooleanToBooleanResult(l, r)(_ === _)
+              .otherwise(RdfType.Boolean(l.value === r.value))
           )
       )
 
   /** Peforms logical binary operation '>' over two columns
+    *
     * @param l
     * @param r
     * @return
@@ -113,7 +111,7 @@ object TypedFuncForms {
     * @return
     */
   def or(l: Column, r: Column): Column =
-    RdfType.Boolean(l.value || r.value)
+    RdfType.Boolean(l.value.cast(BooleanType) || r.value.cast(BooleanType))
 
   /** Performs logical binary operation 'and' over two columns
     * @param r
@@ -121,7 +119,7 @@ object TypedFuncForms {
     * @return
     */
   def and(l: Column, r: Column): Column =
-    RdfType.Boolean(l.value && r.value)
+    RdfType.Boolean(l.value.cast(BooleanType) && r.value.cast(BooleanType))
 
   /** Negates all rows of a column
     * @param s
@@ -281,10 +279,10 @@ object TypedFuncForms {
   def coalesce(cols: List[Column]): Column = {
     cols.foldLeft(DataFrameTyper.NullLiteral) { case (acc, elem) =>
       when(
-        elem.hasType(RdfType.Null),
+        elem.hasType(RdfType.Null) || elem.value.isNull,
         acc
       ).when(
-        acc.hasType(RdfType.Null),
+        acc.hasType(RdfType.Null) || acc.value.isNull,
         elem
       ).otherwise(acc)
     }

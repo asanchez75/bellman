@@ -25,16 +25,14 @@ class BlankNodeSpec
         (
           "nodeA",
           "<http://gsk-kg.rdip.gsk.com/dm/1.0/predEntityClass>",
-          "thisIsTheBlankNode",
-          ""
+          "thisIsTheBlankNode"
         ),
         (
           "thisIsTheBlankNode",
           "<http://gsk-kg.rdip.gsk.com/dm/1.0/predClass>",
-          "otherThingy",
-          ""
+          "otherThingy"
         )
-      ).toDF("s", "p", "o", "g")
+      ).toDF("s", "p", "o")
 
       val query =
         """

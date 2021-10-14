@@ -15,19 +15,18 @@ class BGPSpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
 
   val dfList = List(
     (
-      "test",
+      "\"test\"",
       "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
-      "<http://id.gsk.com/dm/1.0/Document>",
-      ""
+      "<http://id.gsk.com/dm/1.0/Document>"
     ),
-    ("test", "<http://id.gsk.com/dm/1.0/docSource>", "source", "")
+    ("\"test\"", "<http://id.gsk.com/dm/1.0/docSource>", "\"source\"")
   )
 
   "perform query with BGPs" should {
 
     "will execute operations in the dataframe" in {
 
-      val df = dfList.toDF("s", "p", "o", "g")
+      val df = dfList.toDF("s", "p", "o")
       val query =
         """
             SELECT
@@ -53,7 +52,7 @@ class BGPSpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
 
     "will execute with two dependent BGPs" in {
 
-      val df: DataFrame = dfList.toDF("s", "p", "o", "g")
+      val df: DataFrame = dfList.toDF("s", "p", "o")
 
       val query =
         """
@@ -85,12 +84,12 @@ class BGPSpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
           (
             "<http://example.org/alice>",
             "<http://xmlns.com/foaf/0.1/name>",
-            "Alice"
+            "\"Alice\""
           ),
           (
             "<http://example.org/bob>",
             "<http://xmlns.com/foaf/0.1/name>",
-            "Bob"
+            "\"Bob\""
           )
         ).toDF("s", "p", "o")
 
@@ -293,12 +292,12 @@ class BGPSpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
           (
             "<http://example.org/alice>",
             "<http://xmlns.com/foaf/0.1/isFriend>",
-            true
+            "true"
           ),
           (
             "<http://example.org/bob>",
             "<http://xmlns.com/foaf/0.1/isFriend>",
-            false
+            "false"
           )
         ).toDF("s", "p", "o")
 
@@ -396,12 +395,12 @@ class BGPSpec extends AnyWordSpec with Matchers with SparkSpec with TestConfig {
           (
             "<http://example.org/alice>",
             "<http://xmlns.com/foaf/0.1/isFriend>",
-            true
+            "true"
           ),
           (
             "<http://example.org/bob>",
             "<http://xmlns.com/foaf/0.1/isFriend>",
-            false
+            "false"
           )
         ).toDF("s", "p", "o")
 

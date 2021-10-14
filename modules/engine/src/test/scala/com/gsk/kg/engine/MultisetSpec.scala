@@ -8,6 +8,7 @@ import org.apache.spark.sql.DataFrame
 import com.gsk.kg.engine.compiler.SparkSpec
 import com.gsk.kg.engine.relational.Relational
 import com.gsk.kg.engine.relational.Relational.Untyped
+import com.gsk.kg.engine.syntax._
 import com.gsk.kg.engine.utils.MultisetMatchers
 import com.gsk.kg.sparqlparser.EngineError
 import com.gsk.kg.sparqlparser.StringVal.GRAPH_VARIABLE
@@ -63,12 +64,12 @@ class MultisetSpec extends AnyWordSpec with SparkSpec with MultisetMatchers {
         ("test1", "graph1"),
         ("test2", "graph1"),
         ("test3", "graph1")
-      ).toDF("d", GRAPH_VARIABLE.s).@@[Untyped]
+      ).toTypedDF("d", GRAPH_VARIABLE.s).@@[Untyped]
       val df2 = List(
         ("test2", "graph1"),
         ("test3", "graph2"),
         ("test4", "graph2")
-      ).toDF("d", GRAPH_VARIABLE.s).@@[Untyped]
+      ).toTypedDF("d", GRAPH_VARIABLE.s).@@[Untyped]
 
       val ms1 = Multiset(variables, df1)
       val ms2 = Multiset(variables, df2)
@@ -77,7 +78,7 @@ class MultisetSpec extends AnyWordSpec with SparkSpec with MultisetMatchers {
         Multiset(
           variables,
           List(("test2", "graph1"), ("test3", ""))
-            .toDF("d", GRAPH_VARIABLE.s)
+            .toTypedDF("d", GRAPH_VARIABLE.s)
             .@@[Untyped]
         )
       )
@@ -96,7 +97,7 @@ class MultisetSpec extends AnyWordSpec with SparkSpec with MultisetMatchers {
           ("test2", "456", "graph1"),
           ("test3", "789", "graph1")
         )
-          .toDF(d.s, e.s, GRAPH_VARIABLE.s)
+          .toTypedDF(d.s, e.s, GRAPH_VARIABLE.s)
           .@@[Untyped]
       )
       val ms2 = Multiset(
@@ -106,7 +107,7 @@ class MultisetSpec extends AnyWordSpec with SparkSpec with MultisetMatchers {
           ("test3", "goodbye", "graph2"),
           ("test4", "hola", "graph2")
         )
-          .toDF(d.s, f.s, GRAPH_VARIABLE.s)
+          .toTypedDF(d.s, f.s, GRAPH_VARIABLE.s)
           .@@[Untyped]
       )
 
@@ -117,7 +118,7 @@ class MultisetSpec extends AnyWordSpec with SparkSpec with MultisetMatchers {
             ("test2", "456", "hello", "graph1"),
             ("test3", "789", "goodbye", "")
           )
-            .toDF("d", "e", "f", GRAPH_VARIABLE.s)
+            .toTypedDF("d", "e", "f", GRAPH_VARIABLE.s)
             .@@[Untyped]
         )
       )
@@ -137,7 +138,7 @@ class MultisetSpec extends AnyWordSpec with SparkSpec with MultisetMatchers {
           ("test1", "123", "g1", "h1", "graph1"),
           ("test2", "456", "g2", "h2", "graph1"),
           ("test3", "789", "g3", "h3", "graph1")
-        ).toDF(d.s, e.s, g.s, h.s, GRAPH_VARIABLE.s).@@[Untyped]
+        ).toTypedDF(d.s, e.s, g.s, h.s, GRAPH_VARIABLE.s).@@[Untyped]
       )
       val ms2 = Multiset(
         Set(d, e, f, VARIABLE(GRAPH_VARIABLE.s)),
@@ -145,7 +146,7 @@ class MultisetSpec extends AnyWordSpec with SparkSpec with MultisetMatchers {
           ("test2", "456", "hello", "graph1"),
           ("test3", "789", "goodbye", "graph2"),
           ("test4", "012", "hola", "graph2")
-        ).toDF(d.s, e.s, f.s, GRAPH_VARIABLE.s).@@[Untyped]
+        ).toTypedDF(d.s, e.s, f.s, GRAPH_VARIABLE.s).@@[Untyped]
       )
 
       val result = ms1.join(ms2)
@@ -154,7 +155,7 @@ class MultisetSpec extends AnyWordSpec with SparkSpec with MultisetMatchers {
         List(
           ("test2", "456", "g2", "h2", "hello", "graph1"),
           ("test3", "789", "g3", "h3", "goodbye", "")
-        ).toDF("d", "e", "g", "h", "f", GRAPH_VARIABLE.s).@@[Untyped]
+        ).toTypedDF("d", "e", "g", "h", "f", GRAPH_VARIABLE.s).@@[Untyped]
       )
 
       result should equalsMultiset(expectedResult)

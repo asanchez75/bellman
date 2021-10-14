@@ -26,7 +26,7 @@ object FuncAgg {
     * @return
     */
   def countAgg(col: Column): Column =
-    count(col)
+    RdfType.Int(count(col))
 
   /** This function calculates the average on a numeric type group
     *
@@ -50,7 +50,7 @@ object FuncAgg {
     * @return
     */
   def minAgg(col: Column): Column =
-    DataFrameTyper.createRecord(min(col.value), first(col.`type`))
+    DataFrameTyper.parse(min(col.value))
 
   /** This funciton calculates the maximum of a group when numeric or other literals like strings
     *
@@ -58,7 +58,7 @@ object FuncAgg {
     * @return
     */
   def maxAgg(col: Column): Column =
-    DataFrameTyper.createRecord(max(col.value), first(col.`type`))
+    DataFrameTyper.parse(max(col.value))
 
   // TODO: Implement group-concat https://github.com/gsk-aiops/bellman/issues/202
   def groupConcat(col: Column, separator: String): Column =

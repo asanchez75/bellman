@@ -40,12 +40,14 @@ object FuncStrings {
     * @return
     */
   def substr(col: Column, pos: Int, len: Option[Int]): Column =
-    RdfType.String {
+    DataFrameTyper.createRecord(
       len match {
         case Some(l) => col.value.substr(pos, l)
         case None    => col.value.substr(lit(pos), length(col.value) - pos + 1)
-      }
-    }
+      },
+      RdfType.String.repr,
+      col.lang
+    )
 
   /** Implementation of SparQL UCASE on Spark dataframes.
     *
@@ -102,9 +104,11 @@ object FuncStrings {
       when(substring_index(c, s, 1) === c, lit(""))
         .otherwise(substring_index(c, s, 1))
 
+    val value = getLeftOrEmpty(col.value, str)
+
     DataFrameTyper.createRecord(
-      getLeftOrEmpty(col.value, str),
-      col.`type`,
+      value,
+      when(value.isNull, RdfType.Null.repr).otherwise(col.`type`),
       col.lang
     )
   }
@@ -139,9 +143,11 @@ object FuncStrings {
     if (isEmptyPattern(str)) {
       col
     } else {
+      val value = getLeftOrEmpty(col.value, str)
+
       DataFrameTyper.createRecord(
-        getLeftOrEmpty(col.value, str),
-        col.`type`,
+        value,
+        when(value.isNull, RdfType.Null.repr).otherwise(col.`type`),
         col.lang
       )
     }

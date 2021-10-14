@@ -15,19 +15,21 @@ import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.RelationalGroupedDataset
 import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.catalyst.encoders.RowEncoder
+import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Row => SparkRow}
 
 import com.gsk.kg.config.Config
-import com.gsk.kg.engine.SPOEncoder._
 import com.gsk.kg.engine.data.ChunkedList
 import com.gsk.kg.engine.data.ChunkedList.Chunk
-import com.gsk.kg.engine.functions.FuncAgg
-import com.gsk.kg.engine.functions.FuncForms
 import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.engine.relational.Relational.ops._
 import com.gsk.kg.engine.relational.RelationalGrouped
+import com.gsk.kg.engine.syntax._
+import com.gsk.kg.engine.typed.functions.FuncAgg
+import com.gsk.kg.engine.typed.functions.FuncForms
 import com.gsk.kg.sparqlparser.ConditionOrder.ASC
 import com.gsk.kg.sparqlparser.ConditionOrder.DESC
 import com.gsk.kg.sparqlparser.Expr.Quad
@@ -41,6 +43,14 @@ import java.{util => ju}
 
 object Engine {
 
+  val typedField = StructType(
+    Seq(
+      StructField("value", StringType, false),
+      StructField("type", StringType, false),
+      StructField("lang", StringType, true)
+    )
+  )
+
   def evaluateAlgebraM(implicit
       sc: SQLContext
   ): AlgebraM[M, DAG, Multiset[DataFrame @@ Untyped]] =
@@ -50,7 +60,7 @@ object Engine {
       case DAG.Construct(bgp, r) => evaluateConstruct(bgp, r)
       case DAG.Scan(graph, expr) =>
         evaluateScan(graph, expr)
-      case DAG.Project(variables, r) => r.select(variables: _*).pure[M]
+      case DAG.Project(variables, r) => evaluateProject(variables, r)
       case DAG.Bind(variable, expression, r) =>
         evaluateBind(variable, expression, r)
       case DAG.Sequence(bps)           => evaluateSequence(bps)
@@ -102,12 +112,18 @@ object Engine {
       )
       dataFrame =
         if (df.columns.length == 3) {
-          df.withColumn("g", lit(""))
+          df.withColumn("g", DataFrameTyper.parse(lit("")))
         } else {
           df
         }
     } yield dataFrame
   }
+
+  private def evaluateProject(
+      variables: List[VARIABLE],
+      r: Multiset[DataFrame @@ Untyped]
+  ): M[Multiset[DataFrame @@ Untyped]] =
+    r.select(variables: _*).pure[M]
 
   private def evaluateNoop(
       str: String
@@ -138,7 +154,7 @@ object Engine {
         quads
           .mapChunks { chunk =>
             val condition = composedConditionFromChunk(df, chunk)
-            val filtered  = df.filter(condition)
+            val filtered  = df.filter(condition.value.cast(BooleanType))
             applyChunkToDf(chunk, filtered)
           }
           .foldLeft(Multiset.empty)(
@@ -183,8 +199,16 @@ object Engine {
   )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] = {
     val askVariable = VARIABLE("?_askResult")
     val isEmpty     = !r.relational.isEmpty
-    val schema      = StructType(Seq(StructField(askVariable.s, BooleanType, false)))
-    val rows        = Seq(SparkRow(isEmpty))
+    val schema      = StructType(Seq(StructField(askVariable.s, typedField, false)))
+    val rows = Seq(
+      SparkRow(
+        SparkRow(
+          isEmpty.toString,
+          "http://www.w3.org/2001/XMLSchema#boolean",
+          null // scalastyle:off
+        )
+      )
+    )
     val askDf = @@[DataFrame, Untyped](
       sc.sparkSession.createDataFrame(sc.sparkContext.parallelize(rows), schema)
     )
@@ -248,10 +272,16 @@ object Engine {
       g: List[StringVal]
   )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] = {
 
-    def genGraphCnd(cnf: Config, g: List[StringVal]): Column =
-      if (cnf.isDefaultGraphExclusive) {
+    def genGraphCnd(
+        config: Config,
+        df: DataFrame @@ Untyped,
+        g: List[StringVal]
+    ): Column =
+      if (config.isDefaultGraphExclusive) {
         g.foldLeft(lit(false)) { case (acc, elem) =>
-          acc || col("g") === lit(elem.s)
+          acc || df.getColumn("g").value === lit(
+            elem.s.stripPrefix("<").stripSuffix(">")
+          )
         }
       } else {
         lit(true)
@@ -264,7 +294,8 @@ object Engine {
           .apply(df)
           .map { accDf =>
             val chunk    = Chunk(Quad(s, STRING(""), o, g))
-            val graphCnd = genGraphCnd(config, g)
+            val graphCnd = genGraphCnd(config, accDf, g)
+
             val filtered = accDf.filter(graphCnd)
             val result   = applyChunkToDf(chunk, filtered)
             result.copy(relational =
@@ -284,7 +315,7 @@ object Engine {
       Foldable[ChunkedList].fold(
         quads.mapChunks { chunk =>
           val condition = composedConditionFromChunk(df, chunk)
-          val filtered  = df.filter(condition)
+          val filtered  = df.filter(condition.value.cast(BooleanType))
           applyChunkToDf(chunk, filtered)
         }
       )
@@ -307,22 +338,24 @@ object Engine {
       relational: DataFrame @@ Untyped,
       chunk: Chunk[Quad]
   ): Column = {
-    chunk
-      .map { quad =>
-        quad.getPredicates
-          .groupBy(_._2)
-          .map { case (_, vs) =>
-            vs.map { case (pred, position) =>
-              val col = relational.getColumn(position)
-              when(
-                col.startsWith("\"") && col.endsWith("\""),
-                FuncForms.equals(trim(col, "\""), lit(pred.s))
-              ).otherwise(FuncForms.equals(col, lit(pred.s)))
-            }.foldLeft(lit(false))(_ || _)
-          }
-          .foldLeft(lit(true))(_ && _)
-      }
-      .foldLeft(lit(true))(_ && _)
+    RdfType.Boolean(
+      chunk
+        .map { quad =>
+          quad.getPredicates
+            .groupBy(_._2)
+            .map { case (_, vs) =>
+              vs.map { case (pred, position) =>
+                val col = relational.getColumn(position)
+                FuncForms
+                  .equals(col, DataFrameTyper.parse(lit(pred.s)))
+                  .value
+                  .cast(BooleanType)
+              }.foldLeft(lit(false))(_ || _)
+            }
+            .foldLeft(lit(true))(_ && _)
+        }
+        .foldLeft(lit(true))(_ && _)
+    )
   }
 
   private def evaluateDistinct(
@@ -368,15 +401,15 @@ object Engine {
       func: (VARIABLE, Expression)
   ): M[Column] = func match {
     case (VARIABLE(name), Aggregate.COUNT(VARIABLE(v))) =>
-      FuncAgg.countAgg(col(v)).cast("string").as(name).pure[M]
+      FuncAgg.countAgg(col(v)).as(name).pure[M]
     case (VARIABLE(name), Aggregate.SUM(VARIABLE(v))) =>
-      FuncAgg.sumAgg(col(v)).cast("string").as(name).pure[M]
+      FuncAgg.sumAgg(col(v)).as(name).pure[M]
     case (VARIABLE(name), Aggregate.MIN(VARIABLE(v))) =>
-      FuncAgg.minAgg(col(v)).cast("string").as(name).pure[M]
+      FuncAgg.minAgg(col(v)).as(name).pure[M]
     case (VARIABLE(name), Aggregate.MAX(VARIABLE(v))) =>
-      FuncAgg.maxAgg(col(v)).cast("string").as(name).pure[M]
+      FuncAgg.maxAgg(col(v)).as(name).pure[M]
     case (VARIABLE(name), Aggregate.AVG(VARIABLE(v))) =>
-      FuncAgg.avgAgg(col(v)).cast("string").as(name).pure[M]
+      FuncAgg.avgAgg(col(v)).as(name).pure[M]
     case (VARIABLE(name), Aggregate.SAMPLE(VARIABLE(v))) =>
       FuncAgg.sample(col(v)).as(name).pure[M]
     case (VARIABLE(name), Aggregate.GROUP_CONCAT(VARIABLE(v), separator)) =>
@@ -465,7 +498,7 @@ object Engine {
             filterCol <- f(acc.relational)
             result <-
               expr
-                .filter(filterCol)
+                .filter(filterCol.value.cast(BooleanType))
                 .map(r =>
                   expr.copy(relational = r.relational intersect acc.relational)
                 )
@@ -506,6 +539,14 @@ object Engine {
         .map(quad => List(quad.s -> 1, quad.p -> 2, quad.o -> 3))
         .toList
 
+    val schema = StructType(
+      Seq(
+        StructField("s", typedField),
+        StructField("p", typedField),
+        StructField("o", typedField)
+      )
+    )
+
     val df = r.relational.flatMap { solution =>
       val extractBlanks: List[(StringVal, Int)] => List[StringVal] =
         triple => triple.filter(x => x._1.isBlank).map(_._1)
@@ -523,16 +564,16 @@ object Engine {
             case (VARIABLE(s), pos) =>
               (solution.get(solution.fieldIndex(s)), pos)
             case (BLANK(x), pos) =>
-              (blankNodes.get(x).get, pos)
+              (parseLiteralStringToTypedGenericRow(blankNodes.get(x).get), pos)
             case (x, pos) =>
-              (x.s, pos)
+              (parseLiteralStringToTypedGenericRow(x.s), pos)
           })
           .sortBy(_._2)
           .map(_._1)
 
         SparkRow.fromSeq(fields)
       }
-    }.distinct
+    }(RowEncoder(schema)).distinct
 
     Multiset[DataFrame @@ Untyped](
       Set.empty,
@@ -567,20 +608,21 @@ object Engine {
   )(implicit sc: SQLContext): M[Multiset[DataFrame @@ Untyped]] = {
 
     def parseRow(totalVars: Seq[VARIABLE], row: Row): SparkRow = {
-      SparkRow.fromSeq(totalVars.foldLeft(Seq.empty[String]) { case (acc, v) =>
-        val parsed = row.tuples
-          .groupBy(_._1.s)
-          .mapValues(_.map(_._2.s))
-          .getOrElse(v.s, Seq(null)) // scalastyle:ignore
-        acc ++ parsed
-      } :+ "")
+      SparkRow.fromSeq(totalVars.foldLeft(Seq.empty[GenericRowWithSchema]) {
+        case (acc, v) =>
+          val parsed = row.tuples
+            .groupBy(_._1.s)
+            .mapValues(_.map(x => parseLiteralStringToTypedGenericRow(x._2.s)))
+            .getOrElse(v.s, Seq(null)) // scalastyle:ignore
+          acc ++ parsed
+      } :+ parseLiteralStringToTypedGenericRow(""))
     }
 
     val sparkRows = rows.map(r => parseRow(vars, r))
     val schema = StructType(
       vars
-        .map(name => StructField(name.s, StringType, true)) :+
-        StructField(GRAPH_VARIABLE.s, StringType, false)
+        .map(name => StructField(name.s, typedField, true)) :+
+        StructField(GRAPH_VARIABLE.s, typedField, false)
     )
 
     val df = @@[DataFrame, Untyped](
@@ -617,5 +659,26 @@ object Engine {
     r.copy(
       relational = resultDf
     ).pure[M]
+  }
+
+  def parseLiteralStringToTypedGenericRow(str: String): GenericRowWithSchema = {
+    val (value, tpe) =
+      if (str.startsWith("<") && str.endsWith(">")) {
+        (
+          str.stripPrefix("<").stripSuffix(">"),
+          "http://www.w3.org/2001/XMLSchema#anyURI"
+        )
+      } else {
+        (str, "http://www.w3.org/2001/XMLSchema#string")
+      }
+
+    new GenericRowWithSchema(
+      Array(
+        value,
+        tpe,
+        null // scalastyle:off
+      ),
+      typedField
+    )
   }
 }

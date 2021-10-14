@@ -119,7 +119,7 @@ object TypedLiterals {
       RdfType.Decimal(op(col1.value, col2.value))
     ).when(
       isIntNumericLiteral(col1) || isIntNumericLiteral(col2),
-      RdfType.Int(op(col1.value, col2.value))
+      RdfType.Int(op(col1.value, col2.value).cast(IntegerType))
     )
   // scalastyle:on
 

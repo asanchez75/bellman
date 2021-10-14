@@ -64,7 +64,7 @@ class DescribeSpec
           Row(
             "<http://example.org/alice>",
             "<http://xmlns.com/foaf/0.1/age>",
-            "21"
+            "\"21\"^^<http://www.w3.org/2001/XMLSchema#integer>"
           ),
           Row(
             "<http://example.org/alice>",
