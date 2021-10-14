@@ -27,41 +27,91 @@ class HavingSpec
     ("_:b", "<http://example.org/size>", "11")
   ).toDF("s", "p", "o")
 
- lazy val dfComplete: DataFrame = List(
-    ("<http://example/phillips>", "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
-      "<http://gsk-kg.rdip.gsk.com/dm/1.0/ReferencedDoc>", "<http://id.gsk.com/dataset/elsevier/>"),
-    ("<http://example/phillips>", "<http://schema.org/title>",
-      "Scala puzzlers", "<http://id.gsk.com/dataset/elsevier/>"),
-
-    ("<http://example/odersky>", "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
-      "<http://gsk-kg.rdip.gsk.com/dm/1.0/ReferencedDoc>", "<http://id.gsk.com/dataset/elsevier/>"),
-    ("<http://example/odersky>", "<http://schema.org/title>",
-      "Programming in Scala", "<http://id.gsk.com/dataset/elsevier/>"),
-
-    ("<http://example/spoon>", "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
-      "<http://gsk-kg.rdip.gsk.com/dm/1.0/ReferencedDoc>", "<http://id.gsk.com/dataset/elsevier/>"),
-    ("<http://example/spoon>", "<http://schema.org/title>",
-      "Programming in Scala", "<http://id.gsk.com/dataset/elsevier/>"),
-
-    ("<http://example/venners>", "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
-      "<http://gsk-kg.rdip.gsk.com/dm/1.0/ReferencedDoc>", "<http://id.gsk.com/dataset/elsevier/>"),
-    ("<http://example/venners>", "<http://schema.org/title>",
-      "Programming in Scala", "<http://id.gsk.com/dataset/elsevier/>"),
-
-    ("<http://example/siew>", "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
-      "<http://gsk-kg.rdip.gsk.com/dm/1.0/ReferencedDoc>", "<http://id.gsk.com/dataset/elsevier/>"),
-    ("<http://example/siew>", "<http://schema.org/title>",
-      "Programming in Scala", "<http://id.gsk.com/dataset/elsevier/>"),
-
-    ("<http://example/chambers>", "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
-      "<http://gsk-kg.rdip.gsk.com/dm/1.0/ReferencedDoc>", "<http://id.gsk.com/dataset/elsevier/>"),
-    ("<http://example/chambers>", "<http://schema.org/title>",
-      "Spark: The definitive Guide", "<http://id.gsk.com/dataset/elsevier/>"),
-
-    ("<http://example/zaharia>", "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
-      "<http://gsk-kg.rdip.gsk.com/dm/1.0/ReferencedDoc>", "<http://id.gsk.com/dataset/elsevier/>"),
-    ("<http://example/zaharia>", "<http://schema.org/title>",
-      "Spark: The definitive Guide", "<http://id.gsk.com/dataset/elsevier/>")
+  lazy val dfComplete: DataFrame = List(
+    (
+      "<http://example/phillips>",
+      "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+      "<http://gsk-kg.rdip.gsk.com/dm/1.0/ReferencedDoc>",
+      "<http://id.gsk.com/dataset/elsevier/>"
+    ),
+    (
+      "<http://example/phillips>",
+      "<http://schema.org/title>",
+      "Scala puzzlers",
+      "<http://id.gsk.com/dataset/elsevier/>"
+    ),
+    (
+      "<http://example/odersky>",
+      "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+      "<http://gsk-kg.rdip.gsk.com/dm/1.0/ReferencedDoc>",
+      "<http://id.gsk.com/dataset/elsevier/>"
+    ),
+    (
+      "<http://example/odersky>",
+      "<http://schema.org/title>",
+      "Programming in Scala",
+      "<http://id.gsk.com/dataset/elsevier/>"
+    ),
+    (
+      "<http://example/spoon>",
+      "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+      "<http://gsk-kg.rdip.gsk.com/dm/1.0/ReferencedDoc>",
+      "<http://id.gsk.com/dataset/elsevier/>"
+    ),
+    (
+      "<http://example/spoon>",
+      "<http://schema.org/title>",
+      "Programming in Scala",
+      "<http://id.gsk.com/dataset/elsevier/>"
+    ),
+    (
+      "<http://example/venners>",
+      "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+      "<http://gsk-kg.rdip.gsk.com/dm/1.0/ReferencedDoc>",
+      "<http://id.gsk.com/dataset/elsevier/>"
+    ),
+    (
+      "<http://example/venners>",
+      "<http://schema.org/title>",
+      "Programming in Scala",
+      "<http://id.gsk.com/dataset/elsevier/>"
+    ),
+    (
+      "<http://example/siew>",
+      "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+      "<http://gsk-kg.rdip.gsk.com/dm/1.0/ReferencedDoc>",
+      "<http://id.gsk.com/dataset/elsevier/>"
+    ),
+    (
+      "<http://example/siew>",
+      "<http://schema.org/title>",
+      "Programming in Scala",
+      "<http://id.gsk.com/dataset/elsevier/>"
+    ),
+    (
+      "<http://example/chambers>",
+      "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+      "<http://gsk-kg.rdip.gsk.com/dm/1.0/ReferencedDoc>",
+      "<http://id.gsk.com/dataset/elsevier/>"
+    ),
+    (
+      "<http://example/chambers>",
+      "<http://schema.org/title>",
+      "Spark: The definitive Guide",
+      "<http://id.gsk.com/dataset/elsevier/>"
+    ),
+    (
+      "<http://example/zaharia>",
+      "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+      "<http://gsk-kg.rdip.gsk.com/dm/1.0/ReferencedDoc>",
+      "<http://id.gsk.com/dataset/elsevier/>"
+    ),
+    (
+      "<http://example/zaharia>",
+      "<http://schema.org/title>",
+      "Spark: The definitive Guide",
+      "<http://id.gsk.com/dataset/elsevier/>"
+    )
   ).toDF("s", "p", "o", "g")
 
   "performs HAVING queries" should {
@@ -142,8 +192,8 @@ class HavingSpec
 
       "single condicion on HAVING clause with COUNT do a good comparation beetween numbers types with some rows" in {
 
-          val query =
-            """
+        val query =
+          """
               |PREFIX dm: <http://gsk-kg.rdip.gsk.com/dm/1.0/>
               |PREFIX schema: <http://schema.org/>
               |
@@ -159,14 +209,17 @@ class HavingSpec
               |HAVING (COUNT(?title) > 2)
               |""".stripMargin
 
-          val result = Compiler.compile(dfComplete, query, config)
+        val result = Compiler.compile(dfComplete, query, config)
 
-          result shouldBe a[Right[_, _]]
-          result.right.get.collect.length shouldEqual 1
-          result.right.get.collect.toSet shouldEqual Set(
-            Row("\"Programming in Scala\"", "\"4\"^^<http://www.w3.org/2001/XMLSchema#integer>")
+        result shouldBe a[Right[_, _]]
+        result.right.get.collect.length shouldEqual 1
+        result.right.get.collect.toSet shouldEqual Set(
+          Row(
+            "\"Programming in Scala\"",
+            "\"4\"^^<http://www.w3.org/2001/XMLSchema#integer>"
           )
-        }
+        )
+      }
 
       "single condicion on HAVING clause with COUNT do a good comparation beetween numbers types with all the rows" in {
 
@@ -192,9 +245,18 @@ class HavingSpec
         result shouldBe a[Right[_, _]]
         result.right.get.collect.length shouldEqual 3
         result.right.get.collect.toSet shouldEqual Set(
-          Row("\"Scala puzzlers\"", "\"1\"^^<http://www.w3.org/2001/XMLSchema#integer>"),
-          Row("\"Programming in Scala\"", "\"4\"^^<http://www.w3.org/2001/XMLSchema#integer>"),
-          Row("\"Spark: The definitive Guide\"", "\"2\"^^<http://www.w3.org/2001/XMLSchema#integer>")
+          Row(
+            "\"Scala puzzlers\"",
+            "\"1\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+          ),
+          Row(
+            "\"Programming in Scala\"",
+            "\"4\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+          ),
+          Row(
+            "\"Spark: The definitive Guide\"",
+            "\"2\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+          )
         )
       }
     }
