@@ -6,11 +6,9 @@ import cats.implicits.toTraverseOps
 import cats.instances.all._
 import cats.syntax.applicative._
 import cats.syntax.either._
-
 import higherkindness.droste._
 import higherkindness.droste.contrib.NewTypesSyntax.NewTypesOps
 import higherkindness.droste.util.newtypes.@@
-
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.RelationalGroupedDataset
@@ -20,16 +18,17 @@ import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Row => SparkRow}
-
 import com.gsk.kg.config.Config
 import com.gsk.kg.engine.data.ChunkedList
 import com.gsk.kg.engine.data.ChunkedList.Chunk
+import com.gsk.kg.engine.functions.Literals
 import com.gsk.kg.engine.relational.Relational.Untyped
 import com.gsk.kg.engine.relational.Relational.ops._
 import com.gsk.kg.engine.relational.RelationalGrouped
 import com.gsk.kg.engine.syntax._
 import com.gsk.kg.engine.typed.functions.FuncAgg
 import com.gsk.kg.engine.typed.functions.FuncForms
+import com.gsk.kg.engine.typed.functions.TypedLiterals
 import com.gsk.kg.sparqlparser.ConditionOrder.ASC
 import com.gsk.kg.sparqlparser.ConditionOrder.DESC
 import com.gsk.kg.sparqlparser.Expr.Quad
@@ -443,26 +442,87 @@ object Engine {
       r: Multiset[DataFrame @@ Untyped]
   ): M[Multiset[DataFrame @@ Untyped]] = {
     M.ask[Result, Config, Log, DataFrame @@ Untyped].flatMapF { config =>
-      conds
-        .map {
-          case ASC(VARIABLE(v)) =>
-            col(v).asc.asRight
-          case ASC(e) =>
-            ExpressionF
-              .compile[Expression](e, config)
-              .apply(r.relational)
-              .map(_.asc)
-          case DESC(VARIABLE(v)) =>
-            col(v).desc.asRight
-          case DESC(e) =>
-            ExpressionF
-              .compile[Expression](e, config)
-              .apply(r.relational)
-              .map(_.desc)
-        }
-        .toList
-        .sequence[Either[EngineError, *], Column]
-        .map(columns => r.copy(relational = r.relational.orderBy(columns)))
+      val stringName   = "_string"
+      val intName     = "_int"
+      val doubleName  = "_double"
+      val floatName   = "_float"
+      val booleanName = "_boolean"
+
+      def genTmpRelational(colName: String): DataFrame @@ Untyped = {
+        r.relational
+          .withColumn(s"_${colName}_${stringName}", col(colName).cast(DataTypes.StringType))
+          .withColumn(s"_${colName}_${intName}", col(colName).value.cast(DataTypes.IntegerType))
+          .withColumn(s"_${colName}_${doubleName}", col(colName).value.cast(DataTypes.DoubleType))
+          .withColumn(s"_${colName}_${floatName}", col(colName).value.cast(DataTypes.FloatType))
+          .withColumn(s"_${colName}_${booleanName}", col(colName).value.cast(DataTypes.BooleanType))
+      }
+
+      def selectTypeColumn(colName: String): Column = when(
+        TypedLiterals.isIntNumericLiteral(col(colName)),
+        col(s"_${colName}_${intName}")
+      ).when(
+        TypedLiterals.isDoubleNumericLiteral(col(colName)),
+        col(s"_${colName}_${doubleName}")
+      ).when(
+        TypedLiterals.isFloatNumericLiteral(col(colName)),
+        col(s"_${colName}_${floatName}")
+      ).when(
+        TypedLiterals.isBooleanLiteral(col(colName)),
+        col(s"_${colName}_${booleanName}")
+      ).otherwise(
+        col(s"_${colName}_${stringName}")
+      )
+
+      def evalOrderCondition(cnd: ConditionOrder): (DataFrame @@ Untyped, Column) = cnd match {
+        case ASC(VARIABLE(v)) =>
+          val rel = genTmpRelational(v)
+          val selection = selectTypeColumn(v).asc
+          (rel, selection)
+        case ASC(e) => ???
+        case DESC(VARIABLE(v)) => ???
+        case DESC(e) => ???
+      }
+
+      val (rel, selection) = evalOrderCondition(conds.head)
+
+      val b = rel.collect
+      b
+
+      val relOrdered = rel.orderBy(Seq(selection))
+
+      val a = relOrdered.collect
+      a
+
+      r.copy(relational = r.relational intersect relOrdered).asRight
+
+//      conds
+//        .map {
+//          case ASC(VARIABLE(v)) =>
+//            val a = genTmpRelational(v)
+//
+//            val b = a.orderBy(Seq(selectTypeColumn(col(v)).asc))
+//
+//            val c = tmpRelational.select(b).collect
+//
+//            val d = tmpRelational.orderBy(Seq(b.asc)).collect
+//
+//            b.asc.asRight
+//          case ASC(e) =>
+//            ExpressionF
+//              .compile[Expression](e, config)
+//              .apply(r.relational)
+//              .map(c => c.asc)
+//          case DESC(VARIABLE(v)) =>
+//            col(v).desc.asRight
+//          case DESC(e) =>
+//            ExpressionF
+//              .compile[Expression](e, config)
+//              .apply(r.relational)
+//              .map(c => c.desc)
+//        }
+//        .toList
+//        .sequence[Either[EngineError, *], Column]
+//        .map(columns => r.copy(relational = r.relational.orderBy(columns)))
     }
   }
 

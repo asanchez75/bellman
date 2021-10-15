@@ -19,250 +19,410 @@ class OrderBySpec
 
   "perform query with ORDER BY" should {
 
-    "execute and obtain expected results when no order modifier" in {
+    "execute and obtain expected results" when {
 
-      val df: DataFrame = List(
-        (
-          "_:a",
-          "<http://xmlns.com/foaf/0.1/name>",
-          "Alice",
-          ""
-        ),
-        (
-          "_:c",
-          "<http://xmlns.com/foaf/0.1/name>",
-          "Charlie",
-          ""
-        ),
-        (
-          "_:b",
-          "<http://xmlns.com/foaf/0.1/name>",
-          "Bob",
-          ""
+      "no order modifier" in {
+
+        val df: DataFrame = List(
+          (
+            "_:a",
+            "<http://xmlns.com/foaf/0.1/name>",
+            "\"Alice\""
+          ),
+          (
+            "_:c",
+            "<http://xmlns.com/foaf/0.1/name>",
+            "\"Charlie\""
+          ),
+          (
+            "_:b",
+            "<http://xmlns.com/foaf/0.1/name>",
+            "\"Bob\""
+          )
+        ).toDF("s", "p", "o")
+
+        val query =
+          """
+            |PREFIX foaf:    <http://xmlns.com/foaf/0.1/>
+            |
+            |SELECT ?name
+            |WHERE { ?x foaf:name ?name }
+            |ORDER BY ?name
+            |""".stripMargin
+
+        val result = Compiler.compile(df, query, config)
+
+        result.right.get.collect().length shouldEqual 3
+        result.right.get.collect.toList shouldEqual List(
+          Row("\"Alice\""),
+          Row("\"Bob\""),
+          Row("\"Charlie\"")
         )
-      ).toDF("s", "p", "o", "g")
+      }
 
-      val query =
-        """
-          |PREFIX foaf:    <http://xmlns.com/foaf/0.1/>
-          |
-          |SELECT ?name
-          |WHERE { ?x foaf:name ?name }
-          |ORDER BY ?name
-          |""".stripMargin
+      "ASC modifier" in {
 
-      val result = Compiler.compile(df, query, config)
+        val df: DataFrame = List(
+          (
+            "_:a",
+            "<http://xmlns.com/foaf/0.1/name>",
+            "Alice",
+            ""
+          ),
+          (
+            "_:c",
+            "<http://xmlns.com/foaf/0.1/name>",
+            "Charlie",
+            ""
+          ),
+          (
+            "_:b",
+            "<http://xmlns.com/foaf/0.1/name>",
+            "Bob",
+            ""
+          )
+        ).toDF("s", "p", "o", "g")
 
-      result.right.get.collect().length shouldEqual 3
-      result.right.get.collect.toList shouldEqual List(
-        Row("\"Alice\""),
-        Row("\"Bob\""),
-        Row("\"Charlie\"")
-      )
-    }
+        val query =
+          """
+            |PREFIX foaf:    <http://xmlns.com/foaf/0.1/>
+            |
+            |SELECT ?name
+            |WHERE { ?x foaf:name ?name }
+            |ORDER BY ASC(?name)
+            |""".stripMargin
 
-    "execute and obtain expected results when ASC modifier" in {
+        val result = Compiler.compile(df, query, config)
 
-      val df: DataFrame = List(
-        (
-          "_:a",
-          "<http://xmlns.com/foaf/0.1/name>",
-          "Alice",
-          ""
-        ),
-        (
-          "_:c",
-          "<http://xmlns.com/foaf/0.1/name>",
-          "Charlie",
-          ""
-        ),
-        (
-          "_:b",
-          "<http://xmlns.com/foaf/0.1/name>",
-          "Bob",
-          ""
+        result.right.get.collect().length shouldEqual 3
+        result.right.get.collect.toList shouldEqual List(
+          Row("\"Alice\""),
+          Row("\"Bob\""),
+          Row("\"Charlie\"")
         )
-      ).toDF("s", "p", "o", "g")
+      }
 
-      val query =
-        """
-          |PREFIX foaf:    <http://xmlns.com/foaf/0.1/>
-          |
-          |SELECT ?name
-          |WHERE { ?x foaf:name ?name }
-          |ORDER BY ASC(?name)
-          |""".stripMargin
+      "DESC modifier" in {
 
-      val result = Compiler.compile(df, query, config)
+        val df: DataFrame = List(
+          (
+            "_:a",
+            "<http://xmlns.com/foaf/0.1/name>",
+            "Alice",
+            ""
+          ),
+          (
+            "_:c",
+            "<http://xmlns.com/foaf/0.1/name>",
+            "Charlie",
+            ""
+          ),
+          (
+            "_:b",
+            "<http://xmlns.com/foaf/0.1/name>",
+            "Bob",
+            ""
+          )
+        ).toDF("s", "p", "o", "g")
 
-      result.right.get.collect().length shouldEqual 3
-      result.right.get.collect.toList shouldEqual List(
-        Row("\"Alice\""),
-        Row("\"Bob\""),
-        Row("\"Charlie\"")
-      )
-    }
+        val query =
+          """
+            |PREFIX foaf:    <http://xmlns.com/foaf/0.1/>
+            |
+            |SELECT ?name
+            |WHERE { ?x foaf:name ?name }
+            |ORDER BY DESC(?name)
+            |""".stripMargin
 
-    "execute and obtain expected results when DESC modifier" in {
+        val result = Compiler.compile(df, query, config)
 
-      val df: DataFrame = List(
-        (
-          "_:a",
-          "<http://xmlns.com/foaf/0.1/name>",
-          "Alice",
-          ""
-        ),
-        (
-          "_:c",
-          "<http://xmlns.com/foaf/0.1/name>",
-          "Charlie",
-          ""
-        ),
-        (
-          "_:b",
-          "<http://xmlns.com/foaf/0.1/name>",
-          "Bob",
-          ""
+        result.right.get.collect().length shouldEqual 3
+        result.right.get.collect.toList shouldEqual List(
+          Row("\"Charlie\""),
+          Row("\"Bob\""),
+          Row("\"Alice\"")
         )
-      ).toDF("s", "p", "o", "g")
+      }
 
-      val query =
-        """
-          |PREFIX foaf:    <http://xmlns.com/foaf/0.1/>
-          |
-          |SELECT ?name
-          |WHERE { ?x foaf:name ?name }
-          |ORDER BY DESC(?name)
-          |""".stripMargin
+      "multiple comparators" in {
 
-      val result = Compiler.compile(df, query, config)
+        val df: DataFrame = List(
+          (
+            "_:a",
+            "<http://xmlns.com/foaf/0.1/name>",
+            "A. Alice",
+            ""
+          ),
+          (
+            "_:a",
+            "<http://xmlns.com/foaf/0.1/age>",
+            "10",
+            ""
+          ),
+          (
+            "_:c",
+            "<http://xmlns.com/foaf/0.1/name>",
+            "A. Charlie",
+            ""
+          ),
+          (
+            "_:c",
+            "<http://xmlns.com/foaf/0.1/age>",
+            "30",
+            ""
+          ),
+          (
+            "_:b",
+            "<http://xmlns.com/foaf/0.1/name>",
+            "A. Bob",
+            ""
+          ),
+          (
+            "_:b",
+            "<http://xmlns.com/foaf/0.1/age>",
+            "20",
+            ""
+          )
+        ).toDF("s", "p", "o", "g")
 
-      result.right.get.collect().length shouldEqual 3
-      result.right.get.collect.toList shouldEqual List(
-        Row("\"Charlie\""),
-        Row("\"Bob\""),
-        Row("\"Alice\"")
-      )
-    }
+        val query =
+          """
+            |PREFIX foaf:    <http://xmlns.com/foaf/0.1/>
+            |
+            |SELECT ?name
+            |WHERE { ?x foaf:name ?name ; foaf:age ?age }
+            |ORDER BY ?name DESC(?age)
+            |""".stripMargin
 
-    "execute and obtain expected results whit multiple comparators" in {
+        val result = Compiler.compile(df, query, config)
 
-      val df: DataFrame = List(
-        (
-          "_:a",
-          "<http://xmlns.com/foaf/0.1/name>",
-          "A. Alice",
-          ""
-        ),
-        (
-          "_:a",
-          "<http://xmlns.com/foaf/0.1/age>",
-          "10",
-          ""
-        ),
-        (
-          "_:c",
-          "<http://xmlns.com/foaf/0.1/name>",
-          "A. Charlie",
-          ""
-        ),
-        (
-          "_:c",
-          "<http://xmlns.com/foaf/0.1/age>",
-          "30",
-          ""
-        ),
-        (
-          "_:b",
-          "<http://xmlns.com/foaf/0.1/name>",
-          "A. Bob",
-          ""
-        ),
-        (
-          "_:b",
-          "<http://xmlns.com/foaf/0.1/age>",
-          "20",
-          ""
+        result.right.get.collect().length shouldEqual 3
+        result.right.get.collect.toList shouldEqual List(
+          Row("\"A. Alice\""),
+          Row("\"A. Bob\""),
+          Row("\"A. Charlie\"")
         )
-      ).toDF("s", "p", "o", "g")
+      }
 
-      val query =
-        """
-          |PREFIX foaf:    <http://xmlns.com/foaf/0.1/>
-          |
-          |SELECT ?name
-          |WHERE { ?x foaf:name ?name ; foaf:age ?age }
-          |ORDER BY ?name DESC(?age)
-          |""".stripMargin
+      "multiple comparators 2" in {
 
-      val result = Compiler.compile(df, query, config)
+        val df: DataFrame = List(
+          (
+            "_:a",
+            "<http://xmlns.com/foaf/0.1/name>",
+            "A. Alice",
+            ""
+          ),
+          (
+            "_:a",
+            "<http://xmlns.com/foaf/0.1/age>",
+            "10",
+            ""
+          ),
+          (
+            "_:c",
+            "<http://xmlns.com/foaf/0.1/name>",
+            "A. Charlie",
+            ""
+          ),
+          (
+            "_:c",
+            "<http://xmlns.com/foaf/0.1/age>",
+            "30",
+            ""
+          ),
+          (
+            "_:b",
+            "<http://xmlns.com/foaf/0.1/name>",
+            "A. Bob",
+            ""
+          ),
+          (
+            "_:b",
+            "<http://xmlns.com/foaf/0.1/age>",
+            "20",
+            ""
+          )
+        ).toDF("s", "p", "o", "g")
 
-      result.right.get.collect().length shouldEqual 3
-      result.right.get.collect.toList shouldEqual List(
-        Row("\"A. Alice\""),
-        Row("\"A. Bob\""),
-        Row("\"A. Charlie\"")
-      )
-    }
+        val query =
+          """
+            |PREFIX foaf:    <http://xmlns.com/foaf/0.1/>
+            |
+            |SELECT ?name
+            |WHERE { ?x foaf:name ?name ; foaf:age ?age }
+            |ORDER BY DESC(?name) ?age DESC(?age) ASC(?name) DESC((isBlank(?x) || isBlank(?age)))
+            |""".stripMargin
 
-    "execute and obtain expected results whit multiple comparators 2" in {
+        val result = Compiler.compile(df, query, config)
 
-      val df: DataFrame = List(
-        (
-          "_:a",
-          "<http://xmlns.com/foaf/0.1/name>",
-          "A. Alice",
-          ""
-        ),
-        (
-          "_:a",
-          "<http://xmlns.com/foaf/0.1/age>",
-          "10",
-          ""
-        ),
-        (
-          "_:c",
-          "<http://xmlns.com/foaf/0.1/name>",
-          "A. Charlie",
-          ""
-        ),
-        (
-          "_:c",
-          "<http://xmlns.com/foaf/0.1/age>",
-          "30",
-          ""
-        ),
-        (
-          "_:b",
-          "<http://xmlns.com/foaf/0.1/name>",
-          "A. Bob",
-          ""
-        ),
-        (
-          "_:b",
-          "<http://xmlns.com/foaf/0.1/age>",
-          "20",
-          ""
+        result.right.get.collect().length shouldEqual 3
+        result.right.get.collect.toList shouldEqual List(
+          Row("\"A. Charlie\""),
+          Row("\"A. Bob\""),
+          Row("\"A. Alice\"")
         )
-      ).toDF("s", "p", "o", "g")
+      }
 
-      val query =
-        """
-          |PREFIX foaf:    <http://xmlns.com/foaf/0.1/>
-          |
-          |SELECT ?name
-          |WHERE { ?x foaf:name ?name ; foaf:age ?age }
-          |ORDER BY DESC(?name) ?age DESC(?age) ASC(?name) DESC((isBlank(?x) || isBlank(?age)))
-          |""".stripMargin
+      "order DESC" when {
 
-      val result = Compiler.compile(df, query, config)
+        "alphabetic" in {
 
-      result.right.get.collect().length shouldEqual 3
-      result.right.get.collect.toList shouldEqual List(
-        Row("\"A. Charlie\""),
-        Row("\"A. Bob\""),
-        Row("\"A. Alice\"")
-      )
+          val df: DataFrame = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.com/foaf/0.1/age>",
+              "\"11\""
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.com/foaf/0.1/age>",
+              "\"101\""
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+              |
+              |SELECT ?s ?age
+              |WHERE {
+              |  ?s foaf:age ?age .
+              |}
+              |ORDER BY DESC(?age)
+              |""".stripMargin
+
+          val result =
+            Compiler.compile(df, query, config)
+
+          result.right.get.collect().length shouldEqual 2
+          result.right.get.collect.toList shouldEqual List(
+            Row("<http://example.org/Alice>", "\"11\""),
+            Row("<http://example.org/Bob>", "\"101\"")
+          )
+        }
+
+        "numeric" in {
+
+          val df: DataFrame = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.com/foaf/0.1/age>",
+              "\"11\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.com/foaf/0.1/age>",
+              "\"101\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+              |
+              |SELECT ?s ?age
+              |WHERE {
+              |  ?s foaf:age ?age .
+              |}
+              |ORDER BY DESC(?age)
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect().length shouldEqual 2
+          result.right.get.collect.toList shouldEqual List(
+            Row(
+              "<http://example.org/Bob>",
+              "\"101\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+            ),
+            Row(
+              "<http://example.org/Alice>",
+              "\"11\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+            )
+          )
+        }
+      }
+
+      "order ASC" when {
+
+        "alphabetic" in {
+
+          val df: DataFrame = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.com/foaf/0.1/age>",
+              "\"11\""
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.com/foaf/0.1/age>",
+              "\"101\""
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+              |
+              |SELECT ?s ?age
+              |WHERE {
+              |  ?s foaf:age ?age .
+              |}
+              |ORDER BY ASC(?age)
+              |""".stripMargin
+
+          val result =
+            Compiler.compile(df, query, config)
+
+          result.right.get.collect().length shouldEqual 2
+          result.right.get.collect.toList shouldEqual List(
+            Row("<http://example.org/Bob>", "\"101\""),
+            Row("<http://example.org/Alice>", "\"11\"")
+          )
+        }
+
+        "numeric" in {
+
+          val df: DataFrame = List(
+            (
+              "<http://example.org/Alice>",
+              "<http://xmlns.com/foaf/0.1/age>",
+              "\"11\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+            ),
+            (
+              "<http://example.org/Bob>",
+              "<http://xmlns.com/foaf/0.1/age>",
+              "\"101\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+            )
+          ).toDF("s", "p", "o")
+
+          val query =
+            """
+              |PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+              |
+              |SELECT ?s ?age
+              |WHERE {
+              |  ?s foaf:age ?age .
+              |}
+              |ORDER BY ASC(?age)
+              |""".stripMargin
+
+          val result = Compiler.compile(df, query, config)
+
+          result.right.get.collect().length shouldEqual 2
+          result.right.get.collect.toList shouldEqual List(
+            Row(
+              "<http://example.org/Alice>",
+              "\"11\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+            ),
+            Row(
+              "<http://example.org/Bob>",
+              "\"101\"^^<http://www.w3.org/2001/XMLSchema#integer>"
+            )
+          )
+        }
+      }
     }
   }
 }
